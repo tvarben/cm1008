@@ -2,7 +2,8 @@
 
 int main()
 {
-    printf("Hello World /Adam");
-    printf("Pull request test");
+    printf("Hello World /Adam\n");
+    printf("Hej hej/Alex\n");
+    printf("Pull request test\n");
     return 0;
 }
