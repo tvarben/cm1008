@@ -7,6 +7,7 @@ int main() {
   printf("test again :)\n");
   printf("Ny Commit \n");
   printf("David test pull\n");
-  printf("Test igen/Alex");
+  printf("Test igen/Alex\n");
+  printf("Testing from Windows/Adam \n");
   return 0;
 }
