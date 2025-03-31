@@ -2,3 +2,4 @@ makefile*
 Makefile*
 Makefile
 a.out
+*.exe
