@@ -2,8 +2,8 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
-#define WINDOW_WIDTH 1920
-#define WINDOW_HEIGHT 1080
+#define WINDOW_WIDTH 1160
+#define WINDOW_HEIGHT 700
 
 typedef struct {
 	SDL_Window *pWindow;
@@ -24,12 +24,28 @@ void close(Game *pGame) {
 	SDL_Quit();
 }
 
+void run(Game *pGame) {
+	bool isRunning = true;
+	SDL_Event event;
+
+	while(isRunning) {
+		while(SDL_PollEvent(&event)){
+			switch(event.type) {
+				case SDL_QUIT:
+					isRunning = false;
+					break;
+			}
+		}
+	}
+}
+
 int main(int argv, char** args) {
 	Game game = {NULL, NULL};
 	initiate(&game);
 	
 	bool isRunning = true;
+	run(&game);
 
 	close(&game);
-  return 0;
+	return 0;
 }
