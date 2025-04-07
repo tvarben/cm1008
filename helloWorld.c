@@ -8,6 +8,8 @@ int main() {
   printf("Ny Commit \n");
   printf("David test pull\n");
   printf("Test igen/Alex\n");
-  printf("Branching/merging test\n")
+  printf("Branching/merging test\n");
+  printf("Branching/merging test\n");
+
   return 0;
 }
