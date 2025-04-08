@@ -7,7 +7,7 @@
 #define WINDOW_HEIGHT 700
 #define SHIP_WIDTH 64
 #define SHIP_HEIGHT 64
-#define SHIP_SPEED 5
+#define SHIP_SPEED 7
 
 typedef struct {
     SDL_Window* pWindow;
