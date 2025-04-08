@@ -6,3 +6,12 @@ a.out
 *.o
 .DS_Store
 myGame
+# macOS system files
+.DS_Store
+
+# Build outputs
+myGame
+*.o obj/
+
+# Editor configs
+.vscode/
