@@ -1,153 +1,105 @@
 #include <stdio.h>
-#include <stdbool.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <stdbool.h>
+#include <SDL2/SDL_ttf.h>
+#include "ship.h"
 
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
-#define SHIP_WIDTH 64
-#define SHIP_HEIGHT 64
-#define SHIP_SPEED 7
+
+enum GameState { START, ONGOING, GAME_OVER };
+typedef enum GameState GameState;
 
 typedef struct {
-    SDL_Window* pWindow;
-    SDL_Renderer* pRenderer;
+    SDL_Window *pWindow;
+    SDL_Renderer *pRenderer;
+    Ship *pShip;
+    GameState state;
 } Game;
 
-int initiate(Game* pGame) {
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-        printf("SDL_Init Error: %s\n", SDL_GetError());
-        return -1;
+int initiate(Game *pGame) 
+{
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
+        printf("SDL Init Error: %s\n", SDL_GetError());
+        return 0;
     }
-
     if (IMG_Init(IMG_INIT_PNG) == 0) {
-        printf("IMG_Init Error: %s\n", IMG_GetError());
-        return -1;
+        printf("SDL_image Init Error: %s\n", IMG_GetError());
+        SDL_Quit();
+        return 0;
     }
 
-    pGame->pWindow = SDL_CreateWindow("Space Ship", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+    pGame->pWindow = SDL_CreateWindow("",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     if (!pGame->pWindow) {
         printf("Window Error: %s\n", SDL_GetError());
-        return -1;
+        return 0;
     }
 
-    pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED);
+    pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!pGame->pRenderer) {
         printf("Renderer Error: %s\n", SDL_GetError());
-        return -1;
+        return 0;
     }
 
-    return 0;
+    pGame->pShip = createShip(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+    if (!pGame->pShip) {
+        printf("Ship creation failed.\n");
+        return 0;
+    }
+
+    pGame->state = START;
+    return 1;
 }
 
-void closeGame(Game* pGame) {
-    SDL_DestroyRenderer(pGame->pRenderer);
-    SDL_DestroyWindow(pGame->pWindow);
+void run(Game *pGame) {
+    bool isRunning = true;
+    SDL_Event event;
+
+    while (isRunning) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                isRunning = false;
+            } else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+                resetShip(pGame->pShip);
+                pGame->state = ONGOING;                 // set game state to ONGOING and exit the loop
+            } else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)) {
+                handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
+            }
+        }
+
+        if (pGame->state == ONGOING) 
+        {
+            updateShipVelocity(pGame->pShip);           // resolve velocity based on key states
+            updateShip(pGame->pShip);
+            SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
+            SDL_RenderClear(pGame->pRenderer);
+            drawShip(pGame->pShip);
+            SDL_RenderPresent(pGame->pRenderer);
+        } 
+        else if (pGame->state == START) 
+        {
+            SDL_SetRenderDrawColor(pGame->pRenderer, 10, 10, 40, 255);
+            SDL_RenderClear(pGame->pRenderer);
+            drawShip(pGame->pShip);
+            SDL_RenderPresent(pGame->pRenderer);
+        }
+    }
+}
+
+void closeGame(Game *pGame) {
+    if (pGame->pShip) destroyShip(pGame->pShip);
+    if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
+    if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
     IMG_Quit();
     SDL_Quit();
 }
 
-int loadAssets(SDL_Renderer* renderer, SDL_Texture** shipTexture) {
-    SDL_Surface* surface = IMG_Load("resources/Ship.png");
-    if (!surface) {
-        printf("Failed to load image: %s\n", IMG_GetError());
-        return -1;
-    }
-
-    *shipTexture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-
-    if (!*shipTexture) {
-        printf("Failed to create texture: %s\n", SDL_GetError());
-        return -1;
-    }
-
-    return 0;
-}
-
-void handleInput(SDL_Event* event, bool* isRunning, int* velX, int* velY) {
-    if (event->type == SDL_QUIT) {
-        *isRunning = false;
-    }
-
-    if (event->type == SDL_KEYDOWN || event->type == SDL_KEYUP) {
-        bool keyDown = (event->type == SDL_KEYDOWN);
-        int value = keyDown ? SHIP_SPEED : 0;
-
-        switch (event->key.keysym.sym) {
-            case SDLK_w:
-            case SDLK_UP:
-                *velY = keyDown ? -value : 0;
-                break;
-            case SDLK_s:
-            case SDLK_DOWN:
-                *velY = keyDown ? value : 0;
-                break;
-            case SDLK_a:
-            case SDLK_LEFT:
-                *velX = keyDown ? -value : 0;
-                break;
-            case SDLK_d:
-            case SDLK_RIGHT:
-                *velX = keyDown ? value : 0;
-                break;
-        }
-    }
-}
-
-void updatePosition(SDL_Rect* rect, int velX, int velY) {
-    rect->x += velX;
-    rect->y += velY;
-
-    // Stay within window bounds
-    if (rect->x < 0) rect->x = 0;
-    if (rect->y < 0) rect->y = 0;
-    if (rect->x + rect->w > WINDOW_WIDTH) rect->x = WINDOW_WIDTH - rect->w;
-    if (rect->y + rect->h > WINDOW_HEIGHT) rect->y = WINDOW_HEIGHT - rect->h;
-}
-
-void render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* rect) {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
-
-    SDL_RenderCopy(renderer, texture, NULL, rect);
-    SDL_RenderPresent(renderer);
-}
-
-void run(Game* pGame) {
-    bool isRunning = true;
-    SDL_Event event;
-
-    SDL_Texture* shipTexture = NULL;
-    if (loadAssets(pGame->pRenderer, &shipTexture) != 0) {
-        return;
-    }
-
-    SDL_Rect shipRect = {WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, SHIP_WIDTH, SHIP_HEIGHT};
-    int velX = 0, velY = 0;
-
-    while (isRunning) {
-        while (SDL_PollEvent(&event)) {
-            handleInput(&event, &isRunning, &velX, &velY);
-        }
-
-        updatePosition(&shipRect, velX, velY);
-        render(pGame->pRenderer, shipTexture, &shipRect);
-
-        SDL_Delay(16); // ~60 FPS
-    }
-
-    SDL_DestroyTexture(shipTexture);
-}
-
 int main(int argc, char** argv) {
-	printf("Starting program...\n");
-    Game game = {NULL, NULL};
-
-    if (initiate(&game) != 0) {
-		printf("Init failed\n");
-        return -1;
-    }
+    Game game = {NULL, NULL, NULL, START};
+    if (!initiate(&game)) return 1;
 
     run(&game);
     closeGame(&game);
