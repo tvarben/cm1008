@@ -1,13 +1,22 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_timer.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
 
+int volume = 50;
+void setVolume(int v) { volume = (MIX_MAX_VOLUME * v) / 100; }
+
 typedef struct {
   SDL_Window *pWindow;
   SDL_Renderer *pRenderer;
+  Mix_Music *pBackgroundMusic;
+
 } Game;
 
 int initiate(Game *pGame) {
@@ -18,6 +27,12 @@ int initiate(Game *pGame) {
       SDL_CreateWindow("Hello World", SDL_WINDOWPOS_CENTERED,
                        SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
   pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, 0);
+  pGame->pBackgroundMusic =
+      Mix_LoadMUS("/home/tvarben/School/cm1008/resources/sound/music.wav");
+  Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 4096);
+  Mix_VolumeMusic(volume);
+  Mix_PlayMusic(pGame->pBackgroundMusic, -1); // plays background music once
+                                              //
 }
 
 void closeGame(Game *pGame) {
@@ -42,7 +57,7 @@ void run(Game *pGame) {
 }
 
 int main(int argv, char **args) {
-  Game game = {NULL, NULL};
+  Game game = {NULL, NULL, NULL};
   initiate(&game);
 
   bool isRunning = true;
