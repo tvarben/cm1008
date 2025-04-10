@@ -29,9 +29,7 @@ int initiate(Game *pGame) {
       SDL_CreateWindow("Hello World", SDL_WINDOWPOS_CENTERED,
                        SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
   pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, 0);
-  pGame->pBackgroundMusic =
-      /*Mix_LoadMUS("/home/tvarben/School/cm1008/resources/sound/techno.wav");*/
-      Mix_LoadMUS("resources/sound/techno.wav");
+  pGame->pBackgroundMusic = Mix_LoadMUS("resources/sound/techno.wav");
   if (!pGame->pBackgroundMusic) {
     printf("Failed to laod music. SDL_mixer Error %s\n", Mix_GetError());
     return -1;
