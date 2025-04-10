@@ -4,9 +4,12 @@
 #include <stdbool.h>
 #include <SDL2/SDL_ttf.h>
 #include "ship.h"
+#include <SDL2/SDL_mixer.h>
+#include "sound.h"
 
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
+#define MUSIC_FILEPATH "./resources/music.wav"
 
 enum GameState { START, ONGOING, GAME_OVER };
 typedef enum GameState GameState;
@@ -16,11 +19,13 @@ typedef struct {
     SDL_Renderer *pRenderer;
     Ship *pShip;
     GameState state;
+    Mix_Music *pMusic;
 } Game;
 
 int initiate(Game *pGame) 
 {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
+    Mix_Init(MIX_INIT_WAVPACK);
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0) {
         printf("SDL Init Error: %s\n", SDL_GetError());
         return 0;
     }
@@ -50,6 +55,11 @@ int initiate(Game *pGame)
         return 0;
     }
 
+    if (!initMusic(&pGame->pMusic, MUSIC_FILEPATH)) {
+        printf("Error: %s\n",Mix_GetError());
+        return 0;
+    }
+
     pGame->state = START;
     return 1;
 }
@@ -57,6 +67,8 @@ int initiate(Game *pGame)
 void run(Game *pGame) {
     bool isRunning = true;
     SDL_Event event;
+
+    playMusic(pGame->pMusic, -1);
 
     while (isRunning) {
         while (SDL_PollEvent(&event)) {
@@ -72,6 +84,7 @@ void run(Game *pGame) {
 
         if (pGame->state == ONGOING) 
         {
+            if (Mix_PlayingMusic()) Mix_HaltMusic();
             updateShipVelocity(pGame->pShip);           // resolve velocity based on key states
             updateShip(pGame->pShip);
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
@@ -93,6 +106,7 @@ void closeGame(Game *pGame) {
     if (pGame->pShip) destroyShip(pGame->pShip);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
+    closeMusic(pGame->pMusic);
     IMG_Quit();
     SDL_Quit();
 }
