@@ -60,7 +60,6 @@ int initiate(Game *pGame)
 	pGame->pFont = TTF_OpenFont("arial.ttf", 100);
     if(!pGame->pFont ) {
         printf("Error: %s\n",TTF_GetError());
-        close(pGame);
         return 0;
     }
 
@@ -88,14 +87,15 @@ void run(Game *pGame) {
     playMusic(pGame->pMusic, -1);
 
     while (isRunning) {
+        drawText(pGame->pStartText);
+        SDL_RenderPresent(pGame->pRenderer);	//Draw the start text
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
             } else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+                if(pGame->pStartText) destroyText(pGame->pStartText);
                 resetShip(pGame->pShip);
                 pGame->state = ONGOING;                 // set game state to ONGOING and exit the loop
-				drawText(pGame->pStartText);
-                SDL_RenderPresent(pGame->pRenderer);	//Draw the start text
             } else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)) {
                 handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
             }
@@ -125,6 +125,10 @@ void closeGame(Game *pGame) {
     if (pGame->pShip) destroyShip(pGame->pShip);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
+
+    if(pGame->pStartText) destroyText(pGame->pStartText);
+    if(pGame->pFont) TTF_CloseFont(pGame->pFont); 
+
     closeMusic(pGame->pMusic);
     IMG_Quit();
     SDL_Quit();
