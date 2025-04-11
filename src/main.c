@@ -22,7 +22,7 @@ typedef struct {
     GameState state;
     Mix_Music *pMusic;
 	TTF_Font *pFont;
-	Text *pStartText;
+	Text *pStartText, *pGameName, *pExitText;
 } Game;
 
 int initiate(Game *pGame) 
@@ -63,7 +63,14 @@ int initiate(Game *pGame)
         return 0;
     }
 
-	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Press space to start",WINDOW_WIDTH/2,WINDOW_HEIGHT/2+100);
+	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Start",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
+    pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
+    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
+    if(!pGame->pFont){
+        printf("Error: %s\n",TTF_GetError());
+        return 0;
+    }
+
 
     pGame->pShip = createShip(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     if (!pGame->pShip) {
@@ -87,13 +94,10 @@ void run(Game *pGame) {
     playMusic(pGame->pMusic, -1);
 
     while (isRunning) {
-        drawText(pGame->pStartText);
-        SDL_RenderPresent(pGame->pRenderer);	//Draw the start text
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
             } else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-                if(pGame->pStartText) destroyText(pGame->pStartText);
                 resetShip(pGame->pShip);
                 pGame->state = ONGOING;                 // set game state to ONGOING and exit the loop
             } else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)) {
@@ -113,10 +117,14 @@ void run(Game *pGame) {
         } 
         else if (pGame->state == START) 
         {
-            SDL_SetRenderDrawColor(pGame->pRenderer, 10, 10, 40, 255);
-            SDL_RenderClear(pGame->pRenderer);
-            drawShip(pGame->pShip);
-            SDL_RenderPresent(pGame->pRenderer);
+            drawText(pGame->pStartText);
+            drawText(pGame->pExitText);
+            drawText(pGame->pGameName);
+            SDL_RenderPresent(pGame->pRenderer);	//Draw the start text
+            //SDL_SetRenderDrawColor(pGame->pRenderer, 10, 10, 40, 255);
+            //SDL_RenderClear(pGame->pRenderer);
+            //drawShip(pGame->pShip);
+            //SDL_RenderPresent(pGame->pRenderer);
         }
     }
 }
