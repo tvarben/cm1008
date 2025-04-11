@@ -117,12 +117,14 @@ void run(Game *pGame) {
         } 
         else if (pGame->state == START) 
         {
+            SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);  //Important to set the color before clearing the screen 
+            SDL_RenderClear(pGame->pRenderer);                         //Clear the first frame when the game starts, otherwise issues on mac/linux 
+
             drawText(pGame->pStartText);
             drawText(pGame->pExitText);
             drawText(pGame->pGameName);
-            SDL_RenderPresent(pGame->pRenderer);	//Draw the start text
+            SDL_RenderPresent(pGame->pRenderer);    //Draw the start text
             //SDL_SetRenderDrawColor(pGame->pRenderer, 10, 10, 40, 255);
-            //SDL_RenderClear(pGame->pRenderer);
             //drawShip(pGame->pShip);
             //SDL_RenderPresent(pGame->pRenderer);
         }
