@@ -6,6 +6,7 @@
 #include "ship.h"
 #include <SDL2/SDL_mixer.h>
 #include "sound.h"
+#include "text.h"
 
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
@@ -20,6 +21,8 @@ typedef struct {
     Ship *pShip;
     GameState state;
     Mix_Music *pMusic;
+	TTF_Font *pFont;
+	Text *pStartText;
 } Game;
 
 int initiate(Game *pGame) 
@@ -31,6 +34,11 @@ int initiate(Game *pGame)
     }
     if (IMG_Init(IMG_INIT_PNG) == 0) {
         printf("SDL_image Init Error: %s\n", IMG_GetError());
+        SDL_Quit();
+        return 0;
+    }
+	if(TTF_Init()!=0) {
+        printf("Error: %s\n",TTF_GetError());
         SDL_Quit();
         return 0;
     }
@@ -48,6 +56,14 @@ int initiate(Game *pGame)
         printf("Renderer Error: %s\n", SDL_GetError());
         return 0;
     }
+
+	pGame->pFont = TTF_OpenFont("arial.ttf", 100);
+    if(!pGame->pFont ) {
+        printf("Error: %s\n",TTF_GetError());
+        return 0;
+    }
+
+	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Press space to start",WINDOW_WIDTH/2,WINDOW_HEIGHT/2+100);
 
     pGame->pShip = createShip(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     if (!pGame->pShip) {
@@ -71,10 +87,13 @@ void run(Game *pGame) {
     playMusic(pGame->pMusic, -1);
 
     while (isRunning) {
+        drawText(pGame->pStartText);
+        SDL_RenderPresent(pGame->pRenderer);	//Draw the start text
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
             } else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+                if(pGame->pStartText) destroyText(pGame->pStartText);
                 resetShip(pGame->pShip);
                 pGame->state = ONGOING;                 // set game state to ONGOING and exit the loop
             } else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)) {
@@ -106,6 +125,10 @@ void closeGame(Game *pGame) {
     if (pGame->pShip) destroyShip(pGame->pShip);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
+
+    if(pGame->pStartText) destroyText(pGame->pStartText);
+    if(pGame->pFont) TTF_CloseFont(pGame->pFont); 
+
     closeMusic(pGame->pMusic);
     IMG_Quit();
     SDL_Quit();
