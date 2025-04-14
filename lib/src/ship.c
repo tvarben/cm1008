@@ -24,7 +24,7 @@ Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int wind
     s->windowHeight = windowHeight;
     s->renderer = renderer;
 
-    SDL_Surface* surface = IMG_Load("resources/Ship.png");
+    SDL_Surface* surface = IMG_Load("../lib/resources//Ship.png");
     if (!surface) {
         printf("Error loading Ship.png: %s\n", IMG_GetError());
         free(s);
