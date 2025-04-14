@@ -57,7 +57,7 @@ int initiate(Game *pGame)
         return 0;
     }
 
-	pGame->pFont = TTF_OpenFont("arial.ttf", 100);
+	pGame->pFont = TTF_OpenFont("resources/arial.ttf", 100);
     if(!pGame->pFont ) {
         printf("Error: %s\n",TTF_GetError());
         return 0;
