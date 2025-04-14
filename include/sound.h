@@ -5,6 +5,7 @@
 
 int initMusic(Mix_Music **ppMusic, char *filepath);
 void playMusic(Mix_Music *pMusic, int loops);
+void pauseMusic();
 void closeMusic(Mix_Music *pMusic);
 
 #endif 

@@ -91,8 +91,6 @@ void run(Game *pGame) {
     bool isRunning = true;
     SDL_Event event;
 
-    playMusic(pGame->pMusic, -1);
-
     while (isRunning) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -109,7 +107,7 @@ void run(Game *pGame) {
 
         if (pGame->state == ONGOING) 
         {
-            if (Mix_PlayingMusic()) Mix_HaltMusic();
+            if (Mix_PlayingMusic()) pauseMusic();
             updateShipVelocity(pGame->pShip);           // resolve velocity based on key states
             updateShip(pGame->pShip);
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
@@ -119,6 +117,7 @@ void run(Game *pGame) {
         } 
         else if (pGame->state == START) 
         {
+            playMusic(pGame->pMusic, -1);
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);  //Important to set the color before clearing the screen 
             SDL_RenderClear(pGame->pRenderer);                         //Clear the first frame when the game starts, otherwise issues on mac/linux 
 
