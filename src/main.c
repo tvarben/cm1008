@@ -61,7 +61,7 @@ int initiate(Game *pGame) {
 
 	pGame->pFont = TTF_OpenFont("resources/arial.ttf", 100);
     if (!pGame->pFont ) {
-        printf("Error: %s\n",TTF_GetError());
+        printf("Error: %s\n", TTF_GetError());
         return 0;
     }
 
@@ -69,7 +69,7 @@ int initiate(Game *pGame) {
     pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
     pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit [2]",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
     if (!pGame->pFont){
-        printf("Error: %s\n",TTF_GetError());
+        printf("Error: %s\n", TTF_GetError());
         return 0;
     }
 
@@ -80,11 +80,8 @@ int initiate(Game *pGame) {
         return 0;
     }
 
-
-    if (!initMusic(&pGame->pMusic, MUSIC_FILEPATH)) {
-        printf("Error: %s\n",Mix_GetError());
-        return 0;
-    }
+    pGame->pMusic = initMusic(MUSIC_FILEPATH);
+    if (!pGame->pMusic) return 0;
 
     pGame->state = START;
     return 1;

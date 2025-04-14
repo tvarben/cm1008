@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "sound.h"
 
-int initMusic(Mix_Music **ppMusic, char *filepath) {
+Mix_Music* initMusic(char *filepath) {
 	int frequency = MIX_DEFAULT_FREQUENCY;
 	Uint16 format = MIX_DEFAULT_FORMAT;
 	int nChannels = 2;
@@ -9,14 +9,14 @@ int initMusic(Mix_Music **ppMusic, char *filepath) {
 
 	if(Mix_OpenAudio(frequency, format, nChannels, chunkSize) != 0) {
 		printf("Error: %s\n", Mix_GetError());
-		return 0;
+		return NULL;
 	}
-	*ppMusic = Mix_LoadMUS(filepath);
-	if(!*ppMusic) {
+	Mix_Music *pMusic = Mix_LoadMUS(filepath);
+	if(!pMusic) {
 		printf("Error: %s\n", Mix_GetError());
-		return 0;
+		return NULL;
 	}
-	return 1;
+	return pMusic;
 }
 
 void playMusic(Mix_Music *pMusic, int loops) {

@@ -51,6 +51,7 @@ Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int wind
 
     return s;
 }
+
 void handleShipEvent(Ship* s, SDL_Event* event) {
     bool down = event->type == SDL_KEYDOWN;
 
@@ -66,10 +67,12 @@ void handleShipEvent(Ship* s, SDL_Event* event) {
         default: break;
     }
 }
+
 void setShipVelocity(Ship* s, int vx, int vy) {
     s->vx = vx;
     s->vy = vy;
 }
+
 void updateShipVelocity(Ship* s) {
     int vx = 0, vy = 0;
 
@@ -82,7 +85,6 @@ void updateShipVelocity(Ship* s) {
     s->vx = vx;
     s->vy = vy;
 }
-
 
 void updateShip(Ship* s) {
     const int speed = 4; // constant speed

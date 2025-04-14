@@ -3,7 +3,7 @@
 
 #include <SDL2/SDL_mixer.h>
 
-int initMusic(Mix_Music **ppMusic, char *filepath);
+Mix_Music* initMusic(char *filepath);
 void playMusic(Mix_Music *pMusic, int loops);
 void pauseMusic();
 void closeMusic(Mix_Music *pMusic);
