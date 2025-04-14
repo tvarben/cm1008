@@ -25,18 +25,20 @@ typedef struct {
 	Text *pStartText, *pGameName, *pExitText;
 } Game;
 
-int initiate(Game *pGame) 
-{
+int initiate(Game *pGame) {
+
     Mix_Init(MIX_INIT_WAVPACK);
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0) {
         printf("SDL Init Error: %s\n", SDL_GetError());
         return 0;
     }
+
     if (IMG_Init(IMG_INIT_PNG) == 0) {
         printf("SDL_image Init Error: %s\n", IMG_GetError());
         SDL_Quit();
         return 0;
     }
+
 	if(TTF_Init()!=0) {
         printf("Error: %s\n",TTF_GetError());
         SDL_Quit();
@@ -58,7 +60,7 @@ int initiate(Game *pGame)
     }
 
 	pGame->pFont = TTF_OpenFont("resources/arial.ttf", 100);
-    if(!pGame->pFont ) {
+    if (!pGame->pFont ) {
         printf("Error: %s\n",TTF_GetError());
         return 0;
     }
@@ -66,7 +68,7 @@ int initiate(Game *pGame)
 	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Start [1]",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
     pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
     pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit [2]",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
-    if(!pGame->pFont){
+    if (!pGame->pFont){
         printf("Error: %s\n",TTF_GetError());
         return 0;
     }
@@ -123,7 +125,9 @@ void run(Game *pGame) {
             SDL_RenderClear(pGame->pRenderer);
             drawShip(pGame->pShip);
             SDL_RenderPresent(pGame->pRenderer);
+
         } else if (pGame->state == START) {
+
             while (SDL_PollEvent(&event)) {
                 if (event.type == SDL_QUIT) {
                     isRunning = false;
@@ -133,7 +137,6 @@ void run(Game *pGame) {
                 } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2) {
                     isRunning = false;
                 }
-
             }
             playMusic(pGame->pMusic, -1);
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);  //Important to set the color before clearing the screen 
@@ -155,8 +158,8 @@ void closeGame(Game *pGame) {
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
 
-    if(pGame->pStartText) destroyText(pGame->pStartText);
-    if(pGame->pFont) TTF_CloseFont(pGame->pFont); 
+    if (pGame->pStartText) destroyText(pGame->pStartText);
+    if (pGame->pFont) TTF_CloseFont(pGame->pFont); 
 
     closeMusic(pGame->pMusic);
     IMG_Quit();
