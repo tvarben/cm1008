@@ -63,9 +63,9 @@ int initiate(Game *pGame)
         return 0;
     }
 
-	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Start",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
+	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Start [1]",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
     pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
-    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
+    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit [2]",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
     if(!pGame->pFont){
         printf("Error: %s\n",TTF_GetError());
         return 0;
@@ -97,9 +97,11 @@ void run(Game *pGame) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
-            } else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+            } else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_1) {
                 resetShip(pGame->pShip);
                 pGame->state = ONGOING;                 // set game state to ONGOING and exit the loop
+            } else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2) {
+                isRunning = false;
             } else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)) {
                 handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
             }
