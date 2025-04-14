@@ -106,8 +106,8 @@ void run(Game *pGame) {
             }
         }*/
 
-        if (pGame->state == ONGOING) 
-        {
+        if (pGame->state == ONGOING) {
+
             while (SDL_PollEvent(&event)) {
                 if (event.type == SDL_QUIT) {
                     isRunning = false;
@@ -115,6 +115,7 @@ void run(Game *pGame) {
                     handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
                 }
             }
+            
             if (Mix_PlayingMusic()) pauseMusic();
             updateShipVelocity(pGame->pShip);           // resolve velocity based on key states
             updateShip(pGame->pShip);
