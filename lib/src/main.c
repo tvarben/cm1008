@@ -10,7 +10,7 @@
 
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
-#define MUSIC_FILEPATH "./resources/music.wav"
+#define MUSIC_FILEPATH "../lib/resources/music.wav"
 
 enum GameState { START, ONGOING, GAME_OVER };
 typedef enum GameState GameState;

@@ -10,7 +10,7 @@
 
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
-#define MUSIC_FILEPATH "./resources/music.wav"
+#define MUSIC_FILEPATH "../lib/resources/music.wav"
 
 enum GameState { START, ONGOING, GAME_OVER };
 typedef enum GameState GameState;
@@ -57,7 +57,7 @@ int initiate(Game *pGame)
         return 0;
     }
 
-	pGame->pFont = TTF_OpenFont("arial.ttf", 100);
+	pGame->pFont = TTF_OpenFont("../lib/resources/arial.ttf", 100);
     if(!pGame->pFont ) {
         printf("Error: %s\n",TTF_GetError());
         return 0;
