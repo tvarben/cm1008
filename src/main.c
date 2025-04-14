@@ -78,6 +78,7 @@ int initiate(Game *pGame)
         return 0;
     }
 
+
     if (!initMusic(&pGame->pMusic, MUSIC_FILEPATH)) {
         printf("Error: %s\n",Mix_GetError());
         return 0;
@@ -92,7 +93,8 @@ void run(Game *pGame) {
     SDL_Event event;
 
     while (isRunning) {
-        while (SDL_PollEvent(&event)) {
+        
+        /*while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
             } else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_1) {
@@ -103,10 +105,17 @@ void run(Game *pGame) {
             } else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)) {
                 handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
             }
-        }
+        }*/
 
         if (pGame->state == ONGOING) 
         {
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_QUIT) {
+                    isRunning = false;
+                } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+                    handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
+                }
+            }
             if (Mix_PlayingMusic()) pauseMusic();
             updateShipVelocity(pGame->pShip);           // resolve velocity based on key states
             updateShip(pGame->pShip);
@@ -114,9 +123,18 @@ void run(Game *pGame) {
             SDL_RenderClear(pGame->pRenderer);
             drawShip(pGame->pShip);
             SDL_RenderPresent(pGame->pRenderer);
-        } 
-        else if (pGame->state == START) 
-        {
+        } else if (pGame->state == START) {
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_QUIT) {
+                    isRunning = false;
+                } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_1) {
+                    resetShip(pGame->pShip);
+                    pGame->state = ONGOING;                 // set game state to ONGOING and exit the loop
+                } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2) {
+                    isRunning = false;
+                }
+
+            }
             playMusic(pGame->pMusic, -1);
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);  //Important to set the color before clearing the screen 
             SDL_RenderClear(pGame->pRenderer);                         //Clear the first frame when the game starts, otherwise issues on mac/linux 
