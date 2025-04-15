@@ -125,7 +125,8 @@ void run(Game *pGame) {
             }
             playMusic(pGame->pMusic, -1);
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
-            SDL_RenderClear(pGame->pRenderer);//Clear the first frame when the game starts, otherwise issues on mac/linux 
+            SDL_RenderClear(pGame->pRenderer);  //Clear the first frame when the game starts,
+                                                //otherwise issues on mac/linux 
 
             drawText(pGame->pStartText);
             drawText(pGame->pExitText);
