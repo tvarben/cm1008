@@ -1,0 +1,1 @@
+Compile the game while you are in this directory,CM1008\server-client
