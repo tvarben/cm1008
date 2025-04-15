@@ -2,28 +2,24 @@
 #include <SDL2/SDL_ttf.h>
 #include "text.h"
 
-struct text
-{
+struct text {
     SDL_Rect rect;
     SDL_Texture *pTexture;
     SDL_Renderer *pRenderer;
 };
 
-Text *createText(SDL_Renderer *pRenderer, int r, int g, int b, TTF_Font *pFont, char *pString, int x, int y)
-{
+Text *createText(SDL_Renderer *pRenderer, int r, int g, int b, TTF_Font *pFont, char *pString, int x, int y) {
     Text *pText = malloc(sizeof(struct text));
     pText->pRenderer = pRenderer;
     SDL_Color color = { r, g, b };
     SDL_Surface *pSurface = TTF_RenderText_Solid(pFont, pString, color);
-    if(!pSurface)
-    {
+    if(!pSurface) {
         printf("Error: %s\n",SDL_GetError());
         return NULL;
     }
     pText->pTexture = SDL_CreateTextureFromSurface(pRenderer, pSurface);
     SDL_FreeSurface(pSurface);
-    if(!pText->pTexture)
-    {
+    if(!pText->pTexture) {
         printf("Error: %s\n",SDL_GetError());
         return NULL;
     }
@@ -34,14 +30,11 @@ Text *createText(SDL_Renderer *pRenderer, int r, int g, int b, TTF_Font *pFont, 
     return pText;
 }
 
-
-void drawText(Text *pText)
-{
+void drawText(Text *pText) {
     SDL_RenderCopy(pText->pRenderer,pText->pTexture, NULL, &pText->rect);
 }
 
-void destroyText(Text *pText)
-{
+void destroyText(Text *pText) {
     SDL_DestroyTexture(pText->pTexture);
     free(pText);
 }
