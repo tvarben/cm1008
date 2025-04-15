@@ -116,6 +116,19 @@ void resetShip(Ship* s) {
     s->keyRight = false;
 }
 
+
+float getShipX(Ship* s) { return s->x; }
+float getShipY(Ship* s) { return s->y; }
+int getShipVx(Ship* s) { return s->vx; }
+int getShipVy(Ship* s) { return s->vy; }
+void setShipPosition(Ship* s, float x, float y) {
+    s->x = x;
+    s->y = y;
+    s->rect.x = (int)x;
+    s->rect.y = (int)y;
+}
+
+
 void destroyShip(Ship* s) {
     if (s) {
         if (s->texture) SDL_DestroyTexture(s->texture);
