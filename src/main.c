@@ -93,19 +93,6 @@ void run(Game *pGame) {
 
     while (isRunning) {
         
-        /*while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                isRunning = false;
-            } else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_1) {
-                resetShip(pGame->pShip);
-                pGame->state = ONGOING;                 // set game state to ONGOING and exit the loop
-            } else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2) {
-                isRunning = false;
-            } else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)) {
-                handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
-            }
-        }*/
-
         if (pGame->state == ONGOING) {
 
             while (SDL_PollEvent(&event)) {
@@ -115,7 +102,7 @@ void run(Game *pGame) {
                     handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
                 }
             }
-            
+
             if (Mix_PlayingMusic()) pauseMusic();
             updateShipVelocity(pGame->pShip);           // resolve velocity based on key states
             updateShip(pGame->pShip);
@@ -131,22 +118,19 @@ void run(Game *pGame) {
                     isRunning = false;
                 } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_1) {
                     resetShip(pGame->pShip);
-                    pGame->state = ONGOING;                 // set game state to ONGOING and exit the loop
+                    pGame->state = ONGOING;
                 } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2) {
                     isRunning = false;
                 }
             }
             playMusic(pGame->pMusic, -1);
-            SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);  //Important to set the color before clearing the screen 
-            SDL_RenderClear(pGame->pRenderer);                         //Clear the first frame when the game starts, otherwise issues on mac/linux 
+            SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
+            SDL_RenderClear(pGame->pRenderer);//Clear the first frame when the game starts, otherwise issues on mac/linux 
 
             drawText(pGame->pStartText);
             drawText(pGame->pExitText);
             drawText(pGame->pGameName);
-            SDL_RenderPresent(pGame->pRenderer);    //Draw the start text
-            //SDL_SetRenderDrawColor(pGame->pRenderer, 10, 10, 40, 255);
-            //drawShip(pGame->pShip);
-            //SDL_RenderPresent(pGame->pRenderer);
+            SDL_RenderPresent(pGame->pRenderer);
         }
     }
 }
