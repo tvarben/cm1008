@@ -138,6 +138,16 @@ void run(Game *pGame) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
+            } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+                strcpy((char*)pGame->pPacket->data, "Hej pa dig!");
+                pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
+                SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+                
+                printf("Sent: %s\n", (char*)pGame->pPacket->data);
+                //pGame->pPacket->len = sizeof(ClientData);
+
+            } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2){
+                isRunning = false;
             }
         }
 
