@@ -25,6 +25,19 @@ typedef struct {
 	Text *pStartText, *pGameName, *pExitText;
 } Game;
 
+int initiate(Game *pGame);
+void run(Game *pGame);
+void closeGame(Game *pGame);
+
+int main(int argc, char** argv) {
+    Game game = {NULL, NULL, NULL, START};
+    if (!initiate(&game)) return 1;
+
+    run(&game);
+    closeGame(&game);
+    return 0;
+}
+
 int initiate(Game *pGame) {
 
     Mix_Init(MIX_INIT_WAVPACK);
@@ -92,24 +105,6 @@ void run(Game *pGame) {
     SDL_Event event;
 
     while (isRunning) {
-        int x, y;
-        SDL_GetMouseState(&x,&y);
-        SDL_Point mousePoint = {x,y};                                   //Kolla position för musen
-
-        const SDL_Rect *startRect = getTextRect(pGame->pStartText);     //Hämta position för rect för Start-texten
-        const SDL_Rect *exitRect = getTextRect(pGame->pExitText);       //Hämta position för rect för Exit-texten
-
-        if (SDL_PointInRect(&mousePoint, startRect)) {
-            setTextColor(pGame->pStartText, 255, 255, 100, pGame->pFont, "Start");
-        }
-        else {
-            setTextColor(pGame->pStartText, 238, 168, 65, pGame->pFont, "Start");
-        }
-        if (SDL_PointInRect(&mousePoint, exitRect)) {
-            setTextColor(pGame->pExitText, 255, 100, 100, pGame->pFont, "Exit");
-        } else {
-            setTextColor(pGame->pExitText, 238, 168, 65, pGame->pFont, "Exit");
-        }
         
         if (pGame->state == ONGOING) {
 
@@ -130,6 +125,24 @@ void run(Game *pGame) {
             SDL_RenderPresent(pGame->pRenderer);
 
         } else if (pGame->state == START) {
+            int x, y;
+            SDL_GetMouseState(&x,&y);
+            SDL_Point mousePoint = {x,y};                                   //Kolla position för musen
+    
+            const SDL_Rect *startRect = getTextRect(pGame->pStartText);     //Hämta position för rect för Start-texten
+            const SDL_Rect *exitRect = getTextRect(pGame->pExitText);       //Hämta position för rect för Exit-texten
+    
+            if (SDL_PointInRect(&mousePoint, startRect)) {
+                setTextColor(pGame->pStartText, 255, 255, 100, pGame->pFont, "Start");
+            }
+            else {
+                setTextColor(pGame->pStartText, 238, 168, 65, pGame->pFont, "Start");
+            }
+            if (SDL_PointInRect(&mousePoint, exitRect)) {
+                setTextColor(pGame->pExitText, 255, 100, 100, pGame->pFont, "Exit");
+            } else {
+                setTextColor(pGame->pExitText, 238, 168, 65, pGame->pFont, "Exit");
+            }
 
             while (SDL_PollEvent(&event)) {
                 if (event.type == SDL_QUIT) {
@@ -165,13 +178,4 @@ void closeGame(Game *pGame) {
     closeMusic(pGame->pMusic);
     IMG_Quit();
     SDL_Quit();
-}
-
-int main(int argc, char** argv) {
-    Game game = {NULL, NULL, NULL, START};
-    if (!initiate(&game)) return 1;
-
-    run(&game);
-    closeGame(&game);
-    return 0;
 }
