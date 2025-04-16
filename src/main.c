@@ -7,12 +7,12 @@
 #include <SDL2/SDL_mixer.h>
 #include "sound.h"
 #include "text.h"
-
+#include "stars.h"
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
 #define MUSIC_FILEPATH "./resources/music.wav"
 
-enum GameState { START, ONGOING, GAME_OVER };
+enum GameState { START, ONGOING, PAUSED, GAME_OVER };
 typedef enum GameState GameState;
 
 typedef struct {
@@ -22,7 +22,9 @@ typedef struct {
     GameState state;
     Mix_Music *pMusic;
 	TTF_Font *pFont;
-	Text *pStartText, *pGameName, *pExitText;
+	Text *pStartText, *pGameName, *pExitText, *pPauseText;
+    Stars *pStars;
+
 } Game;
 
 int initiate(Game *pGame) 
@@ -62,10 +64,12 @@ int initiate(Game *pGame)
         printf("Error: %s\n",TTF_GetError());
         return 0;
     }
-
+    pGame->pStars = createStars(WINDOW_WIDTH*WINDOW_HEIGHT/10000,WINDOW_WIDTH,WINDOW_HEIGHT);
 	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Start",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
     pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
     pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
+    pGame->pPauseText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"PAUSED",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
+
     if(!pGame->pFont){
         printf("Error: %s\n",TTF_GetError());
         return 0;
@@ -123,9 +127,21 @@ void run(Game *pGame) {
                 else if (SDL_PointInRect(&mousePoint, exitRect)) {
                     isRunning = false;
                 }
-            } else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)) {
-                handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
+                
+            } 
+            else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
+            {
+                pGame->state = PAUSED;
             }
+            else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP))
+            {
+                handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
+            }  
+            else if (pGame->state == PAUSED && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
+            {
+                pGame->state = ONGOING;
+
+            }  
         }
 
         if (pGame->state == ONGOING) 
@@ -133,26 +149,33 @@ void run(Game *pGame) {
             if (Mix_PlayingMusic()) Mix_HaltMusic();
             updateShipVelocity(pGame->pShip);           // resolve velocity based on key states
             updateShip(pGame->pShip);
-            SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
+            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);
             SDL_RenderClear(pGame->pRenderer);
+            drawStars(pGame->pStars,pGame->pRenderer);
             drawShip(pGame->pShip);
             SDL_RenderPresent(pGame->pRenderer);
         } 
         else if (pGame->state == START) 
         {
-            SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);  //Important to set the color before clearing the screen 
+            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);  //Important to set the color before clearing the screen 
             SDL_RenderClear(pGame->pRenderer);                         //Clear the first frame when the game starts, otherwise issues on mac/linux 
-
             drawText(pGame->pStartText);
             drawText(pGame->pExitText);
             drawText(pGame->pGameName);
             SDL_RenderPresent(pGame->pRenderer);    //Draw the start text
         }
+        else if (pGame->state == PAUSED)
+        {
+            drawText(pGame->pPauseText);
+            SDL_RenderPresent(pGame->pRenderer);
+
+        }   
     }
 }
 
 void closeGame(Game *pGame) {
     if (pGame->pShip) destroyShip(pGame->pShip);
+    if(pGame->pStars) destroyStars(pGame->pStars);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
 
