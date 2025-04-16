@@ -65,9 +65,9 @@ int initiate(Game *pGame) {
         return 0;
     }
 
-	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Start [1]",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
+	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Start",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
     pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
-    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit [2]",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
+    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
     if (!pGame->pFont){
         printf("Error: %s\n", TTF_GetError());
         return 0;
@@ -92,6 +92,24 @@ void run(Game *pGame) {
     SDL_Event event;
 
     while (isRunning) {
+        int x, y;
+        SDL_GetMouseState(&x,&y);
+        SDL_Point mousePoint = {x,y};                                   //Kolla position för musen
+
+        const SDL_Rect *startRect = getTextRect(pGame->pStartText);     //Hämta position för rect för Start-texten
+        const SDL_Rect *exitRect = getTextRect(pGame->pExitText);       //Hämta position för rect för Exit-texten
+
+        if (SDL_PointInRect(&mousePoint, startRect)) {
+            setTextColor(pGame->pStartText, 255, 255, 100, pGame->pFont, "Start");
+        }
+        else {
+            setTextColor(pGame->pStartText, 238, 168, 65, pGame->pFont, "Start");
+        }
+        if (SDL_PointInRect(&mousePoint, exitRect)) {
+            setTextColor(pGame->pExitText, 255, 100, 100, pGame->pFont, "Exit");
+        } else {
+            setTextColor(pGame->pExitText, 238, 168, 65, pGame->pFont, "Exit");
+        }
         
         if (pGame->state == ONGOING) {
 
@@ -116,10 +134,10 @@ void run(Game *pGame) {
             while (SDL_PollEvent(&event)) {
                 if (event.type == SDL_QUIT) {
                     isRunning = false;
-                } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_1) {
+                } else if (SDL_PointInRect(&mousePoint, startRect) && event.type == SDL_MOUSEBUTTONDOWN) {
                     resetShip(pGame->pShip);
                     pGame->state = ONGOING;
-                } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2) {
+                } else if (SDL_PointInRect(&mousePoint, exitRect) && event.type == SDL_MOUSEBUTTONDOWN) {
                     isRunning = false;
                 }
             }
