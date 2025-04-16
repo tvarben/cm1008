@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <stdbool.h>
+#include <time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <stdbool.h>
 #include <SDL2/SDL_ttf.h>
-#include "ship.h"
 #include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_net.h>
+#include "ship.h"
 #include "sound.h"
 #include "text.h"
 
@@ -23,10 +25,28 @@ typedef struct {
     Mix_Music *pMusic;
 	TTF_Font *pFont;
 	Text *pStartText, *pGameName, *pExitText;
+
+    UDPsocket pSocket;
+    IPaddress serverAddress;
+    UDPpacket *pPacket;
 } Game;
 
-int initiate(Game *pGame) 
-{
+int initiate(Game *pGame);
+void run(Game *pGame);
+void closeGame(Game *pGame);
+
+int main(int argc, char** argv) {
+    Game game = {0};
+    if (!initiate(&game)) return 1;
+
+    run(&game);
+    closeGame(&game);
+    return 0;
+}
+
+
+int initiate(Game *pGame) {
+    srand(time(NULL));
     Mix_Init(MIX_INIT_WAVPACK);
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0) {
         printf("SDL Init Error: %s\n", SDL_GetError());
@@ -39,6 +59,12 @@ int initiate(Game *pGame)
     }
 	if(TTF_Init()!=0) {
         printf("Error: %s\n",TTF_GetError());
+        SDL_Quit();
+        return 0;
+    }
+    if (SDLNet_Init()) {
+        printf("SDLNet_Init: %s\n", SDLNet_GetError());
+        TTF_Quit();
         SDL_Quit();
         return 0;
     }
@@ -69,8 +95,22 @@ int initiate(Game *pGame)
     if(!pGame->pFont){
         printf("Error: %s\n",TTF_GetError());
         return 0;
+    } 
+    if (!(pGame->pSocket = SDLNet_UDP_Open(0))) {
+        printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
+        return 0;
+    }
+    if (SDLNet_ResolveHost(&(pGame->serverAddress), "127.0.0.1", 2000)) {
+        printf("SDLNet_ResolveHost(127.0.0.1 2000): %s\n", SDLNet_GetError());
+        return 0;
+    }
+    if (!(pGame->pPacket = SDLNet_AllocPacket(512))) {
+        printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
+        return 0;
     }
 
+    pGame->pPacket->address.host = pGame->serverAddress.host;
+    pGame->pPacket->address.port = pGame->serverAddress.port;
 
     pGame->pShip = createShip(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     if (!pGame->pShip) {
@@ -94,44 +134,34 @@ void run(Game *pGame) {
     playMusic(pGame->pMusic, -1);
 
     while (isRunning) {
+        
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
-            } else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_1) {
-                resetShip(pGame->pShip);
-                pGame->state = ONGOING;                 // set game state to ONGOING and exit the loop
-            } else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2) {
+            } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+                strcpy((char*)pGame->pPacket->data, "Hej pa dig!");
+                pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
+                SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+                
+                printf("Sent: %s\n", (char*)pGame->pPacket->data);
+                //pGame->pPacket->len = sizeof(ClientData);
+
+            } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2){
                 isRunning = false;
-            } else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)) {
-                handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
             }
         }
 
-        if (pGame->state == ONGOING) 
-        {
-            if (Mix_PlayingMusic()) Mix_HaltMusic();
-            updateShipVelocity(pGame->pShip);           // resolve velocity based on key states
-            updateShip(pGame->pShip);
-            SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
-            SDL_RenderClear(pGame->pRenderer);
-            drawShip(pGame->pShip);
-            SDL_RenderPresent(pGame->pRenderer);
-        } 
-        else if (pGame->state == START) 
-        {
-            SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);  //Important to set the color before clearing the screen 
-            SDL_RenderClear(pGame->pRenderer);                         //Clear the first frame when the game starts, otherwise issues on mac/linux 
-
-            drawText(pGame->pStartText);
-            drawText(pGame->pExitText);
-            drawText(pGame->pGameName);
-            SDL_RenderPresent(pGame->pRenderer);    //Draw the start text
-            //SDL_SetRenderDrawColor(pGame->pRenderer, 10, 10, 40, 255);
-            //drawShip(pGame->pShip);
-            //SDL_RenderPresent(pGame->pRenderer);
-        }
+        SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
+        SDL_RenderClear(pGame->pRenderer);   
+        
+        drawText(pGame->pStartText);
+        drawText(pGame->pExitText);
+        drawText(pGame->pGameName);
+        SDL_RenderPresent(pGame->pRenderer);
+        
     }
 }
+
 
 void closeGame(Game *pGame) {
     if (pGame->pShip) destroyShip(pGame->pShip);
@@ -142,15 +172,8 @@ void closeGame(Game *pGame) {
     if(pGame->pFont) TTF_CloseFont(pGame->pFont); 
 
     closeMusic(pGame->pMusic);
+
+    SDLNet_Quit();
     IMG_Quit();
     SDL_Quit();
-}
-
-int main(int argc, char** argv) {
-    Game game = {NULL, NULL, NULL, START};
-    if (!initiate(&game)) return 1;
-
-    run(&game);
-    closeGame(&game);
-    return 0;
 }
