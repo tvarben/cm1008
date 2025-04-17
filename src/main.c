@@ -8,6 +8,8 @@
 #include "sound.h"
 #include "text.h"
 #include "stars.h"
+#include "enemies.h"
+#define MAX_ENEMIES 3
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
 #define MUSIC_FILEPATH "./resources/music.wav"
@@ -22,10 +24,22 @@ typedef struct {
     GameState state;
     Mix_Music *pMusic;
 	TTF_Font *pFont;
-	Text *pStartText, *pGameName, *pExitText, *pPauseText;
+	Text *pStartText, *pGameName, *pExitText, *pPauseText, *pScoreText;
     Stars *pStars;
-
+    EnemyImage *pEnemyImage;
+    Enemy *pEnemies[MAX_ENEMIES];
+    int nrOfEnemies;
+    int timeForNextEnemy;
+    int startTime;//in ms
+    int gameTime;//in s
+    Uint64 pauseStartTime;
+    Uint64 pausedTime;
 } Game;
+
+int getTime(Game *pGame);
+void updateGameTime(Game *pGame);
+void updateNrOfEnemies(Game *pGame);
+void resetEnemy(Game *pGame);
 
 int initiate(Game *pGame) 
 {
@@ -45,9 +59,7 @@ int initiate(Game *pGame)
         return 0;
     }
 
-    pGame->pWindow = SDL_CreateWindow("",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+    pGame->pWindow = SDL_CreateWindow("",SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     if (!pGame->pWindow) {
         printf("Window Error: %s\n", SDL_GetError());
         return 0;
@@ -69,6 +81,7 @@ int initiate(Game *pGame)
     pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
     pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
     pGame->pPauseText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"PAUSED",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
+    pGame->pEnemyImage = initiateEnemy(pGame->pRenderer);
 
     if(!pGame->pFont){
         printf("Error: %s\n",TTF_GetError());
@@ -86,7 +99,12 @@ int initiate(Game *pGame)
         printf("Error: %s\n",Mix_GetError());
         return 0;
     }
-
+    pGame->nrOfEnemies = 0;
+    resetEnemy(pGame);
+    pGame->pausedTime = 0;
+    pGame->startTime = SDL_GetTicks64();
+    pGame->gameTime = -1;
+    pGame->timeForNextEnemy = 2;
     pGame->state = START;
     return 1;
 }
@@ -132,6 +150,8 @@ void run(Game *pGame) {
             else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
             {
                 pGame->state = PAUSED;
+                pGame->pauseStartTime = SDL_GetTicks64();
+
             }
             else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP))
             {
@@ -139,24 +159,31 @@ void run(Game *pGame) {
             }  
             else if (pGame->state == PAUSED && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
             {
+                pGame->pausedTime += SDL_GetTicks64() - pGame->pauseStartTime;
                 pGame->state = ONGOING;
-
             }  
         }
 
         if (pGame->state == ONGOING) 
         {
             if (Mix_PlayingMusic()) Mix_HaltMusic();
+            updateGameTime(pGame);
+            updateNrOfEnemies(pGame);
             updateShipVelocity(pGame->pShip);           // resolve velocity based on key states
             updateShip(pGame->pShip);
+            for(int i=0;i<pGame->nrOfEnemies;i++) updateEnemy(pGame->pEnemies[i]);
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);
             SDL_RenderClear(pGame->pRenderer);
             drawStars(pGame->pStars,pGame->pRenderer);
             drawShip(pGame->pShip);
+            for(int i=0;i<pGame->nrOfEnemies;i++) drawEnemy(pGame->pEnemies[i]);
+            if(pGame->pScoreText) drawText(pGame->pScoreText);
             SDL_RenderPresent(pGame->pRenderer);
+
         } 
         else if (pGame->state == START) 
         {
+            
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);  //Important to set the color before clearing the screen 
             SDL_RenderClear(pGame->pRenderer);                         //Clear the first frame when the game starts, otherwise issues on mac/linux 
             drawText(pGame->pStartText);
@@ -178,14 +205,48 @@ void closeGame(Game *pGame) {
     if(pGame->pStars) destroyStars(pGame->pStars);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
-
     if(pGame->pStartText) destroyText(pGame->pStartText);
     if(pGame->pFont) TTF_CloseFont(pGame->pFont); 
-
+    for(int i=0;i<pGame->nrOfEnemies;i++) destroyEnemy(pGame->pEnemies[i]);
+    if(pGame->pEnemyImage) destroyEnemyImage(pGame->pEnemyImage);
     closeMusic(pGame->pMusic);
     IMG_Quit();
     SDL_Quit();
 }
+
+
+int getTime(Game *pGame){
+    return (SDL_GetTicks64() - pGame->startTime - pGame->pausedTime) / 1000;
+}
+
+void updateGameTime(Game *pGame){
+    if(getTime(pGame)>pGame->gameTime && pGame->state == ONGOING){
+        (pGame->gameTime)++;
+        if(pGame->pScoreText) destroyText(pGame->pScoreText);
+        static char scoreString[30];
+        sprintf(scoreString,"%d",getTime(pGame));
+        if(pGame->pFont) pGame->pScoreText = createText(pGame->pRenderer,238,168,65,pGame->pFont,scoreString,WINDOW_WIDTH-50,50);    
+    }
+}
+
+
+void updateNrOfEnemies(Game *pGame){
+    if(getTime(pGame)>pGame->timeForNextEnemy && pGame->nrOfEnemies<MAX_ENEMIES){
+        (pGame->timeForNextEnemy)+=1;//seconds till next enemy
+        pGame->pEnemies[pGame->nrOfEnemies] = createEnemy(pGame->pEnemyImage,WINDOW_WIDTH,WINDOW_HEIGHT);
+        pGame->nrOfEnemies++; 
+    }    
+}
+
+void resetEnemy(Game *pGame){
+    for(int i=0;i<pGame->nrOfEnemies;i++) destroyEnemy(pGame->pEnemies[i]);
+    pGame->nrOfEnemies = 3;
+    for(int i=0;i<pGame->nrOfEnemies;i++){
+        pGame->pEnemies[i] = createEnemy(pGame->pEnemyImage,WINDOW_WIDTH,WINDOW_HEIGHT);
+    }
+}
+
+
 
 int main(int argc, char** argv) {
     Game game = {NULL, NULL, NULL, START};

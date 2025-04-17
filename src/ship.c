@@ -12,8 +12,8 @@ struct Ship {
     SDL_Texture* texture;
     SDL_Rect rect;
     bool keyLeft, keyRight, keyUp, keyDown;
+    float rotationAngle;
 };
-
 Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int windowHeight) {
     Ship* s = malloc(sizeof(Ship));
     if (!s) return NULL;
@@ -23,8 +23,9 @@ Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int wind
     s->windowWidth = windowWidth;
     s->windowHeight = windowHeight;
     s->renderer = renderer;
+    s->rotationAngle = 0.0f;  // Initialize rotation angle to 0
 
-    SDL_Surface* surface = IMG_Load("resources/Ship.png");
+    SDL_Surface* surface = IMG_Load("resources/player.png");
     if (!surface) {
         printf("Error loading Ship.png: %s\n", IMG_GetError());
         free(s);
@@ -51,6 +52,7 @@ Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int wind
 
     return s;
 }
+
 void handleShipEvent(Ship* s, SDL_Event* event) {
     bool down = event->type == SDL_KEYDOWN;
 
@@ -83,7 +85,6 @@ void updateShipVelocity(Ship* s) {
     s->vy = vy;
 }
 
-
 void updateShip(Ship* s) {
     const int speed = 4; // constant speed
     s->x += s->vx * speed;
@@ -95,12 +96,20 @@ void updateShip(Ship* s) {
     if (s->x > s->windowWidth - s->rect.w) s->x = s->windowWidth - s->rect.w;
     if (s->y > s->windowHeight - s->rect.h) s->y = s->windowHeight - s->rect.h;
 
+    // Update rotation angle based on movement direction
+    if (s->vx < 0) {
+        s->rotationAngle = 180.0f;  // Faces left when moving left
+    } else if (s->vx > 0) {
+        s->rotationAngle = 0.0f;  // Faces right when moving right
+    }
+
     s->rect.x = (int)s->x;
     s->rect.y = (int)s->y;
 }
 
+
 void drawShip(Ship* s) {
-    SDL_RenderCopy(s->renderer, s->texture, NULL, &s->rect);
+    SDL_RenderCopyEx(s->renderer, s->texture, NULL, &s->rect, s->rotationAngle, NULL, SDL_FLIP_NONE);
 }
 
 void resetShip(Ship* s) {
