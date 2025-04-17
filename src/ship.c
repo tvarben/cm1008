@@ -13,6 +13,7 @@ struct Ship {
     SDL_Rect rect;
     bool keyLeft, keyRight, keyUp, keyDown;
     float rotationAngle;
+    bool facingLeft;
 };
 Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int windowHeight) {
     Ship* s = malloc(sizeof(Ship));
@@ -75,8 +76,13 @@ void setShipVelocity(Ship* s, int vx, int vy) {
 void updateShipVelocity(Ship* s) {
     int vx = 0, vy = 0;
 
-    if (s->keyLeft && !s->keyRight) vx = -1;
-    else if (s->keyRight && !s->keyLeft) vx = 1;
+    if (s->keyLeft && !s->keyRight) {
+        vx = -1;
+        s->facingLeft = true;
+    } else if (s->keyRight && !s->keyLeft) {
+        vx = 1;
+        s->facingLeft = false;
+    }
 
     if (s->keyUp && !s->keyDown) vy = -1;
     else if (s->keyDown && !s->keyUp) vy = 1;
@@ -109,9 +115,9 @@ void updateShip(Ship* s) {
 
 
 void drawShip(Ship* s) {
-    SDL_RenderCopyEx(s->renderer, s->texture, NULL, &s->rect, s->rotationAngle, NULL, SDL_FLIP_NONE);
+    SDL_RendererFlip flip = s->facingLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+    SDL_RenderCopyEx(s->renderer, s->texture, NULL, &s->rect, 0, NULL, flip);
 }
-
 void resetShip(Ship* s) {
     s->x = s->windowWidth / 2.0f;
     s->y = s->windowHeight / 2.0f;
