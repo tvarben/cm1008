@@ -101,9 +101,6 @@ int initiate(Game *pGame)
     }
     pGame->nrOfEnemies = 0;
     resetEnemy(pGame);
-    pGame->pausedTime = 0;
-    pGame->startTime = SDL_GetTicks64();
-    pGame->gameTime = -1;
     pGame->timeForNextEnemy = 2;
     pGame->state = START;
     return 1;
@@ -141,6 +138,10 @@ void run(Game *pGame) {
                 if (SDL_PointInRect(&mousePoint, startRect)) {
                     resetShip(pGame->pShip);
                     pGame->state = ONGOING;
+                    pGame->pausedTime = 0;
+                    pGame->startTime = SDL_GetTicks64();
+                    pGame->gameTime = -1;
+                
                 } 
                 else if (SDL_PointInRect(&mousePoint, exitRect)) {
                     isRunning = false;
