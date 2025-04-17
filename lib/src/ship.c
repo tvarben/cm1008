@@ -32,7 +32,7 @@ Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int wind
     }
 
     s->texture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
+    SDL_FreeSurface(surface); // Free the surface after creating the texture to be readyu for the next picture
 
     if (!s->texture) {
         printf("Error creating texture: %s\n", SDL_GetError());

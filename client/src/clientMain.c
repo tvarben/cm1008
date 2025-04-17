@@ -10,8 +10,8 @@
 #include "sound.h"
 #include "text.h"
 
-#define WINDOW_WIDTH 100
-#define WINDOW_HEIGHT 100
+#define WINDOW_WIDTH 200
+#define WINDOW_HEIGHT 200
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
 enum GameState { START, ONGOING, GAME_OVER };

@@ -130,7 +130,9 @@ void run(Game *pGame) {
             //drawShip(pGame->pShip);
             //SDL_RenderPresent(pGame->pRenderer);
         }
+        sdl_Delay(8); // Delay to prevent high CPU usage
     }
+    
 }
 
 void closeGame(Game *pGame) {

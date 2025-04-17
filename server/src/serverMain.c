@@ -10,8 +10,8 @@
 #include "sound.h"
 #include "text.h"
 
-#define WINDOW_WIDTH 1160
-#define WINDOW_HEIGHT 700
+#define WINDOW_WIDTH 200
+#define WINDOW_HEIGHT 200
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 #define MAX_PLAYERS 2
 
@@ -128,8 +128,20 @@ int initiate(Game *pGame) {
 void run(Game *pGame) {
     bool isRunning = true;
     printf("Server is listening on port 2000...\n");
+    SDL_Event event;
 
     while (isRunning) {
+
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                isRunning = false;
+            }
+        }
+        SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
+        SDL_RenderClear(pGame->pRenderer);   
+        
+        drawText(pGame->pStartText);
+        SDL_RenderPresent(pGame->pRenderer);
         
         if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
             printf("Server recieved a command from %x:%d: %s\n",
@@ -140,7 +152,6 @@ void run(Game *pGame) {
             strcpy((char*)pGame->pPacket->data, "Har far du svar fran server.\n");
             pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
             SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
-
             
             //strcpy((char*) pGame->pPacket->data, "Message recieved!!!!!!!!!!!!!!!!");
             //pGame->pPacket->len = strlen((char*)pGame->pPacket->data) +1;

@@ -170,7 +170,8 @@ void run(Game *pGame){
                 drawText(pGame->pStartText);
                 SDL_RenderPresent(pGame->pRenderer);
                 if(SDL_PollEvent(&event) && event.type==SDL_QUIT) close_requested = 1;
-                if(SDLNet_UDP_Recv(pGame->pSocket,pGame->pPacket)==1){
+                if(SDLNet_UDP_Recv(pGame->pSocket,pGame->pPacket)==1)
+                {
                     add(pGame->pPacket->address,pGame->clients,&(pGame->nrOfClients));
                     if(pGame->nrOfClients==MAX_ROCKETS) setUpGame(pGame);
                 }
@@ -201,7 +202,7 @@ void sendGameData(Game *pGame){
 }
 
 void add(IPaddress address, IPaddress clients[],int *pNrOfClients){
-	for(int i=0;i<*pNrOfClients;i++) if(address.host==clients[i].host &&address.port==clients[i].port) return;
+	for(int i=0;i<*pNrOfClients;i++) if(address.host==clients[i].host && address.port==clients[i].port) return;
 	clients[*pNrOfClients] = address;
 	(*pNrOfClients)++;
 }
