@@ -10,8 +10,8 @@
 #include "sound.h"
 #include "text.h"
 
-#define WINDOW_WIDTH 1160
-#define WINDOW_HEIGHT 700
+#define WINDOW_WIDTH 100
+#define WINDOW_HEIGHT 100
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
 enum GameState { START, ONGOING, GAME_OVER };
@@ -131,7 +131,7 @@ void run(Game *pGame) {
     bool isRunning = true;
     SDL_Event event;
 
-    playMusic(pGame->pMusic, -1);
+    //playMusic(pGame->pMusic, -1);
 
     while (isRunning) {
         
@@ -142,12 +142,22 @@ void run(Game *pGame) {
                 strcpy((char*)pGame->pPacket->data, "Hej pa dig!");
                 pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
                 SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+
+                if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
+                    printf("Server recieved a command from %x:%d: %s\n",
+                                                pGame->pPacket->address.host, 
+                                                pGame->pPacket->address.port,
+                                                (char*)pGame->pPacket->data);
+                }
+                //printf("Sent: %s\n", (char*)pGame->pPacket->data);
                 
-                printf("Sent: %s\n", (char*)pGame->pPacket->data);
                 //pGame->pPacket->len = sizeof(ClientData);
 
             } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2){
                 isRunning = false;
+            }
+            if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
+                printf("Received from server: %s\n", (char*)pGame->pPacket->data);
             }
         }
 

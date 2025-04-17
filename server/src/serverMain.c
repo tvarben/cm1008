@@ -13,6 +13,8 @@
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
+#define MAX_PLAYERS 2
+
 
 enum GameState { START, ONGOING, GAME_OVER };
 typedef enum GameState GameState;
@@ -96,12 +98,8 @@ int initiate(Game *pGame) {
         printf("Error: %s\n",TTF_GetError());
         return 0;
     } 
-    if (!(pGame->pSocket = SDLNet_UDP_Open(0))) {
+    if (!(pGame->pSocket = SDLNet_UDP_Open(2000))) {
         printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
-        return 0;
-    }
-    if (SDLNet_ResolveHost(&(pGame->serverAddress), "127.0.0.1", 2000)) {
-        printf("SDLNet_ResolveHost(127.0.0.1 2000): %s\n", SDLNet_GetError());
         return 0;
     }
     if (!(pGame->pPacket = SDLNet_AllocPacket(512))) {
@@ -129,36 +127,30 @@ int initiate(Game *pGame) {
 
 void run(Game *pGame) {
     bool isRunning = true;
-    SDL_Event event;
-
-    playMusic(pGame->pMusic, -1);
+    printf("Server is listening on port 2000...\n");
 
     while (isRunning) {
         
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                isRunning = false;
-            } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-                strcpy((char*)pGame->pPacket->data, "Hej pa dig!");
-                pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
-                SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
-                
-                printf("Sent: %s\n", (char*)pGame->pPacket->data);
-                //pGame->pPacket->len = sizeof(ClientData);
+        if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
+            printf("Server recieved a command from %x:%d: %s\n",
+                                        pGame->pPacket->address.host, 
+                                        pGame->pPacket->address.port, 
+                                        (char*)pGame->pPacket->data);
+            
+            strcpy((char*)pGame->pPacket->data, "Har far du svar fran server.\n");
+            pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
+            SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
 
-            } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2){
-                isRunning = false;
-            }
+            
+            //strcpy((char*) pGame->pPacket->data, "Message recieved!!!!!!!!!!!!!!!!");
+            //pGame->pPacket->len = strlen((char*)pGame->pPacket->data) +1;
+        
+            //SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+            //printf("Response sent.\n");
         }
 
-        SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
-        SDL_RenderClear(pGame->pRenderer);   
-        
-        drawText(pGame->pStartText);
-        drawText(pGame->pExitText);
-        drawText(pGame->pGameName);
-        SDL_RenderPresent(pGame->pRenderer);
-        
+
+        SDL_Delay(8);
     }
 }
 
@@ -168,10 +160,12 @@ void closeGame(Game *pGame) {
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
 
-    if(pGame->pStartText) destroyText(pGame->pStartText);
-    if(pGame->pFont) TTF_CloseFont(pGame->pFont); 
+    if (pGame->pStartText) destroyText(pGame->pStartText);
+    if (pGame->pFont) TTF_CloseFont(pGame->pFont); 
 
-    closeMusic(pGame->pMusic);
+    if (pGame->pMusic) closeMusic(pGame->pMusic);
+    if (pGame->pSocket) SDLNet_UDP_Close(pGame->pSocket);
+    if (pGame->pPacket) SDLNet_FreePacket(pGame->pPacket);
 
     SDLNet_Quit();
     IMG_Quit();
