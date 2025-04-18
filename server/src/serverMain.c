@@ -149,7 +149,11 @@ void run(Game *pGame) {
                                         pGame->pPacket->address.port, 
                                         (char*)pGame->pPacket->data);
             
-            strcpy((char*)pGame->pPacket->data, "Har far du svar fran server.\n");
+            Uint32 ip = SDL_SwapBE32(pGame->pPacket->address.host);
+            Uint16 port = SDL_SwapBE16(pGame->pPacket->address.port);
+            sprintf((char*)pGame->pPacket->data,
+            "CONNECTED: Your IP:Port adress = 127.0.0.1:%d.\n",
+            port);
             pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
             SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
             
