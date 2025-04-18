@@ -2,6 +2,8 @@
 #include "bullet.c"
 
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_keycode.h>
+#include <SDL2/SDL_scancode.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +14,7 @@ struct Cannon {
   SDL_Renderer *renderer;
   SDL_Texture *texture;
   SDL_Rect rect;
-  bool keyQ, keyE; // Control cannon to left or right
+  bool spacebar;
 };
 
 Cannon *createCannon(int x, int y, SDL_Renderer *renderer, int windowWidth,
@@ -71,6 +73,19 @@ void updateCannon(Cannon *pCannon, Ship *pShip) {
   /*pCannon->x = getShipX(pShip);*/
   pCannon->rect.y = getShipY(pShip) + cannonLocationY;
   pCannon->rect.x = getShipX(pShip) + cannonLocationX;
-  printf("Y coordinate: %d\n", pCannon->rect.y);
-  printf("X coordinate: %d\n", pCannon->rect.x);
+  /*printf("Y coordinate: %d\n", pCannon->rect.y);*/
+  /*printf("X coordinate: %d\n", pCannon->rect.x);*/
 }
+
+void handleCannonEvent(Cannon *c, SDL_Event *event) {
+  bool down = event->type == SDL_KEYDOWN;
+  switch (event->key.keysym.scancode) {
+  case SDL_SCANCODE_SPACE:
+    c->spacebar = down;
+    printf("spacebar click registered\n");
+    break;
+  default:
+    break;
+  }
+}
+void resetCannon(Cannon *c) { c->spacebar = false; }

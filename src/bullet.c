@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 struct bullet {
   float x, y, vx, vy;
   int time, window_width, window_height;

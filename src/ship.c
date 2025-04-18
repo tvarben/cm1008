@@ -53,19 +53,14 @@ Ship *createShip(int x, int y, SDL_Renderer *renderer, int windowWidth,
 
   return s;
 }
-<<<<<<< Updated upstream
-void handleShipEvent(Ship* s, SDL_Event* event) {
-    bool down = event->type == SDL_KEYDOWN;
-=======
-
 void handleShipEvent(Ship *s, SDL_Event *event) {
   bool down = event->type == SDL_KEYDOWN;
->>>>>>> Stashed changes
 
   switch (event->key.keysym.scancode) {
   case SDL_SCANCODE_W:
   case SDL_SCANCODE_UP:
     s->keyUp = down;
+    /*printf("W button registered\n");*/
     break;
   case SDL_SCANCODE_S:
   case SDL_SCANCODE_DOWN:
@@ -83,15 +78,6 @@ void handleShipEvent(Ship *s, SDL_Event *event) {
     break;
   }
 }
-<<<<<<< Updated upstream
-void setShipVelocity(Ship* s, int vx, int vy) {
-    s->vx = vx;
-    s->vy = vy;
-}
-void updateShipVelocity(Ship* s) {
-    int vx = 0, vy = 0;
-=======
-
 void setShipVelocity(Ship *s, int vx, int vy) {
   s->vx = vx;
   s->vy = vy;
@@ -99,7 +85,6 @@ void setShipVelocity(Ship *s, int vx, int vy) {
 
 void updateShipVelocity(Ship *s) {
   int vx = 0, vy = 0;
->>>>>>> Stashed changes
 
   if (s->keyLeft && !s->keyRight)
     vx = -1;
@@ -115,19 +100,10 @@ void updateShipVelocity(Ship *s) {
   s->vy = vy;
 }
 
-<<<<<<< Updated upstream
-
-void updateShip(Ship* s) {
-    const int speed = 4; // constant speed
-    s->x += s->vx * speed;
-    s->y += s->vy * speed;
-=======
 void updateShip(Ship *s) {
   const int speed = 4; // constant speed
   s->x += s->vx * speed;
   s->y += s->vy * speed;
->>>>>>> Stashed changes
-
   // Stay within bounds
   if (s->x < 0)
     s->x = 0;

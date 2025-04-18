@@ -11,4 +11,6 @@ Cannon *createCannon(int x, int y, SDL_Renderer *renderer, int windowWidth,
 void drawCannon(Cannon *s);
 void destroyCannon(Cannon *s);
 void updateCannon(Cannon *pCannon, Ship *pShip);
+void handleCannonEvent(Cannon *c, SDL_Event *event);
+void resetCannon(Cannon *c);
 #endif
