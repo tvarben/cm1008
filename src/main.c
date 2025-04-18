@@ -1,3 +1,4 @@
+#include "../include/bullet.h"
 #include "../include/cannon.h"
 #include "../include/ship.h"
 #include "../include/sound.h"
@@ -81,8 +82,7 @@ int initiate(Game *pGame) {
 
   pGame->pShip = createShip(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2,
                             pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
-  pGame->pCannon = createCannon(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2,
-                                pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+  pGame->pCannon = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
 
   if (!pGame->pCannon) {
     printf("Cannon creation failed.\n");
@@ -107,10 +107,16 @@ int initiate(Game *pGame) {
 void run(Game *pGame) {
   bool isRunning = true;
   SDL_Event event;
-
   playMusic(pGame->pMusic, -1);
 
+  Uint32 last_time = SDL_GetTicks(); // timer for rendering bullets
+  render_projectiles(pGame->pRenderer);
+
   while (isRunning) {
+    Uint32 current_time = SDL_GetTicks(); // needed for shooting
+    float delta_time = (current_time - last_time) /
+                       1000.0f; // calculates time passed since last frame
+    last_time = current_time;   // needed for shooting
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
         isRunning = false;
@@ -124,21 +130,25 @@ void run(Game *pGame) {
         isRunning = false;
       } else if (pGame->state == ONGOING &&
                  (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)) {
-        handleCannonEvent(pGame->pCannon, &event);
+        handleCannonEvent(pGame->pCannon, &event); // what makes cannon shoot
         handleShipEvent(pGame->pShip, &event);
       }
     }
 
     if (pGame->state == ONGOING) {
+      update_projectiles(
+          delta_time); // update based on time since last frame passed
       if (Mix_PlayingMusic())
         Mix_HaltMusic();
       updateShipVelocity(pGame->pShip);
       updateShip(pGame->pShip);
       updateCannon(pGame->pCannon, pGame->pShip);
+
       SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
       SDL_RenderClear(pGame->pRenderer);
       drawShip(pGame->pShip);
       drawCannon(pGame->pCannon);
+      render_projectiles(pGame->pRenderer); // test
       SDL_RenderPresent(pGame->pRenderer);
     } else if (pGame->state == START) {
       SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);

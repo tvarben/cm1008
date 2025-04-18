@@ -60,7 +60,6 @@ void handleShipEvent(Ship *s, SDL_Event *event) {
   case SDL_SCANCODE_W:
   case SDL_SCANCODE_UP:
     s->keyUp = down;
-    /*printf("W button registered\n");*/
     break;
   case SDL_SCANCODE_S:
   case SDL_SCANCODE_DOWN:

@@ -1,5 +1,5 @@
 #include "../include/cannon.h"
-#include "bullet.c"
+#include "../include/bullet.h"
 
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_keycode.h>
@@ -9,15 +9,16 @@
 #include <stdlib.h>
 
 struct Cannon {
-  /*float x, y;*/
+  int dy, dx;
   int windowWidth, windowHeight;
   SDL_Renderer *renderer;
   SDL_Texture *texture;
   SDL_Rect rect;
-  bool spacebar;
+  bool spacebar, moveLeftQ, moveRightE,
+      moveDownN; // keys decide direction of bullet
 };
 
-Cannon *createCannon(int x, int y, SDL_Renderer *renderer, int windowWidth,
+Cannon *createCannon(SDL_Renderer *renderer, int windowWidth,
                      int windowHeight) {
   Cannon *c = malloc(sizeof(Cannon));
   if (!c)
@@ -26,7 +27,8 @@ Cannon *createCannon(int x, int y, SDL_Renderer *renderer, int windowWidth,
   c->windowWidth = windowWidth;
   c->windowHeight = windowHeight;
   c->renderer = renderer;
-
+  c->dy = 100; // direction cannon shoots when press space at start of the game
+  c->dx = 0;
   SDL_Surface *surface = IMG_Load("resources/ship_cannon.png");
   if (!surface) {
     printf("Error loading Cannon.png: %s\n", IMG_GetError());
@@ -65,27 +67,46 @@ void destroyCannon(Cannon *c) {
 }
 
 void updateCannon(Cannon *pCannon, Ship *pShip) {
-  double cannonLocationX = 5;
   // offset from where ship spawns to adjust where we
   // want to place cannon. change later to adjust for sprite sheet
+  double cannonLocationX = 5;
   double cannonLocationY = 15;
   /*pCannon->y = getShipY(pShip); //*/
   /*pCannon->x = getShipX(pShip);*/
   pCannon->rect.y = getShipY(pShip) + cannonLocationY;
   pCannon->rect.x = getShipX(pShip) + cannonLocationX;
-  /*printf("Y coordinate: %d\n", pCannon->rect.y);*/
-  /*printf("X coordinate: %d\n", pCannon->rect.x);*/
+  printf("Y coordinate: %d\n", pCannon->rect.y);
+  printf("X coordinate: %d\n", pCannon->rect.x);
 }
 
 void handleCannonEvent(Cannon *c, SDL_Event *event) {
-  bool down = event->type == SDL_KEYDOWN;
   switch (event->key.keysym.scancode) {
   case SDL_SCANCODE_SPACE:
-    c->spacebar = down;
     printf("spacebar click registered\n");
+    spawn_projectile(c->rect.x, c->rect.y, c->dx, c->dy); // fires projectile
     break;
+
+  case SDL_SCANCODE_E:
+    c->dy = 0;
+    c->dx = 100;
+    break;
+  case SDL_SCANCODE_Q:
+    c->dy = 0;
+    c->dx = -100;
+    break;
+  case SDL_SCANCODE_N:
+    c->dy = 100;
+    c->dx = 0;
   default:
+    break;
+    // might need default statement
+    // test
     break;
   }
 }
-void resetCannon(Cannon *c) { c->spacebar = false; }
+void resetCannon(Cannon *c) {
+  c->spacebar = false;
+  c->moveDownN = false;
+  c->moveLeftQ = false;
+  c->moveRightE = false;
+}

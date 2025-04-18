@@ -1,67 +1,59 @@
+#include "../include/bullet.h"
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <stdbool.h>
 #include <stdio.h>
+#define MAX_PROJECTILES 100
+bullet projectiles[MAX_PROJECTILES]; // 100 bullets can be active at the time
 #include <stdlib.h>
+#define projectile_width 8;
+#define projectile_length 8;
+#define WINDOW_WIDTH 1160
+#define WINDOW_HEIGHT 700
 
-struct bullet {
-  float x, y, vx, vy;
-  int time, window_width, window_height;
-};
-typedef struct bullet Bullet;
-
-Bullet *createBullet(int window_width, int window_height) {
-  Bullet *pBullet = malloc(sizeof(Bullet));
-  pBullet->window_width = window_width;
-  pBullet->window_height = window_height;
-  pBullet->time = 0;
-
-  return pBullet;
+void spawn_projectile(float x, float y, float dx, float dy) {
+  for (int i = 0; i < MAX_PROJECTILES; i++) {
+    if (!projectiles[i].active) {
+      projectiles[i].x = x;
+      projectiles[i].y = y;
+      projectiles[i].vx = dx;
+      projectiles[i].vy = dy;
+      projectiles[i].active = 1;
+      projectiles[i].rect.w = projectile_width; // size of projectile
+      projectiles[i].rect.h = projectile_length;
+      printf("projectile shot \n");
+      return;
+    }
+  }
 }
 
-void updateBullet(Bullet *pBullet) {
-  if (pBullet->time == 0)
-    return;
-  pBullet->x += pBullet->vx;
-  pBullet->y += pBullet->vy;
-  if (pBullet->x < 0)
-    pBullet->x += pBullet->window_width;
-  else if (pBullet->x > pBullet->window_width)
-    pBullet->x -= pBullet->window_width;
-  if (pBullet->y < 0)
-    pBullet->y += pBullet->window_height;
-  else if (pBullet->y > pBullet->window_height)
-    pBullet->y -= pBullet->window_height;
-  (pBullet->time)--;
-  return;
-}
-void startBullet(Bullet *pBullet, float x, float y, float vx, float vy) {
-  pBullet->x = x;
-  pBullet->y = y;
-  pBullet->vx = vx;
-  pBullet->vy = vy;
-  pBullet->time = 300;
-}
-void killBullet(Bullet *pBullet) { pBullet->time = 0; }
+void update_projectiles(float delta_time) {
+  //
+  for (int i = 0; i < MAX_PROJECTILES; i++) {
+    if (projectiles[i].active) {
+      projectiles[i].x += projectiles[i].vx * delta_time;
+      projectiles[i].y += projectiles[i].vy * delta_time;
 
-void drawBullet(Bullet *pBullet, SDL_Renderer *pRenderer) {
-  if (pBullet->time == 0)
-    return;
-  SDL_RenderDrawPoint(pRenderer, pBullet->x, pBullet->y);
-  SDL_RenderDrawPoint(pRenderer, pBullet->x + 1, pBullet->y);
-  SDL_RenderDrawPoint(pRenderer, pBullet->x, pBullet->y + 1);
-  SDL_RenderDrawPoint(pRenderer, pBullet->x + 1, pBullet->y + 1);
+      // Deactivate if off screen (based on wndiow size)
+      if (projectiles[i].x < 0 || projectiles[i].x > WINDOW_WIDTH ||
+          projectiles[i].y < 0 || projectiles[i].y > WINDOW_HEIGHT) {
+        projectiles[i].active = 0;
+      }
+
+      // Update rect position for rendering
+      projectiles[i].rect.x = (int)projectiles[i].x;
+      projectiles[i].rect.y = (int)projectiles[i].y;
+    } // casting int gets rid of compiler warnings
+  }
 }
 
-float xBullet(Bullet *pBullet) { return pBullet->x; }
+void render_projectiles(SDL_Renderer *renderer) {
+  SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255); // Yellow
 
-float yBullet(Bullet *pBullet) { return pBullet->y; }
-
-void destroyBullet(Bullet *pBullet) { free(pBullet); }
-
-int aliveBullet(Bullet *pBullet) {
-  return pBullet->time > 0;
+  for (int i = 0; i < MAX_PROJECTILES; i++) {
+    if (projectiles[i].active) {
+      SDL_RenderFillRect(renderer, &projectiles[i].rect);
+    }
+  }
 }
-
-/*void getBulletSendData(Bullet *pBullet,BulletData *pBulletData);*/
-/*void updateBulletWithRecievedData(Bullet *pBullet,BulletData *pBulletData)*/;
