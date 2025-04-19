@@ -170,10 +170,10 @@ void run(Game *pGame) {
                     int nrOfAttempts = 0, maxAttempts = 10;
                     bool serverResponded = false;
                     
-                    while (!serverResponded && nrOfAttempts < maxAttempts) {
+                    while (!serverResponded && nrOfAttempts < maxAttempts) {     // A loop for establishing a connection with the server.
                                                                                 //send connection request
-                        /*sprintf((char*)pGame->pPacket->data, "Client %d is trying to connect!\n",
-                                          pGame->pPacket->address.port);        // Client is sending random port numbers. 
+                                                                                /*sprintf((char*)pGame->pPacket->data, "Client %d is trying to connect!\n", pGame->pPacket->address.port);        
+                                                                                // Client is sending random port numbers. 
                                                                                 // So let the server be the one to assign
                                                                                 // the port number. (Egentligen operativsystemet som tilldelar portnummer och inte servern?) */
                         
@@ -192,7 +192,7 @@ void run(Game *pGame) {
                         }
                     }
 
-                    if (serverResponded) {
+                    if (serverResponded) {                      // Server responded, set Game state to ONGOING                           
                         pGame->state = ONGOING;
                     } else {
                         printf("Error... Server did not respond after %d attempts. Returning to main menu.\n", nrOfAttempts);
@@ -201,25 +201,6 @@ void run(Game *pGame) {
                     isRunning = false;
                 }
             }
-
- /*                 } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-                    strcpy((char*)pGame->pPacket->data, "Hej pa dig!");
-                    pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
-                    SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
-
-                    bool gotResponse = false;
-                    Uint32 start = SDL_GetTicks();
-                    while (!gotResponse  && SDL_GetTicks() - start < 1000) {
-                        if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
-                            printf("Received from server: %x:%d: %s\n", 
-                                            pGame->pPacket->address.host,
-                                            pGame->pPacket->address.port,
-                                            (char*)pGame->pPacket->data);
-                            gotResponse = true;
-                        }
-                    }
-                }
-            }*/
 
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
             SDL_RenderClear(pGame->pRenderer);
