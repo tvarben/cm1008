@@ -15,6 +15,8 @@ struct Ship {
     float rotationAngle;
     bool facingLeft;
 };
+float distance(int x1, int y1, int x2, int y2);
+
 Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int windowHeight) {
     Ship* s = malloc(sizeof(Ship));
     if (!s) return NULL;
@@ -138,3 +140,11 @@ void destroyShip(Ship* s) {
 
 int getShipX(Ship *s) { return s->x; }
 int getShipY(Ship *s) { return s->y; }
+
+int shipCollision(Ship *pShip, SDL_Rect rect) {
+    return distance(pShip->rect.x+pShip->rect.w/2,pShip->rect.y+pShip->rect.h/2,rect.x+rect.w/2,rect.y+rect.h/2)<(pShip->rect.w+rect.w)/2;
+}
+
+float distance(int x1, int y1, int x2, int y2) {
+    return sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+}
