@@ -79,25 +79,26 @@ int initiate(Game *pGame) {
         return 0;
     }
 
-    pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1,
+                     SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!pGame->pRenderer) {
         printf("Renderer Error: %s\n", SDL_GetError());
         return 0;
     }
 
 	pGame->pFont = TTF_OpenFont("../lib/resources/arial.ttf", 100);
-    if(!pGame->pFont ) {
+    if (!pGame->pFont ) {
         printf("Error: %s\n",TTF_GetError());
         return 0;
     }
 
-	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Start [1]",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
-    pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
-    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit [2]",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
-    if(!pGame->pFont){
-        printf("Error: %s\n",TTF_GetError());
-        return 0;
-    } 
+	pGame->pStartText = createText(pGame->pRenderer,238,168,65,
+                    pGame->pFont,"Start [1]",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
+    pGame->pGameName = createText(pGame->pRenderer,238,168,65,
+                    pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
+    pGame->pExitText = createText(pGame->pRenderer,238,168,65,
+                    pGame->pFont,"Exit [2]",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
+
     if (!(pGame->pSocket = SDLNet_UDP_Open(2000))) {
         printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
         return 0;
@@ -145,30 +146,29 @@ void run(Game *pGame) {
         
         if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
             printf("Server recieved a command from %x:%d: %s\n",
-                                        pGame->pPacket->address.host, 
-                                        pGame->pPacket->address.port, 
-                                        (char*)pGame->pPacket->data);
-            
+                            pGame->pPacket->address.host, 
+                            pGame->pPacket->address.port, 
+                            (char*)pGame->pPacket->data);
+
             Uint32 ip = SDL_SwapBE32(pGame->pPacket->address.host);
             Uint16 port = SDL_SwapBE16(pGame->pPacket->address.port);
             sprintf((char*)pGame->pPacket->data,
-            "CONNECTED: Your IP:Port adress = 127.0.0.1:%d.\n",
-            port);
+                            "CONNECTED: Your IP:Port address = 127.0.0.1:%d.\n", port);
             pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
             SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
             
-            //strcpy((char*) pGame->pPacket->data, "Message recieved!!!!!!!!!!!!!!!!");
-            //pGame->pPacket->len = strlen((char*)pGame->pPacket->data) +1;
-        
-            //SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
-            //printf("Response sent.\n");
-        }
+            strcpy((char*) pGame->pPacket->data, "***");
+            pGame->pPacket->len = strlen((char*)pGame->pPacket->data) +1;
 
+            SDL_Delay(10);
+        
+            SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+            printf("Response sent.\n");
+        }
 
         SDL_Delay(8);
     }
 }
-
 
 void closeGame(Game *pGame) {
     if (pGame->pShip) destroyShip(pGame->pShip);

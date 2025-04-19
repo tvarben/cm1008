@@ -8,5 +8,6 @@ void drawText(Text *pText);
 void destroyText(Text *pText);
 const SDL_Rect *getTextRect(Text *pText);
 void setTextColor(Text *pText, int r, int g, int b, TTF_Font *pFont, const char *pString);
+void setTextColorOnly(Text *pText, int r, int g, int b);
 
 #endif

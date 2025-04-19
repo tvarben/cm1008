@@ -53,6 +53,10 @@ void setTextColor(Text *pText, int r, int g, int b, TTF_Font *pFont, const char 
 
 }
 
+void setTextColorOnly(Text *pText, int r, int g, int b) {
+    SDL_SetTextureColorMod(pText->pTexture, r, g, b);
+}
+
 const SDL_Rect *getTextRect(Text *pText) {
     return &pText->rect;
 }

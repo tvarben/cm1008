@@ -91,13 +91,13 @@ int initiate(Game *pGame) {
         return 0;
     }
 
-	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Start [1]",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
-    pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
-    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit [2]",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
-    if(!pGame->pFont){
-        printf("Error: %s\n",TTF_GetError());
-        return 0;
-    } 
+	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,
+                        "Start",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
+    pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,
+                        "SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
+    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,
+                        "Exit",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
+
     if (!(pGame->pSocket = SDLNet_UDP_Open(0))) {
         printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
         return 0;
@@ -144,105 +144,91 @@ void run(Game *pGame) {
                     handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
                 }
             }
-        
-        
-        }else if(pGame->state == START) {
+        } else if (pGame->state == START) {
             int x, y;
             SDL_GetMouseState(&x,&y);
-            SDL_Point mousePoint = {x, y};                                // Get mouse position
+            SDL_Point mousePoint = { x, y };                                //get mouse position
 
-            const SDL_Rect *startRect = getTextRect(pGame->pStartText);   // Get rect for Start text
-            const SDL_Rect *exitRect = getTextRect(pGame->pExitText);     // Get rect for Exit text 
-            
-            if(SDL_PointInRect(&mousePoint, startRect)) {
-                setTextColor(pGame->pStartText, 255, 255, 100, pGame->pFont, "Start");
+            const SDL_Rect *startRect = getTextRect(pGame->pStartText);     //get rect for startText
+            const SDL_Rect *exitRect = getTextRect(pGame->pExitText);       //get rect for exitText
+
+            if (SDL_PointInRect(&mousePoint, startRect)) {
+                setTextColorOnly(pGame->pStartText, 255, 255, 100);
             } else {
-                setTextColor(pGame->pStartText, 238, 168, 65, pGame->pFont, "Start");
+                setTextColorOnly(pGame->pStartText, 238, 168, 65);
             }
             if(SDL_PointInRect(&mousePoint, exitRect)) {
-                setTextColor(pGame->pExitText, 255, 100, 100, pGame->pFont, "Exit");
+                setTextColorOnly(pGame->pExitText, 255, 100, 100);
             } else {
-                setTextColor(pGame->pExitText, 238, 168, 65, pGame->pFont, "Exit");
+                setTextColorOnly(pGame->pExitText, 238, 168, 65);
             }
-
-            while(SDL_PollEvent(&event)) {
+        
+            while (SDL_PollEvent(&event)) {
                 if (event.type == SDL_QUIT) {
                     isRunning = false;
                 } else if (SDL_PointInRect(&mousePoint, startRect) && event.type == SDL_MOUSEBUTTONDOWN) {
-                    
                     int nrOfAttempts = 0, maxAttempts = 10;
-                    bool ServerResponded = false;                               //// reset flags before trying to connect to server
+                    bool serverResponded = false;
                     
-                    while (!ServerResponded && nrOfAttempts < maxAttempts) {
-                                                                                // Send connection request
-                        //sprintf((char*)pGame->pPacket->data, "Client %d is trying to connect!\n", pGame->pPacket->address.port); // Client is sending random port numbers. So let the server be the one to assign the port number.
-                        strcpy((char*)pGame->pPacket->data, "JOIN_REQUEST");
-                        pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
-                        SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
-                    
+                    while (!serverResponded && nrOfAttempts < maxAttempts) {
+                                                                                //send connection request
+                        /*sprintf((char*)pGame->pPacket->data, "Client %d is trying to connect!\n",
+                                          pGame->pPacket->address.port);        // Client is sending random port numbers. 
+                                                                                // So let the server be the one to assign
+                                                                                // the port number. (Egentligen operativsystemet som tilldelar portnummer och inte servern?) */
                         
-                        SDL_Delay(100); // Wait 100ms to receive response from server                    
-                                                                    
-                                        // server responded? if so, exit the loop.
+                        strcpy((char*)pGame->pPacket->data, "JOIN_REQUEST");
+                        pGame->pPacket->len = strlen((char*)pGame->pPacket->data + 1);
+                        SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+
+                        SDL_Delay(100);
+
                         if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
                             printf("\nServer responded: %s\n", (char*)pGame->pPacket->data);
-                            ServerResponded = true;
+                            serverResponded = true;
                         } else {
                             nrOfAttempts++;
-                            printf("Attempt %d: Server isn't responding...\n", nrOfAttempts);
+                            printf("Attempt: %d: Server is not respodning...\n", nrOfAttempts);
                         }
                     }
-                    
-                    if (ServerResponded) {       // Server responded, start the game. otherwise, return to main menu to try again.
+
+                    if (serverResponded) {
                         pGame->state = ONGOING;
                     } else {
-                        printf("Error... Server didn't respond after %d attempts. Returning to Main Menu.\n", maxAttempts);
-                        pGame->state = START;
-                    } 
-
+                        printf("Error... Server did not respond after %d attempts. Returning to main menu.\n", nrOfAttempts);
+                    }
                 } else if (SDL_PointInRect(&mousePoint, exitRect) && event.type == SDL_MOUSEBUTTONDOWN) {
                     isRunning = false;
                 }
             }
-        
 
-            /*while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                isRunning = false;
-            } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-                strcpy((char*)pGame->pPacket->data, "Hej pa dig!");
-                pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
-                SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+ /*                 } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+                    strcpy((char*)pGame->pPacket->data, "Hej pa dig!");
+                    pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
+                    SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
 
-                if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
-                    printf("Server recieved a command from %x:%d: %s\n",
-                                                pGame->pPacket->address.host, 
-                                                pGame->pPacket->address.port,
-                                                (char*)pGame->pPacket->data);
+                    bool gotResponse = false;
+                    Uint32 start = SDL_GetTicks();
+                    while (!gotResponse  && SDL_GetTicks() - start < 1000) {
+                        if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
+                            printf("Received from server: %x:%d: %s\n", 
+                                            pGame->pPacket->address.host,
+                                            pGame->pPacket->address.port,
+                                            (char*)pGame->pPacket->data);
+                            gotResponse = true;
+                        }
+                    }
                 }
-                //printf("Sent: %s\n", (char*)pGame->pPacket->data);
-                
-                //pGame->pPacket->len = sizeof(ClientData);
+            }*/
 
-            } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2){
-                isRunning = false;
-            }
-            if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
-                printf("Received from server: %s\n", (char*)pGame->pPacket->data);
-            }
-        }*/
+            SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
+            SDL_RenderClear(pGame->pRenderer);
+        
+            drawText(pGame->pStartText);
+            drawText(pGame->pExitText);
+            drawText(pGame->pGameName);
+            SDL_RenderPresent(pGame->pRenderer);
         }
-
-        SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
-        SDL_RenderClear(pGame->pRenderer);              //Clear the first frame when the game starts,
-                                                        //otherwise flickering issues on mac/linux
-        
-        drawText(pGame->pStartText);
-        drawText(pGame->pExitText);
-        drawText(pGame->pGameName);
-        SDL_RenderPresent(pGame->pRenderer);
-
-        
     }
 }
 
