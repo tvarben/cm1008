@@ -9,7 +9,9 @@
 #include "text.h"
 #include "stars.h"
 #include "enemies.h"
-#define MAX_ENEMIES 3
+#include "bullet.h"
+#include "cannon.h"
+#define MAX_ENEMIES 30
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
 #define MUSIC_FILEPATH "./resources/music.wav"
@@ -24,7 +26,7 @@ typedef struct {
     GameState state;
     Mix_Music *pMusic;
 	TTF_Font *pFont;
-	Text *pStartText, *pGameName, *pExitText, *pPauseText, *pScoreText;
+	Text *pSingleplayerText, *pGameName, *pExitText, *pPauseText, *pScoreText, *pMultiplayerText;
     Stars *pStars;
     EnemyImage *pEnemyImage;
     Enemy *pEnemies[MAX_ENEMIES];
@@ -34,6 +36,7 @@ typedef struct {
     int gameTime;//in s
     Uint64 pauseStartTime;
     Uint64 pausedTime;
+    Cannon *pCannon;
 } Game;
 
 int getTime(Game *pGame);
@@ -77,11 +80,14 @@ int initiate(Game *pGame)
         return 0;
     }
     pGame->pStars = createStars(WINDOW_WIDTH*WINDOW_HEIGHT/10000,WINDOW_WIDTH,WINDOW_HEIGHT);
-	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Start",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
-    pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
-    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
+    pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/8);
+    pGame->pSingleplayerText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Singleplayer",WINDOW_WIDTH/2, 330);
+    pGame->pMultiplayerText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Multiplayer",WINDOW_WIDTH/2, 450);
+    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit",WINDOW_WIDTH/2, 570);
     pGame->pPauseText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"PAUSED",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
     pGame->pEnemyImage = initiateEnemy(pGame->pRenderer);
+    pGame->pCannon = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+
 
     if(!pGame->pFont){
         printf("Error: %s\n",TTF_GetError());
@@ -109,27 +115,40 @@ int initiate(Game *pGame)
 void run(Game *pGame) {
     bool isRunning = true;
     SDL_Event event;
-
     playMusic(pGame->pMusic, -1);
+
+    Uint32 last_time = SDL_GetTicks(); // timer for rendering bullets
+    render_projectiles(pGame->pRenderer);
 
     while (isRunning) {
         int x, y;
+        Uint32 current_time = SDL_GetTicks(); // needed for shooting
+        float delta_time = (current_time - last_time) /
+        1000.0f; // calculates time passed since last frame
+        last_time = current_time;   // needed for shooting
+
         SDL_GetMouseState(&x,&y);
         SDL_Point mousePoint = {x,y};       //Kolla position för musen
 
-        const SDL_Rect *startRect = getTextRect(pGame->pStartText);     //Hämta position för rect för Start-texten
+        const SDL_Rect *startRect = getTextRect(pGame->pSingleplayerText);     //Hämta position för rect för Start-texten
         const SDL_Rect *exitRect = getTextRect(pGame->pExitText);       //Hämta position för rect för Exit-texten
+        const SDL_Rect *multiRect = getTextRect(pGame->pMultiplayerText);
 
         if (SDL_PointInRect(&mousePoint, startRect)) {
-            setTextColor(pGame->pStartText, 255, 255, 100, pGame->pFont, "Start");
+            setTextColor(pGame->pSingleplayerText, 255, 255, 100, pGame->pFont, "Singleplayer");
         }
         else {
-            setTextColor(pGame->pStartText, 238, 168, 65, pGame->pFont, "Start");
+            setTextColor(pGame->pSingleplayerText, 238, 168, 65, pGame->pFont, "Singleplayer");
         }
         if (SDL_PointInRect(&mousePoint, exitRect)) {
             setTextColor(pGame->pExitText, 255, 100, 100, pGame->pFont, "Exit");
         } else {
             setTextColor(pGame->pExitText, 238, 168, 65, pGame->pFont, "Exit");
+        }
+        if (SDL_PointInRect(&mousePoint, multiRect)) {
+            setTextColor(pGame->pMultiplayerText, 255, 100, 100, pGame->pFont, "Multiplayer");
+        } else {
+            setTextColor(pGame->pMultiplayerText, 238, 168, 65, pGame->pFont, "Multiplayer");
         }
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -137,6 +156,7 @@ void run(Game *pGame) {
             } else if (pGame->state == START && event.type == SDL_MOUSEBUTTONDOWN) {
                 if (SDL_PointInRect(&mousePoint, startRect)) {
                     resetShip(pGame->pShip);
+                    resetCannon(pGame->pCannon);
                     pGame->state = ONGOING;
                     pGame->pausedTime = 0;
                     pGame->startTime = SDL_GetTicks64();
@@ -157,6 +177,7 @@ void run(Game *pGame) {
             else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP))
             {
                 handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
+                handleCannonEvent(pGame->pCannon, &event); // what makes cannon shoot
             }  
             else if (pGame->state == PAUSED && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
             {
@@ -168,15 +189,20 @@ void run(Game *pGame) {
         if (pGame->state == ONGOING) 
         {
             if (Mix_PlayingMusic()) Mix_HaltMusic();
+            
+            update_projectiles(delta_time); // update based on time since last frame passed
             updateGameTime(pGame);
             updateNrOfEnemies(pGame);
             updateShipVelocity(pGame->pShip);           // resolve velocity based on key states
             updateShip(pGame->pShip);
+            updateCannon(pGame->pCannon, pGame->pShip);
             for(int i=0;i<pGame->nrOfEnemies;i++) updateEnemy(pGame->pEnemies[i]);
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);
             SDL_RenderClear(pGame->pRenderer);
             drawStars(pGame->pStars,pGame->pRenderer);
             drawShip(pGame->pShip);
+            drawCannon(pGame->pCannon);
+            render_projectiles(pGame->pRenderer); // test      
             for(int i=0;i<pGame->nrOfEnemies;i++) drawEnemy(pGame->pEnemies[i]);
             if(pGame->pScoreText) drawText(pGame->pScoreText);
             SDL_RenderPresent(pGame->pRenderer);
@@ -187,7 +213,8 @@ void run(Game *pGame) {
             
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);  //Important to set the color before clearing the screen 
             SDL_RenderClear(pGame->pRenderer);                         //Clear the first frame when the game starts, otherwise issues on mac/linux 
-            drawText(pGame->pStartText);
+            drawText(pGame->pSingleplayerText);                        //Clear the first frame when the game starts, otherwise issues on mac/linux 
+            drawText(pGame->pMultiplayerText);
             drawText(pGame->pExitText);
             drawText(pGame->pGameName);
             SDL_RenderPresent(pGame->pRenderer);    //Draw the start text
@@ -203,10 +230,13 @@ void run(Game *pGame) {
 
 void closeGame(Game *pGame) {
     if (pGame->pShip) destroyShip(pGame->pShip);
+    if (pGame->pShip) destroyCannon(pGame->pCannon);
     if(pGame->pStars) destroyStars(pGame->pStars);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
-    if(pGame->pStartText) destroyText(pGame->pStartText);
+    if(pGame->pSingleplayerText) destroyText(pGame->pSingleplayerText);
+    if(pGame->pMultiplayerText) destroyText(pGame->pMultiplayerText);
+    if(pGame->pExitText) destroyText(pGame->pExitText);
     if(pGame->pFont) TTF_CloseFont(pGame->pFont); 
     for(int i=0;i<pGame->nrOfEnemies;i++) destroyEnemy(pGame->pEnemies[i]);
     if(pGame->pEnemyImage) destroyEnemyImage(pGame->pEnemyImage);

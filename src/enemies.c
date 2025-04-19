@@ -63,23 +63,16 @@ Enemy *createEnemy(EnemyImage *pEnemyImage, int window_width, int window_height)
 }
 
 static void getStartValues(Enemy *pEnemy){
-    int angle;
-    if(rand()%2){
-        pEnemy->x=rand()%pEnemy->window_width-pEnemy->rect.w/2;
-        pEnemy->y=-pEnemy->rect.h;
-        angle=rand()%90-45;
-    }else{
-        pEnemy->y=rand()%pEnemy->window_height-pEnemy->rect.h/2;
-        pEnemy->x=-pEnemy->rect.w;
-        angle=rand()%90;
-    }
-    int v=rand()%8+5;
-    pEnemy->vx=v*sin(angle*2*3.14/360);
-    pEnemy->vy=v*cos(angle*2*3.14/360);
-    pEnemy->rect.x=pEnemy->x;
-    pEnemy->rect.y=pEnemy->y;
-}
+    pEnemy->x = pEnemy->window_width;
+    pEnemy->y = rand() % (pEnemy->window_height - pEnemy->rect.h);
 
+    float speed = 5.0f;
+    pEnemy->vx = -speed; // rakt åt vänster
+    pEnemy->vy = 0;      // ingen rörelse i y-led
+
+    pEnemy->rect.x = pEnemy->x;
+    pEnemy->rect.y = pEnemy->y;
+}
 
 SDL_Rect getRectEnemy(Enemy *pEnemy){
     return pEnemy->rect;

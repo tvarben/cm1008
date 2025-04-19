@@ -13,5 +13,6 @@ void resetShip(Ship* s);
 void handleShipEvent(Ship* s, SDL_Event* event);
 void updateShipVelocity(Ship* s); 
 void destroyShip(Ship* s);
-
+int getShipX(Ship *s);
+int getShipY(Ship *s);
 #endif

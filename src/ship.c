@@ -135,3 +135,6 @@ void destroyShip(Ship* s) {
         free(s);
     }
 }
+
+int getShipX(Ship *s) { return s->x; }
+int getShipY(Ship *s) { return s->y; }
