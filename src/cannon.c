@@ -14,6 +14,7 @@ struct Cannon {
   SDL_Renderer *renderer;
   SDL_Texture *texture;
   SDL_Rect rect;
+  bool lastFacedLeft;
   bool spacebar, moveLeftQ, moveRightE,
       moveDownN; // keys decide direction of bullet
 };
@@ -27,8 +28,9 @@ Cannon *createCannon(SDL_Renderer *renderer, int windowWidth,
   c->windowWidth = windowWidth;
   c->windowHeight = windowHeight;
   c->renderer = renderer;
-  c->dy = 100; // direction cannon shoots when press space at start of the game
-  c->dx = 0;
+  c->dy = 0; // direction cannon shoots when press space at start of the game
+  c->dx = 100;
+  c->lastFacedLeft = false;
   SDL_Surface *surface = IMG_Load("resources/ship_cannon.png");
   if (!surface) {
     printf("Error loading Cannon.png: %s\n", IMG_GetError());
@@ -55,7 +57,8 @@ Cannon *createCannon(SDL_Renderer *renderer, int windowWidth,
 }
 
 void drawCannon(Cannon *c) {
-  SDL_RenderCopy(c->renderer, c->texture, NULL, &c->rect);
+  SDL_RendererFlip flip = c->lastFacedLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+  SDL_RenderCopyEx(c->renderer, c->texture, NULL, &c->rect, 0, NULL, flip);
 }
 
 void destroyCannon(Cannon *c) {
@@ -69,7 +72,7 @@ void destroyCannon(Cannon *c) {
 void updateCannon(Cannon *pCannon, Ship *pShip) {
     // offset from where ship spawns to adjust where we
     // want to place cannon. change later to adjust for sprite sheet
-    double cannonLocationX = 5;
+    double cannonLocationX = 28;
     double cannonLocationY = 15;
   
     pCannon->rect.y = getShipY(pShip) + cannonLocationY;
@@ -83,24 +86,36 @@ void handleCannonEvent(Cannon *c, SDL_Event *event) {
   switch (event->key.keysym.scancode) {
   case SDL_SCANCODE_SPACE:
     printf("spacebar click registered\n");
-    spawn_projectile(c->rect.x, c->rect.y, c->dx, c->dy); // fires projectile
+    if (c->lastFacedLeft == true)
+    {
+      spawn_projectile(c->rect.x-8, c->rect.y+15, c->dx, c->dy); // fires projectile
+    }
+    else 
+    {
+      spawn_projectile(c->rect.x+20, c->rect.y+15, c->dx, c->dy); // fires projectile
+    }
     break;
-
-  case SDL_SCANCODE_E:
+  case SDL_SCANCODE_D: case SDL_SCANCODE_RIGHT:
     c->dy = 0;
     c->dx = 100;
+    c->lastFacedLeft = false;
     break;
-  case SDL_SCANCODE_Q:
+  case SDL_SCANCODE_A: case SDL_SCANCODE_LEFT:
     c->dy = 0;
     c->dx = -100;
+    c->lastFacedLeft = true;
     break;
-  case SDL_SCANCODE_N:
-    c->dy = 100;
-    c->dx = 0;
   default:
-    break;
-    // might need default statement
-    // test
+    if (c->lastFacedLeft == true)
+    {
+      c->dy = 0;
+      c->dx = -100;
+    }
+    else
+    {
+      c->dy = 0;
+      c->dx = 100;
+    }
     break;
   }
 }
