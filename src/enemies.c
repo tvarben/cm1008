@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <time.h>
 struct enemyImage{
     SDL_Renderer *pRenderer;
     SDL_Texture *pTexture;    
@@ -63,6 +64,11 @@ Enemy *createEnemy(EnemyImage *pEnemyImage, int window_width, int window_height)
 }
 
 static void getStartValues(Enemy *pEnemy){
+    srand(time(NULL));
+    int startSpawnOnTheLeft =  rand() % 2; //0 or 1
+
+    if (startSpawnOnTheLeft == 1)
+    {
     pEnemy->x = pEnemy->window_width;
     pEnemy->y = rand() % (pEnemy->window_height - pEnemy->rect.h);
 
@@ -72,6 +78,19 @@ static void getStartValues(Enemy *pEnemy){
 
     pEnemy->rect.x = pEnemy->x;
     pEnemy->rect.y = pEnemy->y;
+    }
+    else 
+    {
+        pEnemy->x = 0; // also spawn at left
+        pEnemy->y = rand() % (pEnemy->window_height - pEnemy->rect.h);
+
+        float speed = 5.0f;
+        pEnemy->vx = speed; // move right
+        pEnemy->vy = 0;
+
+        pEnemy->rect.x = pEnemy->x;
+        pEnemy->rect.y = pEnemy->y;
+    }
 }
 
 SDL_Rect getRectEnemy(Enemy *pEnemy){

@@ -146,7 +146,7 @@ void run(Game *pGame) {
             setTextColor(pGame->pExitText, 238, 168, 65, pGame->pFont, "Exit");
         }
         if (SDL_PointInRect(&mousePoint, multiRect)) {
-            setTextColor(pGame->pMultiplayerText, 255, 100, 100, pGame->pFont, "Multiplayer");
+            setTextColor(pGame->pMultiplayerText, 255, 100, 100, pGame->pFont, "This should later on open a window that allows one to enter a string");
         } else {
             setTextColor(pGame->pMultiplayerText, 238, 168, 65, pGame->pFont, "Multiplayer");
         }
