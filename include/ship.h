@@ -15,4 +15,5 @@ void updateShipVelocity(Ship* s);
 void destroyShip(Ship* s);
 int getShipX(Ship *s);
 int getShipY(Ship *s);
+int shipCollision(Ship *pShip, SDL_Rect rect);
 #endif
