@@ -213,7 +213,7 @@ void run(Game *pGame)
                 if (SDL_PointInRect(&mousePoint, startRect))
                 {
                     resetShip(pGame->pShip);
-                    resetCannon(pGame->pCannon);
+                    resetEnemy(pGame);
                     pGame->state = ONGOING;
                     pGame->pausedTime = 0;
                     pGame->startTime = SDL_GetTicks64();
@@ -265,6 +265,8 @@ void run(Game *pGame)
             for(int i=0;i<pGame->nrOfEnemies;i++) updateEnemy(pGame->pEnemies[i]);
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);
             SDL_RenderClear(pGame->pRenderer);
+            SDL_Rect dstRect = { WINDOW_WIDTH/2.5, WINDOW_HEIGHT/3, 200, 200 };  // adjust position and size
+            SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage, NULL, &dstRect);
             drawStars(pGame->pStars,pGame->pRenderer);
             drawShip(pGame->pShip);
             drawCannon(pGame->pCannon);
@@ -285,6 +287,7 @@ void run(Game *pGame)
             SDL_RenderClear(pGame->pRenderer);                         //Clear the first frame when the game starts, otherwise issues on mac/linux 
             drawText(pGame->pSingleplayerText);                        //Clear the first frame when the game starts, otherwise issues on mac/linux 
             drawText(pGame->pMultiplayerText);
+            drawStars(pGame->pStars,pGame->pRenderer);
             drawText(pGame->pExitText);
             drawText(pGame->pGameName);
             SDL_Rect dstRect = { 125, 500, 100, 100 };  // adjust position and size
