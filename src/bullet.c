@@ -7,8 +7,8 @@
 #define MAX_PROJECTILES 100
 bullet projectiles[MAX_PROJECTILES]; // 100 bullets can be active at the time
 #include <stdlib.h>
-#define projectile_width 8;
-#define projectile_length 8;
+#define projectile_width 8
+#define projectile_length 4
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
 

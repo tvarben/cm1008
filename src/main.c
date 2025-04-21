@@ -19,7 +19,8 @@
 enum GameState { START, ONGOING, PAUSED, GAME_OVER };
 typedef enum GameState GameState;
 
-typedef struct {
+typedef struct
+{
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
     Ship *pShip;
@@ -47,38 +48,45 @@ void resetEnemy(Game *pGame);
 int initiate(Game *pGame) 
 {
     Mix_Init(MIX_INIT_WAVPACK);
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0)
+    {
         printf("SDL Init Error: %s\n", SDL_GetError());
         return 0;
     }
-    if (IMG_Init(IMG_INIT_PNG) == 0) {
+    if (IMG_Init(IMG_INIT_PNG) == 0)
+    {
         printf("SDL_image Init Error: %s\n", IMG_GetError());
         SDL_Quit();
         return 0;
     }
-	if(TTF_Init()!=0) {
+	if(TTF_Init()!=0)
+    {
         printf("Error: %s\n",TTF_GetError());
         SDL_Quit();
         return 0;
     }
 
     pGame->pWindow = SDL_CreateWindow("",SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,WINDOW_WIDTH, WINDOW_HEIGHT, 0);
-    if (!pGame->pWindow) {
+    if (!pGame->pWindow)
+    {
         printf("Window Error: %s\n", SDL_GetError());
         return 0;
     }
 
     pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if (!pGame->pRenderer) {
+    if (!pGame->pRenderer)
+    {
         printf("Renderer Error: %s\n", SDL_GetError());
         return 0;
     }
 
 	pGame->pFont = TTF_OpenFont("arial.ttf", 100);
-    if(!pGame->pFont ) {
+    if(!pGame->pFont)
+    {
         printf("Error: %s\n",TTF_GetError());
         return 0;
     }
+
     pGame->pStars = createStars(WINDOW_WIDTH*WINDOW_HEIGHT/10000,WINDOW_WIDTH,WINDOW_HEIGHT);
     pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/8);
     pGame->pSingleplayerText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Singleplayer",WINDOW_WIDTH/2, 330);
@@ -88,23 +96,25 @@ int initiate(Game *pGame)
     pGame->pEnemyImage = initiateEnemy(pGame->pRenderer);
     pGame->pCannon = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-
-    if(!pGame->pFont){
+    if(!pGame->pFont)
+    {
         printf("Error: %s\n",TTF_GetError());
         return 0;
     }
 
-
     pGame->pShip = createShip(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
-    if (!pGame->pShip) {
+    if (!pGame->pShip)
+    {
         printf("Ship creation failed.\n");
         return 0;
     }
 
-    if (!initMusic(&pGame->pMusic, MUSIC_FILEPATH)) {
+    if (!initMusic(&pGame->pMusic, MUSIC_FILEPATH))
+    {
         printf("Error: %s\n",Mix_GetError());
         return 0;
     }
+
     pGame->nrOfEnemies = 0;
     resetEnemy(pGame);
     pGame->timeForNextEnemy = 2;
@@ -112,7 +122,8 @@ int initiate(Game *pGame)
     return 1;
 }
 
-void run(Game *pGame) {
+void run(Game *pGame)
+{
     bool isRunning = true;
     SDL_Event event;
     playMusic(pGame->pMusic, -1);
@@ -120,7 +131,8 @@ void run(Game *pGame) {
     Uint32 last_time = SDL_GetTicks(); // timer for rendering bullets
     render_projectiles(pGame->pRenderer);
 
-    while (isRunning) {
+    while (isRunning)
+    {
         int x, y;
         Uint32 current_time = SDL_GetTicks(); // needed for shooting
         float delta_time = (current_time - last_time) /
@@ -134,39 +146,52 @@ void run(Game *pGame) {
         const SDL_Rect *exitRect = getTextRect(pGame->pExitText);       //Hämta position för rect för Exit-texten
         const SDL_Rect *multiRect = getTextRect(pGame->pMultiplayerText);
 
-        if (SDL_PointInRect(&mousePoint, startRect)) {
+        if (SDL_PointInRect(&mousePoint, startRect))
+        {
             setTextColor(pGame->pSingleplayerText, 255, 255, 100, pGame->pFont, "Singleplayer");
         }
-        else {
+        else
+        {
             setTextColor(pGame->pSingleplayerText, 238, 168, 65, pGame->pFont, "Singleplayer");
         }
-        if (SDL_PointInRect(&mousePoint, exitRect)) {
+        if (SDL_PointInRect(&mousePoint, exitRect))
+        {
             setTextColor(pGame->pExitText, 255, 100, 100, pGame->pFont, "Exit");
-        } else {
+        } 
+        else
+        {
             setTextColor(pGame->pExitText, 238, 168, 65, pGame->pFont, "Exit");
         }
-        if (SDL_PointInRect(&mousePoint, multiRect)) {
+        if (SDL_PointInRect(&mousePoint, multiRect))
+        {
             setTextColor(pGame->pMultiplayerText, 255, 100, 100, pGame->pFont, "This should later on open a window that allows one to enter a string");
-        } else {
+        }
+        else
+        {
             setTextColor(pGame->pMultiplayerText, 238, 168, 65, pGame->pFont, "Multiplayer");
         }
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
+
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
                 isRunning = false;
-            } else if (pGame->state == START && event.type == SDL_MOUSEBUTTONDOWN) {
-                if (SDL_PointInRect(&mousePoint, startRect)) {
+            }
+            else if (pGame->state == START && event.type == SDL_MOUSEBUTTONDOWN)
+            {
+                if (SDL_PointInRect(&mousePoint, startRect))
+                {
                     resetShip(pGame->pShip);
                     resetCannon(pGame->pCannon);
                     pGame->state = ONGOING;
                     pGame->pausedTime = 0;
                     pGame->startTime = SDL_GetTicks64();
-                    pGame->gameTime = -1;
-                
+                    pGame->gameTime = -1;       
                 } 
-                else if (SDL_PointInRect(&mousePoint, exitRect)) {
+                else if (SDL_PointInRect(&mousePoint, exitRect))
+                {
                     isRunning = false;
                 }
-                
             } 
             else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
             {
@@ -223,12 +248,12 @@ void run(Game *pGame) {
         {
             drawText(pGame->pPauseText);
             SDL_RenderPresent(pGame->pRenderer);
-
         }   
     }
 }
 
-void closeGame(Game *pGame) {
+void closeGame(Game *pGame)
+{
     if (pGame->pShip) destroyShip(pGame->pShip);
     if (pGame->pShip) destroyCannon(pGame->pCannon);
     if(pGame->pStars) destroyStars(pGame->pStars);
@@ -246,12 +271,15 @@ void closeGame(Game *pGame) {
 }
 
 
-int getTime(Game *pGame){
+int getTime(Game *pGame)
+{
     return (SDL_GetTicks64() - pGame->startTime - pGame->pausedTime) / 1000;
 }
 
-void updateGameTime(Game *pGame){
-    if(getTime(pGame)>pGame->gameTime && pGame->state == ONGOING){
+void updateGameTime(Game *pGame)
+{
+    if(getTime(pGame)>pGame->gameTime && pGame->state == ONGOING)
+    {
         (pGame->gameTime)++;
         if(pGame->pScoreText) destroyText(pGame->pScoreText);
         static char scoreString[30];
@@ -261,25 +289,30 @@ void updateGameTime(Game *pGame){
 }
 
 
-void updateNrOfEnemies(Game *pGame){
-    if(getTime(pGame)>pGame->timeForNextEnemy && pGame->nrOfEnemies<MAX_ENEMIES){
+void updateNrOfEnemies(Game *pGame)
+{
+    if(getTime(pGame)>pGame->timeForNextEnemy && pGame->nrOfEnemies<MAX_ENEMIES)
+    {
         (pGame->timeForNextEnemy)+=1;//seconds till next enemy
         pGame->pEnemies[pGame->nrOfEnemies] = createEnemy(pGame->pEnemyImage,WINDOW_WIDTH,WINDOW_HEIGHT);
         pGame->nrOfEnemies++; 
     }    
 }
 
-void resetEnemy(Game *pGame){
+void resetEnemy(Game *pGame)
+{
     for(int i=0;i<pGame->nrOfEnemies;i++) destroyEnemy(pGame->pEnemies[i]);
     pGame->nrOfEnemies = 3;
-    for(int i=0;i<pGame->nrOfEnemies;i++){
+    for(int i=0;i<pGame->nrOfEnemies;i++)
+    {
         pGame->pEnemies[i] = createEnemy(pGame->pEnemyImage,WINDOW_WIDTH,WINDOW_HEIGHT);
     }
 }
 
 
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     Game game = {NULL, NULL, NULL, START};
     if (!initiate(&game)) return 1;
 
