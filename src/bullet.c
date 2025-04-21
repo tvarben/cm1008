@@ -57,3 +57,11 @@ void render_projectiles(SDL_Renderer *renderer) {
     }
   }
 }
+
+void resetBullets(bullet bullets[])
+{
+  for (int i = 0; i < MAX_PROJECTILES; i++)
+  {
+    bullets[i].active = false;
+  }
+}

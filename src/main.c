@@ -26,7 +26,7 @@ typedef struct
     Ship *pShip;
     GameState state;
     Mix_Music *pMusic;
-	TTF_Font *pFont;
+	TTF_Font *pFont, *pSmallFont;
 	Text *pSingleplayerText, *pGameName, *pExitText, *pPauseText, *pScoreText, *pMultiplayerText, *pMenuText, *pGameOverText;
     Stars *pStars;
     EnemyImage *pEnemyImage;
@@ -39,12 +39,14 @@ typedef struct
     Uint64 pausedTime;
     Cannon *pCannon;
     SDL_Texture *pStartImage, *pStartImage2;
+    bool networkMenu;
 } Game;
 
 int getTime(Game *pGame);
 void updateGameTime(Game *pGame);
 void updateNrOfEnemies(Game *pGame);
 void resetEnemy(Game *pGame);
+void showMenu(SDL_Renderer *renderer, TTF_Font *font);
 
 int initiate(Game *pGame) 
 {
@@ -82,6 +84,7 @@ int initiate(Game *pGame)
     }
 
 	pGame->pFont = TTF_OpenFont("arial.ttf", 100);
+    pGame->pSmallFont = TTF_OpenFont("arial.ttf", 50);
     if(!pGame->pFont)
     {
         printf("Error: %s\n",TTF_GetError());
@@ -113,12 +116,11 @@ int initiate(Game *pGame)
     }
 
 
-
     pGame->pStars = createStars(WINDOW_WIDTH*WINDOW_HEIGHT/10000,WINDOW_WIDTH,WINDOW_HEIGHT);
     pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/8);
-    pGame->pSingleplayerText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Singleplayer",WINDOW_WIDTH/2, 330);
-    pGame->pMultiplayerText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Multiplayer",WINDOW_WIDTH/2, 450);
-    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit",WINDOW_WIDTH/2, 570);
+    pGame->pSingleplayerText = createText(pGame->pRenderer,238,168,65,pGame->pSmallFont,"Singleplayer",WINDOW_WIDTH/2, 330);
+    pGame->pMultiplayerText = createText(pGame->pRenderer,238,168,65,pGame->pSmallFont,"Multiplayer",WINDOW_WIDTH/2, 450);
+    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pSmallFont,"Exit",WINDOW_WIDTH/2, 570);
     pGame->pPauseText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"PAUSED",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
     pGame->pMenuText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"MENU",WINDOW_WIDTH/2,450);
     pGame->pGameOverText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"GAME OVER",WINDOW_WIDTH/2,WINDOW_HEIGHT/5);
@@ -147,6 +149,7 @@ int initiate(Game *pGame)
     pGame->nrOfEnemies = 0;
     resetEnemy(pGame);
     pGame->timeForNextEnemy = 2;
+    pGame->networkMenu = false;
     pGame->state = START;
     return 1;
 }
@@ -179,27 +182,27 @@ void run(Game *pGame)
 
         if (SDL_PointInRect(&mousePoint, startRect))
         {
-            setTextColor(pGame->pSingleplayerText, 255, 255, 100, pGame->pFont, "Singleplayer");
+            setTextColor(pGame->pSingleplayerText, 255, 255, 100, pGame->pSmallFont, "Singleplayer");
         }
         else
         {
-            setTextColor(pGame->pSingleplayerText, 238, 168, 65, pGame->pFont, "Singleplayer");
+            setTextColor(pGame->pSingleplayerText, 238, 168, 65, pGame->pSmallFont, "Singleplayer");
         }
         if (SDL_PointInRect(&mousePoint, exitRect))
         {
-            setTextColor(pGame->pExitText, 255, 100, 100, pGame->pFont, "Exit");
+            setTextColor(pGame->pExitText, 255, 100, 100, pGame->pSmallFont, "Exit");
         } 
         else
         {
-            setTextColor(pGame->pExitText, 238, 168, 65, pGame->pFont, "Exit");
+            setTextColor(pGame->pExitText, 238, 168, 65, pGame->pSmallFont, "Exit");
         }
         if (SDL_PointInRect(&mousePoint, multiRect))
         {
-            setTextColor(pGame->pMultiplayerText, 255, 100, 100, pGame->pFont, "This should later on open a window that allows one to enter a string");
+            setTextColor(pGame->pMultiplayerText, 255, 100, 100, pGame->pSmallFont, "Multiplayer");
         }
         else
         {
-            setTextColor(pGame->pMultiplayerText, 238, 168, 65, pGame->pFont, "Multiplayer");
+            setTextColor(pGame->pMultiplayerText, 238, 168, 65, pGame->pSmallFont, "Multiplayer");
         }
 
         while (SDL_PollEvent(&event))
@@ -215,6 +218,7 @@ void run(Game *pGame)
                     resetShip(pGame->pShip);
                     resetEnemy(pGame);
                     pGame->state = ONGOING;
+                    pGame->networkMenu = false;
                     pGame->pausedTime = 0;
                     pGame->startTime = SDL_GetTicks64();
                     pGame->gameTime = -1;       
@@ -223,6 +227,14 @@ void run(Game *pGame)
                 {
                     isRunning = false;
                 }
+                else if (SDL_PointInRect(&mousePoint, multiRect))
+                {
+                    pGame->networkMenu = true;
+                }
+            }
+            else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
+            {
+                pGame->networkMenu = false;
             } 
             else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
             {
@@ -245,7 +257,6 @@ void run(Game *pGame)
                 if(SDL_PointInRect(&mousePoint, MenuRect))
                 {
                     resetShip(pGame->pShip);
-                    //resetCannon(pGame->pCannon); Kanske inte behövs
                     resetEnemy(pGame);
                     pGame->state = START;
                 }
@@ -294,7 +305,12 @@ void run(Game *pGame)
             SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage, NULL, &dstRect);
             SDL_Rect dstRect2 = { 950, 125, 100, 100 };  // adjust position and size
             SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage2, NULL, &dstRect2);
+            if (pGame->networkMenu == true)
+            {
+                showMenu(pGame->pRenderer, pGame->pSmallFont);
+            }
             SDL_RenderPresent(pGame->pRenderer);    //Draw the start text
+
         }
         else if (pGame->state == PAUSED)
         {
@@ -384,4 +400,34 @@ int main(int argc, char** argv)
     run(&game);
     closeGame(&game);
     return 0;
+}
+void showMenu(SDL_Renderer *renderer, TTF_Font *font)
+{
+    // Menu box size and position
+    int menuWidth = 800;
+    int menuHeight = 250;
+    int x = (WINDOW_WIDTH - menuWidth) / 2;
+    int y = (WINDOW_HEIGHT - menuHeight) / 2 - 205;
+
+    // Draw black box
+    SDL_Rect box = {x, y, menuWidth, menuHeight};
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black
+    SDL_RenderFillRect(renderer, &box);
+
+    // Draw white border
+    SDL_SetRenderDrawColor(renderer, 238,168,65, 255);
+    SDL_RenderDrawRect(renderer, &box);
+
+    // Draw some text
+    SDL_Color textColor = {238,168,65};
+    SDL_Surface *surface = TTF_RenderText_Solid(font, "             Enter IP Adress: ", textColor);
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_Rect textRect = {x + 25, y + 10, surface->w, surface->h};
+    SDL_FreeSurface(surface);
+
+    SDL_RenderCopy(renderer, texture, NULL, &textRect);
+    SDL_DestroyTexture(texture);
+
+    // Present the result (caller may want to delay or handle this differently)
+    SDL_RenderPresent(renderer);
 }

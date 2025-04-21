@@ -11,8 +11,8 @@ struct bullet {
 };
 
 void spawn_projectile(float x, float y, float dx, float dy);
-
 void update_projectiles(float delta_time);
-
 void render_projectiles(SDL_Renderer *renderer);
+void resetBullets(bullet bullets[]);
+
 #endif
