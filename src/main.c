@@ -46,7 +46,7 @@ int getTime(Game *pGame);
 void updateGameTime(Game *pGame);
 void updateNrOfEnemies(Game *pGame);
 void resetEnemy(Game *pGame);
-void showMenu(SDL_Renderer *renderer, TTF_Font *font);
+void showMenu(SDL_Renderer *renderer, TTF_Font *font, const char *ipAdress);
 
 int initiate(Game *pGame) 
 {
@@ -322,26 +322,7 @@ void run(Game *pGame)
             SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage2, NULL, &dstRect2);
             if (pGame->networkMenu == true)
             {
-                showMenu(pGame->pRenderer, pGame->pSmallFont);
-            }
-            if (strlen(ipAdress) > 0)  // Only draw if there's something typed
-            {
-                SDL_Color BLACK = {0, 0, 0};  // Text color
-                SDL_Surface *textSurface = TTF_RenderText_Solid(pGame->pSmallFont, ipAdress, BLACK);
-
-                if (textSurface)
-                {
-                    SDL_Texture *textTexture = SDL_CreateTextureFromSurface(pGame->pRenderer, textSurface);
-                    SDL_FreeSurface(textSurface);
-
-                    if (textTexture)
-                    {
-                        SDL_Rect textRect = { 250, 150, 0, 0 };  // Position on screen
-                        SDL_QueryTexture(textTexture, NULL, NULL, &textRect.w, &textRect.h);
-                        SDL_RenderCopy(pGame->pRenderer, textTexture, NULL, &textRect);
-                        SDL_DestroyTexture(textTexture);
-                    }
-                }
+                showMenu(pGame->pRenderer, pGame->pSmallFont, ipAdress);
             }
             SDL_RenderPresent(pGame->pRenderer);    //Draw the start text
         }
@@ -434,7 +415,9 @@ int main(int argc, char** argv)
     closeGame(&game);
     return 0;
 }
-void showMenu(SDL_Renderer *renderer, TTF_Font *font)
+
+// Modify the showMenu function to include the IP address display
+void showMenu(SDL_Renderer *renderer, TTF_Font *font, const char *ipAdress)
 {
     // Menu box size and position
     int menuWidth = 800;
@@ -451,20 +434,33 @@ void showMenu(SDL_Renderer *renderer, TTF_Font *font)
     SDL_SetRenderDrawColor(renderer, 238,168,65, 255);
     SDL_RenderDrawRect(renderer, &box);
 
+    // Draw text input box
     SDL_Rect textBox = {x+50, y+125, menuWidth-100, menuHeight-150};
+    SDL_SetRenderDrawColor(renderer, 238,168,65, 0); // White
     SDL_RenderFillRect(renderer, &textBox);
 
-
-    // Draw some text
+    // Draw title text
     SDL_Color textColor = {238,168,65};
     SDL_Surface *surface = TTF_RenderText_Solid(font, "             Enter IP Adress: ", textColor);
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_Rect textRect = {x + 25, y + 10, surface->w, surface->h};
     SDL_FreeSurface(surface);
-
     SDL_RenderCopy(renderer, texture, NULL, &textRect);
     SDL_DestroyTexture(texture);
 
-    // Present the result (caller may want to delay or handle this differently)
-    SDL_RenderPresent(renderer);
+    // Draw the IP address text if it exists
+    if (strlen(ipAdress) > 0) {
+        SDL_Color BLACK = {0, 0, 0};  // Text color
+        SDL_Surface *ipSurface = TTF_RenderText_Solid(font, ipAdress, BLACK);
+        if (ipSurface) {
+            SDL_Texture *ipTexture = SDL_CreateTextureFromSurface(renderer, ipSurface);
+            SDL_FreeSurface(ipSurface);
+            
+            if (ipTexture) {
+                SDL_Rect ipRect = {x + 60, y + 145, ipSurface->w, ipSurface->h};
+                SDL_RenderCopy(renderer, ipTexture, NULL, &ipRect);
+                SDL_DestroyTexture(ipTexture);
+            }
+        }
+    }
 }
