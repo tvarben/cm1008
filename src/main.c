@@ -157,6 +157,8 @@ int initiate(Game *pGame)
 void run(Game *pGame)
 {
     bool isRunning = true;
+    char ipAdress[16] = {""};
+    int stringIndex = 0;
     SDL_Event event;
     playMusic(pGame->pMusic, -1);
 
@@ -235,12 +237,25 @@ void run(Game *pGame)
             else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
             {
                 pGame->networkMenu = false;
-            } 
+            }
+            else if (pGame->state == START && pGame->networkMenu == true && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE && stringIndex > 0)
+            {
+                ipAdress[stringIndex-1] = '\0';
+                stringIndex--;
+            }
+            else if (pGame->state == START && pGame->networkMenu == true && event.type == SDL_KEYDOWN)
+            {
+                SDL_Keycode keycode = event.key.keysym.sym;
+                if ((char)keycode <= '9' && (char)keycode >= '0' && stringIndex < 15 || (char)keycode =='.' )
+                {
+                    ipAdress[stringIndex] = (char)keycode;
+                    stringIndex++;
+                }
+            }
             else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
             {
                 pGame->state = PAUSED;
                 pGame->pauseStartTime = SDL_GetTicks64();
-
             }
             else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP))
             {
@@ -309,8 +324,26 @@ void run(Game *pGame)
             {
                 showMenu(pGame->pRenderer, pGame->pSmallFont);
             }
-            SDL_RenderPresent(pGame->pRenderer);    //Draw the start text
+            if (strlen(ipAdress) > 0)  // Only draw if there's something typed
+            {
+                SDL_Color BLACK = {0, 0, 0};  // Text color
+                SDL_Surface *textSurface = TTF_RenderText_Solid(pGame->pSmallFont, ipAdress, BLACK);
 
+                if (textSurface)
+                {
+                    SDL_Texture *textTexture = SDL_CreateTextureFromSurface(pGame->pRenderer, textSurface);
+                    SDL_FreeSurface(textSurface);
+
+                    if (textTexture)
+                    {
+                        SDL_Rect textRect = { 250, 150, 0, 0 };  // Position on screen
+                        SDL_QueryTexture(textTexture, NULL, NULL, &textRect.w, &textRect.h);
+                        SDL_RenderCopy(pGame->pRenderer, textTexture, NULL, &textRect);
+                        SDL_DestroyTexture(textTexture);
+                    }
+                }
+            }
+            SDL_RenderPresent(pGame->pRenderer);    //Draw the start text
         }
         else if (pGame->state == PAUSED)
         {
@@ -413,10 +446,14 @@ void showMenu(SDL_Renderer *renderer, TTF_Font *font)
     SDL_Rect box = {x, y, menuWidth, menuHeight};
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black
     SDL_RenderFillRect(renderer, &box);
-
+    
     // Draw white border
     SDL_SetRenderDrawColor(renderer, 238,168,65, 255);
     SDL_RenderDrawRect(renderer, &box);
+
+    SDL_Rect textBox = {x+50, y+125, menuWidth-100, menuHeight-150};
+    SDL_RenderFillRect(renderer, &textBox);
+
 
     // Draw some text
     SDL_Color textColor = {238,168,65};
