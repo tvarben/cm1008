@@ -38,6 +38,7 @@ typedef struct
     Uint64 pauseStartTime;
     Uint64 pausedTime;
     Cannon *pCannon;
+    SDL_Texture *pStartImage, *pStartImage2;
 } Game;
 
 int getTime(Game *pGame);
@@ -86,6 +87,32 @@ int initiate(Game *pGame)
         printf("Error: %s\n",TTF_GetError());
         return 0;
     }
+
+    SDL_Surface *tempSurface = IMG_Load("resources/Earth.png");
+    if (!tempSurface) {
+        printf("Image Load Error: %s\n", IMG_GetError());
+        return 0;
+    }
+    pGame->pStartImage = SDL_CreateTextureFromSurface(pGame->pRenderer, tempSurface);
+    SDL_FreeSurface(tempSurface);
+    if (!pGame->pStartImage) {
+        printf("Texture Creation Error: %s\n", SDL_GetError());
+        return 0;
+    }
+    
+    SDL_Surface *tempSurface2 = IMG_Load("resources/Asteroid.png");
+    if (!tempSurface2) {
+        printf("Image Load Error: %s\n", IMG_GetError());
+        return 0;
+    }
+    pGame->pStartImage2 = SDL_CreateTextureFromSurface(pGame->pRenderer, tempSurface2);
+    SDL_FreeSurface(tempSurface2);
+    if (!pGame->pStartImage2) {
+        printf("Texture Creation Error: %s\n", SDL_GetError());
+        return 0;
+    }
+
+
 
     pGame->pStars = createStars(WINDOW_WIDTH*WINDOW_HEIGHT/10000,WINDOW_WIDTH,WINDOW_HEIGHT);
     pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/8);
@@ -242,6 +269,10 @@ void run(Game *pGame)
             drawText(pGame->pMultiplayerText);
             drawText(pGame->pExitText);
             drawText(pGame->pGameName);
+            SDL_Rect dstRect = { 125, 500, 100, 100 };  // adjust position and size
+            SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage, NULL, &dstRect);
+            SDL_Rect dstRect2 = { 950, 125, 100, 100 };  // adjust position and size
+            SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage2, NULL, &dstRect2);
             SDL_RenderPresent(pGame->pRenderer);    //Draw the start text
         }
         else if (pGame->state == PAUSED)
