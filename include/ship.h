@@ -2,6 +2,7 @@
 #define SHIP_H
 
 #include <SDL2/SDL.h>
+#include <stdbool.h>
 
 typedef struct Ship Ship;
 
@@ -16,4 +17,6 @@ void destroyShip(Ship* s);
 int getShipX(Ship *s);
 int getShipY(Ship *s);
 int shipCollision(Ship *pShip, SDL_Rect rect);
+bool isLeft(Ship *pShip);
+
 #endif

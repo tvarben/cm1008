@@ -80,6 +80,15 @@ void updateCannon(Cannon *pCannon, Ship *pShip) {
   
     //printf("Y coordinate: %d\n", pCannon->rect.y);
     //printf("X coordinate: %d\n", pCannon->rect.x);
+    if (isLeft(pShip))
+    {
+      pCannon->lastFacedLeft = true;
+    }
+    else
+    {
+      pCannon->lastFacedLeft = false;
+    }
+    
   }
 
 void handleCannonEvent(Cannon *c, SDL_Event *event) {

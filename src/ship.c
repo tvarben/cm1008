@@ -148,3 +148,15 @@ int shipCollision(Ship *pShip, SDL_Rect rect) {
 float distance(int x1, int y1, int x2, int y2) {
     return sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
 }
+
+bool isLeft(Ship *pShip)
+{
+    if (pShip->facingLeft == true )
+    {
+        return true;
+    }
+    if (pShip->facingLeft == false )
+    {
+        return false;
+    }
+}
