@@ -27,6 +27,8 @@ typedef struct {
 	TTF_Font *pFont;
 	Text *pStartText, *pGameName, *pExitText;
 
+    ClientCommand command;
+
     UDPsocket pSocket;
     IPaddress serverAddress;
     UDPpacket *pPacket;
@@ -130,6 +132,7 @@ int initiate(Game *pGame) {
 void run(Game *pGame) {
     bool isRunning = true;
     SDL_Event event;
+    ClientData cData;
 
     //playMusic(pGame->pMusic, -1);
 
@@ -142,6 +145,13 @@ void run(Game *pGame) {
                 isRunning = false;
             } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
                 handleShipEvent(pGame->pShip, &event);
+                
+                cData.playerId = 1;
+                cData.command = MOVE_DOWN;
+
+                memcpy(pGame->pPacket->data, &cData, sizeof(ClientData));
+                pGame->pPacket->len = sizeof(ClientData);
+                SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
             }/* else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
                 strcpy((char*)pGame->pPacket->data, "Hej pa dig!");
                 pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;

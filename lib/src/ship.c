@@ -120,3 +120,32 @@ void destroyShip(Ship* s) {
         free(s);
     }
 }
+
+/*
+void applyShipCommand(Ship* s, ClientCommand command) {
+    switch (command) {
+        case MOVE_UP:
+            s->keyUp = true;
+            s->keyDown = false;
+            break;
+        case MOVE_DOWN:
+            s->keyDown = true;
+            s->keyUp = false;
+            break;
+        case MOVE_LEFT:
+            s->keyLeft = true;
+            s->keyRight = false;
+            break;
+        case MOVE_RIGHT:
+            s->keyRight = true;
+            s->keyLeft = false;
+            break;
+        case PAUSE:
+        case SHOOT:
+        case QUIT:
+        default:
+            break;
+    }
+    handleShipEvent(pGame->pShip, &event);
+}
+*/
