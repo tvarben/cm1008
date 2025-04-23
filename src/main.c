@@ -13,7 +13,7 @@
 #include "cannon.h"
 #include "menu.h"
 #define MAX_BULLETS 100
-#define MAX_ENEMIES 30
+#define MAX_ENEMIES 10
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
 #define MUSIC_FILEPATH "./resources/music.wav"
@@ -300,9 +300,9 @@ void run(Game *pGame)
             for(int i=0;i<pGame->nrOfEnemies;i++) updateEnemy(pGame->pEnemies[i]);
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);
             SDL_RenderClear(pGame->pRenderer);
+            drawStars(pGame->pStars,pGame->pRenderer);
             SDL_Rect dstRect = { WINDOW_WIDTH/2.5, WINDOW_HEIGHT/3, 200, 200 };  // adjust position and size
             SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage, NULL, &dstRect);
-            drawStars(pGame->pStars,pGame->pRenderer);
             drawShip(pGame->pShip);
             drawCannon(pGame->pCannon);
             render_projectiles(pGame->pRenderer); // test      
@@ -323,6 +323,8 @@ void run(Game *pGame)
                     if (SDL_HasIntersection(&enemyRect, &bulletRect))
                     {
                         printf("CLOWN DOWN \n");
+                        printf("enemy num: %d \n", k);
+                        damageEnemy(pGame->pEnemies[k], 50);
                         disableEnemy(pGame->pEnemies[k]);
                     }
                 }

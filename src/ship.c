@@ -15,6 +15,7 @@ struct Ship {
     bool keyLeft, keyRight, keyUp, keyDown;
     float rotationAngle;
     bool facingLeft;
+    SDL_Rect hitbox; 
 };
 Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int windowHeight) {
     Ship* s = malloc(sizeof(Ship));
@@ -29,7 +30,7 @@ Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int wind
 
     SDL_Surface* surface = IMG_Load("resources/player.png");
     if (!surface) {
-        printf("Error loading Ship.png: %s\n", IMG_GetError());
+        printf("Error loading player.png: %s\n", IMG_GetError());
         free(s);
         return NULL;
     }
@@ -112,6 +113,11 @@ void updateShip(Ship* s) {
 
     s->rect.x = (int)s->x;
     s->rect.y = (int)s->y;
+    
+    s->hitbox.w = s->rect.w * 0.7;
+    s->hitbox.h = s->rect.h * 0.2;
+    s->hitbox.x = s->x + (s->rect.w - s->hitbox.w) / 2;
+    s->hitbox.y = s->y + (s->rect.h - s->hitbox.h) / 2;
 }
 
 
@@ -142,8 +148,9 @@ int getShipY(Ship *s) { return s->y; }
 
 
 int shipCollision(Ship *pShip, SDL_Rect rect) {
-    return distance(pShip->rect.x+pShip->rect.w/2,pShip->rect.y+pShip->rect.h/2,rect.x+rect.w/2,rect.y+rect.h/2)<(pShip->rect.w+rect.w)/2;
+    return SDL_HasIntersection(&pShip->rect, &rect);
 }
+
 
 float distance(int x1, int y1, int x2, int y2) {
     return sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));

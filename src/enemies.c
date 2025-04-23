@@ -19,6 +19,8 @@ struct enemy{
     SDL_Renderer *pRenderer;
     SDL_Texture *pTexture;
     SDL_Rect rect;
+    SDL_Rect rectHitbox;
+
 };
 
 
@@ -68,7 +70,10 @@ Enemy *createEnemy(EnemyImage *pEnemyImage, int window_width, int window_height)
 static void getStartValues(Enemy *pEnemy){
     srand(time(NULL));
     int startSpawnOnTheLeft =  rand() % 2; //0 or 1
-
+    pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
+    pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
+    pEnemy->rectHitbox.w = pEnemy->rect.w - 20;
+    pEnemy->rectHitbox.h = pEnemy->rect.h - 20;
     if (startSpawnOnTheLeft == 1)
     {
     pEnemy->x = pEnemy->window_width;
@@ -77,9 +82,9 @@ static void getStartValues(Enemy *pEnemy){
     float speed = 5.0f;
     pEnemy->vx = -speed; // rakt åt vänster
     pEnemy->vy = 0;      // ingen rörelse i y-led
-
-    pEnemy->rect.x = pEnemy->x;
-    pEnemy->rect.y = pEnemy->y;
+    pEnemy->damage = 50;
+    pEnemy->health = 100;
+   
     }
     else 
     {
@@ -89,16 +94,13 @@ static void getStartValues(Enemy *pEnemy){
         float speed = 5.0f;
         pEnemy->vx = speed; // move right
         pEnemy->vy = 0;
-
-        pEnemy->rect.x = pEnemy->x;
-        pEnemy->rect.y = pEnemy->y;
     }
 }
 
 SDL_Rect getRectEnemy(Enemy *pEnemy){
     if (pEnemy->active == true)
     {
-        return pEnemy->rect;
+        return pEnemy->rectHitbox;
     }
 }
 void updateEnemy(Enemy *pEnemy){
@@ -115,6 +117,8 @@ void updateEnemy(Enemy *pEnemy){
         }
         pEnemy->rect.x=pEnemy->x;
         pEnemy->rect.y=pEnemy->y;
+        pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
+        pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
    }
 }
 
@@ -135,5 +139,14 @@ void destroyEnemyImage(EnemyImage *pEnemyImage){
 
 void disableEnemy(Enemy *pEnemy)
 {
+    if(pEnemy->health <= 0)
+    {
     pEnemy->active = false;
+    }
+}
+
+void damageEnemy(Enemy *pEnemy, int damage)
+{
+    pEnemy->health -= damage;
+    printf("enemy health: %.2f\n", pEnemy->health);
 }

@@ -14,6 +14,7 @@ void destroyEnemy(Enemy *pEnemy);
 SDL_Rect getRectEnemy(Enemy *pEnemy);
 void destroyEnemyImage(EnemyImage *pEnemyImage);
 void disableEnemy(Enemy *pEnemy);
+void damageEnemy(Enemy *pEnemy, int damage);
 
 
 #endif
