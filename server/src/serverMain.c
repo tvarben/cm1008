@@ -137,12 +137,16 @@ void run(Game *pGame) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
+            } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+                handleShipEvent(pGame->pShip, &event);
             }
         }
+        updateShipVelocity(pGame->pShip);
+        updateShip(pGame->pShip);
         SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
         SDL_RenderClear(pGame->pRenderer);   
-        
-        drawText(pGame->pStartText);
+        drawShip(pGame->pShip);
+        //drawText(pGame->pStartText);
         SDL_RenderPresent(pGame->pRenderer);
         
         if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {

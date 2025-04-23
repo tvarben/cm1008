@@ -9,13 +9,14 @@
 #include "ship.h"
 #include "sound.h"
 #include "text.h"
+#include "ship_data.h"
 
 #define WINDOW_WIDTH 500
 #define WINDOW_HEIGHT 400
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
-enum GameState { START, ONGOING, GAME_OVER };
-typedef enum GameState GameState;
+typedef enum  { START, ONGOING, GAME_OVER 
+} GameState;
 
 typedef struct {
     SDL_Window *pWindow;
@@ -133,6 +134,8 @@ void run(Game *pGame) {
     //playMusic(pGame->pMusic, -1);
 
     while (isRunning) {
+
+
     
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
