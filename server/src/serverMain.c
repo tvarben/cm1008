@@ -9,6 +9,7 @@
 #include "ship.h"
 #include "sound.h"
 #include "text.h"
+#include "ship_data.h"
 
 #define WINDOW_WIDTH 500
 #define WINDOW_HEIGHT 400
@@ -27,6 +28,8 @@ typedef struct {
     Mix_Music *pMusic;
 	TTF_Font *pFont;
 	Text *pStartText, *pGameName, *pExitText;
+
+    ClientCommand command;
 
     UDPsocket pSocket;
     IPaddress serverAddress;
@@ -131,8 +134,14 @@ void run(Game *pGame) {
     bool isRunning = true;
     printf("Server is listening on port 2000...\n");
     SDL_Event event;
+    ClientData cData;
 
     while (isRunning) {
+        while(SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) {
+            memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
+            SDL_Event* event = (SDL_Event*)pGame->pPacket->data;
+            handleShipEvent(pGame, &event);
+        }
 
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -141,7 +150,7 @@ void run(Game *pGame) {
                 handleShipEvent(pGame->pShip, &event);
             }
         }
-        updateShipVelocity(pGame->pShip);
+        //updateShipVelocity(pGame->pShip);
         updateShip(pGame->pShip);
         SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
         SDL_RenderClear(pGame->pRenderer);   

@@ -1,15 +1,7 @@
 #ifndef SHIP_DATA_H
 #define SHIP_DATA_H
 
-#define WINDOW_WIDTH
 #define MAX_PLAYERS 1
-
-/*typedef enum {
-	START,
-	ONGOING,
-	GACE_OVER
-};
-typedef enum gameState GameState;*/
 
 typedef enum{
     MOVE_UP,
@@ -19,12 +11,11 @@ typedef enum{
     SHOOT,
     PAUSE,
     QUIT
-    }Command;
-//typedef enum command Command;
+}ClientCommand;
 
 typedef struct{
-    int player_id;
-    Command command;
-}ClientCommand;
+    int playerId;
+    ClientCommand command;
+}ClientData;
 
 #endif
