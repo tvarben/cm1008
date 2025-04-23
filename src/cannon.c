@@ -70,64 +70,36 @@ void destroyCannon(Cannon *c) {
 }
 
 void updateCannon(Cannon *pCannon, Ship *pShip) {
-    // offset from where ship spawns to adjust where we
-    // want to place cannon. change later to adjust for sprite sheet
-    double cannonLocationX = 28;
-    double cannonLocationY = 15;
-  
-    pCannon->rect.y = getShipY(pShip) + cannonLocationY;
-    pCannon->rect.x = getShipX(pShip) + cannonLocationX;
-  
-    //printf("Y coordinate: %d\n", pCannon->rect.y);
-    //printf("X coordinate: %d\n", pCannon->rect.x);
-    if (isLeft(pShip))
-    {
-      pCannon->lastFacedLeft = true;
-    }
-    else
-    {
-      pCannon->lastFacedLeft = false;
-    }
-    
-  }
+  double cannonLocationX = 28;
+  double cannonLocationY = 15;
 
-void handleCannonEvent(Cannon *c, SDL_Event *event) {
-  switch (event->key.keysym.scancode) {
-  case SDL_SCANCODE_SPACE:
-    // printf("spacebar click registered\n");
-    if (c->lastFacedLeft == true)
-    {
-      spawn_projectile(c->rect.x-8, c->rect.y+15, c->dx, c->dy); // fires projectile
-    }
-    else 
-    {
-      spawn_projectile(c->rect.x+20, c->rect.y+15, c->dx, c->dy); // fires projectile
-    }
-    break;
-  case SDL_SCANCODE_D: case SDL_SCANCODE_RIGHT:
-    c->dy = 0;
-    c->dx = 100;
-    c->lastFacedLeft = false;
-    break;
-  case SDL_SCANCODE_A: case SDL_SCANCODE_LEFT:
-    c->dy = 0;
-    c->dx = -100;
-    c->lastFacedLeft = true;
-    break;
-  default:
-    if (c->lastFacedLeft == true)
-    {
-      c->dy = 0;
-      c->dx = -100;
-    }
-    else
-    {
-      c->dy = 0;
-      c->dx = 100;
-    }
-    break;
+  pCannon->rect.y = getShipY(pShip) + cannonLocationY;
+  pCannon->rect.x = getShipX(pShip) + cannonLocationX;
+
+  if (isLeft(pShip)) {
+    pCannon->lastFacedLeft = true;
+    pCannon->dx = -100;
+    pCannon->dy = 0;
+  } else {
+    pCannon->lastFacedLeft = false;
+    pCannon->dx = 100;
+    pCannon->dy = 0;
   }
 }
+
+  void handleCannonEvent(Cannon *c, SDL_Event *event) {
+    printf("FIRING AWAY SIR! ('_')/ \n");
+    if (event->type == SDL_KEYDOWN && event->key.keysym.scancode == SDL_SCANCODE_SPACE) {
+      if (c->lastFacedLeft) {
+        spawn_projectile(c->rect.x - 8, c->rect.y + 15, -100, 0);
+        printf("left\n");
+      } else {
+        spawn_projectile(c->rect.x + 20, c->rect.y + 15, 100, 0);
+        printf("right\n");
+      }
+    }
+  }
+
 void resetCannon(Cannon *c) {
   c->spacebar = false;
   c->moveDownN = false;

@@ -258,16 +258,19 @@ void run(Game *pGame)
             {
                 pGame->state = PAUSED;
                 pGame->pauseStartTime = SDL_GetTicks64();
-            }
-            else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP))
+            }   
+            else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE)
             {
-                handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
                 if (now - pGame->lastAttackTime >= pGame->attackDelay)
                 {
                     handleCannonEvent(pGame->pCannon, &event);
                     pGame->lastAttackTime = now;
                 }
-            }  
+            }
+            else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP))
+            {
+                handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
+            }    
             else if (pGame->state == PAUSED && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
             {
                 pGame->pausedTime += SDL_GetTicks64() - pGame->pauseStartTime;
@@ -319,7 +322,7 @@ void run(Game *pGame)
                     SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies[k]);
                     if (SDL_HasIntersection(&enemyRect, &bulletRect))
                     {
-                        printf("collision hit\n");
+                        printf("CLOWN DOWN \n");
                         disableEnemy(pGame->pEnemies[k]);
                     }
                 }
