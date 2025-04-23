@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #define MAX_PROJECTILES 100
-bullet projectiles[MAX_PROJECTILES]; // 100 bullets can be active at the time
+Bullet projectiles[MAX_PROJECTILES]; // 100 bullets can be active at the time
 #include <stdlib.h>
 #define projectile_width 8
 #define projectile_length 4
@@ -58,10 +58,13 @@ void render_projectiles(SDL_Renderer *renderer) {
   }
 }
 
-void resetBullets(bullet bullets[])
-{
-  for (int i = 0; i < MAX_PROJECTILES; i++)
-  {
-    bullets[i].active = false;
+SDL_Rect getRectBullet(Bullet *pBullet) { return pBullet->rect; }
+
+void getProjectileRects(SDL_Rect rectArray[]) {
+  for (int i = 0; i < MAX_PROJECTILES; i++) {
+    if (!projectiles[i].active)
+      continue;
+    rectArray[i] = projectiles[i].rect;
   }
+  return;
 }

@@ -14,6 +14,7 @@ struct enemy{
     float x, y, vx, vy;
     float health;
     float damage;
+    bool active;
     int window_width,window_height,renderAngle;
     SDL_Renderer *pRenderer;
     SDL_Texture *pTexture;
@@ -59,6 +60,7 @@ Enemy *createEnemy(EnemyImage *pEnemyImage, int window_width, int window_height)
     pEnemy->window_height = window_height;
     SDL_QueryTexture(pEnemyImage->pTexture,NULL,NULL,&(pEnemy->rect.w),&(pEnemy->rect.h));
     getStartValues(pEnemy);
+    pEnemy->active = true;
     pEnemy->renderAngle = rand()%360;
     return pEnemy;
 }
@@ -94,27 +96,44 @@ static void getStartValues(Enemy *pEnemy){
 }
 
 SDL_Rect getRectEnemy(Enemy *pEnemy){
-    return pEnemy->rect;
+    if (pEnemy->active == true)
+    {
+        return pEnemy->rect;
+    }
 }
 void updateEnemy(Enemy *pEnemy){
-    pEnemy->x+=pEnemy->vx*0.1;
-    pEnemy->y+=pEnemy->vy*0.1;
-    if (pEnemy->x>pEnemy->window_width||pEnemy->y>pEnemy->window_height){
-        getStartValues(pEnemy);
-        return;
-    }
-    pEnemy->rect.x=pEnemy->x;
-    pEnemy->rect.y=pEnemy->y;
+    if(pEnemy->active == true)
+    {
+        pEnemy->x+=pEnemy->vx*0.1;
+        pEnemy->y+=pEnemy->vy*0.1;
+        if (pEnemy->x > pEnemy->window_width || pEnemy->x + pEnemy->rect.w < 0 ||
+            pEnemy->y > pEnemy->window_height || pEnemy->y + pEnemy->rect.h < 0)
+        {
+            //getStartValues(pEnemy); //immediatly respawns enemy once it leaves windows
+            disableEnemy(pEnemy);  
+            return;
+        }
+        pEnemy->rect.x=pEnemy->x;
+        pEnemy->rect.y=pEnemy->y;
+   }
 }
 
 void drawEnemy(Enemy *pEnemy){
-    SDL_RenderCopyEx(pEnemy->pRenderer, pEnemy->pTexture, NULL, &(pEnemy->rect), 0, NULL, SDL_FLIP_NONE); //made 0 to not rotate enemy.png
+    if (pEnemy->active == true)
+    {
+        SDL_RenderCopyEx(pEnemy->pRenderer, pEnemy->pTexture, NULL, &(pEnemy->rect), 0, NULL, SDL_FLIP_NONE); //made 0 to not rotate enemy.png
+    }
 }
 
 void destroyEnemy(Enemy *pEnemy){
-    free(pEnemy);
+        free(pEnemy);
 }
 
 void destroyEnemyImage(EnemyImage *pEnemyImage){
     SDL_DestroyTexture(pEnemyImage->pTexture);
+}
+
+void disableEnemy(Enemy *pEnemy)
+{
+    pEnemy->active = false;
 }

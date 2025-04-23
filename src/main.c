@@ -11,6 +11,7 @@
 #include "enemies.h"
 #include "bullet.h"
 #include "cannon.h"
+#define MAX_BULLETS 100
 #define MAX_ENEMIES 30
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
@@ -38,6 +39,7 @@ typedef struct
     Uint64 pauseStartTime;
     Uint64 pausedTime;
     Cannon *pCannon;
+    Bullet *pProjectiles[MAX_BULLETS];
     SDL_Texture *pStartImage, *pStartImage2;
     bool networkMenu;
 } Game;
@@ -157,6 +159,7 @@ int initiate(Game *pGame)
 void run(Game *pGame)
 {
     bool isRunning = true;
+    SDL_Rect rectArray[MAX_PROJECTILES] = {0,0,0,0};
     char ipAdress[16] = {""};
     int stringIndex = 0;
     SDL_Event event;
@@ -299,11 +302,27 @@ void run(Game *pGame)
             render_projectiles(pGame->pRenderer); // test      
             for(int i=0;i<pGame->nrOfEnemies;i++) drawEnemy(pGame->pEnemies[i]);
             for(int i=0;i<pGame->nrOfEnemies;i++){
-                if(shipCollision(pGame->pShip,getRectEnemy(pGame->pEnemies[i]))){
+                if(shipCollision(pGame->pShip, getRectEnemy(pGame->pEnemies[i]))){
                     pGame->state = GAME_OVER;
                 }
             }
             if(pGame->pScoreText) drawText(pGame->pScoreText);
+            getProjectileRects(rectArray);
+            for (int i = 0; i < MAX_PROJECTILES; i++)
+            {
+                SDL_Rect bulletRect = rectArray[i];
+                for (int k = 0; k < pGame->nrOfEnemies; k++)
+                {
+                    SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies[k]);
+                    if (SDL_HasIntersection(&enemyRect, &bulletRect))
+                    {
+                        printf("collision hit\n");
+                        disableEnemy(pGame->pEnemies[k]);
+                    }
+                }
+            }
+            if (pGame->pScoreText)
+            drawText(pGame->pScoreText);
             SDL_RenderPresent(pGame->pRenderer);
         } 
         else if (pGame->state == START) 
@@ -318,7 +337,7 @@ void run(Game *pGame)
             drawText(pGame->pGameName);
             SDL_Rect dstRect = { 125, 500, 100, 100 };  // adjust position and size
             SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage, NULL, &dstRect);
-            SDL_Rect dstRect2 = { 950, 125, 100, 100 };  // adjust position and size
+            SDL_Rect dstRect2 = { 1000, 125, 50, 50 };  // adjust position and size
             SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage2, NULL, &dstRect2);
             if (pGame->networkMenu == true)
             {
@@ -383,7 +402,6 @@ void updateGameTime(Game *pGame)
     }
 }
 
-
 void updateNrOfEnemies(Game *pGame)
 {
     if(getTime(pGame)>pGame->timeForNextEnemy && pGame->nrOfEnemies<MAX_ENEMIES)
@@ -403,8 +421,6 @@ void resetEnemy(Game *pGame)
         pGame->pEnemies[i] = createEnemy(pGame->pEnemyImage,WINDOW_WIDTH,WINDOW_HEIGHT);
     }
 }
-
-
 
 int main(int argc, char** argv)
 {

@@ -78,14 +78,14 @@ void updateCannon(Cannon *pCannon, Ship *pShip) {
     pCannon->rect.y = getShipY(pShip) + cannonLocationY;
     pCannon->rect.x = getShipX(pShip) + cannonLocationX;
   
-    printf("Y coordinate: %d\n", pCannon->rect.y);
-    printf("X coordinate: %d\n", pCannon->rect.x);
+    //printf("Y coordinate: %d\n", pCannon->rect.y);
+    //printf("X coordinate: %d\n", pCannon->rect.x);
   }
 
 void handleCannonEvent(Cannon *c, SDL_Event *event) {
   switch (event->key.keysym.scancode) {
   case SDL_SCANCODE_SPACE:
-    printf("spacebar click registered\n");
+    // printf("spacebar click registered\n");
     if (c->lastFacedLeft == true)
     {
       spawn_projectile(c->rect.x-8, c->rect.y+15, c->dx, c->dy); // fires projectile

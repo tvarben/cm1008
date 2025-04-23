@@ -2,17 +2,24 @@
 #define BULLET_H
 #include "ship.h"
 #include <SDL2/SDL.h>
+#include <stdbool.h>
+#define MAX_PROJECTILES 100
 
-typedef struct bullet bullet;
+typedef struct bullet Bullet;
+
 struct bullet {
   float x, y, vx, vy;
-  int active;
+  bool active;
   SDL_Rect rect;
 };
 
 void spawn_projectile(float x, float y, float dx, float dy);
+
+void getProjectileRects(SDL_Rect rectArray[]);
 void update_projectiles(float delta_time);
+
 void render_projectiles(SDL_Renderer *renderer);
-void resetBullets(bullet bullets[]);
+
+SDL_Rect getRectProjectile(Bullet projectile[]);
 
 #endif
