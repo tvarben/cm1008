@@ -44,7 +44,6 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-
 int initiate(Game *pGame) {
     srand(time(NULL));
     Mix_Init(MIX_INIT_WAVPACK);
@@ -140,12 +139,12 @@ void run(Game *pGame) {
                 isRunning = false;
             } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
                 handleShipEvent(pGame->pShip, &event);
-            } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+            }/* else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
                 strcpy((char*)pGame->pPacket->data, "Hej pa dig!");
                 pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
                 SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
                 SDL_Delay(10);
-            } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2){
+            }*/else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2){
                 isRunning = false;
             }
             if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
@@ -158,10 +157,8 @@ void run(Game *pGame) {
         SDL_RenderClear(pGame->pRenderer);
         drawShip(pGame->pShip);   
         SDL_RenderPresent(pGame->pRenderer);
-        
     }
 }
-
 
 void closeGame(Game *pGame) {
     if (pGame->pShip) destroyShip(pGame->pShip);
