@@ -7,8 +7,8 @@
 #define MAX_PROJECTILES 100
 Bullet projectiles[MAX_PROJECTILES]; // 100 bullets can be active at the time
 #include <stdlib.h>
-#define projectile_width 8
-#define projectile_length 4
+#define projectile_width 6
+#define projectile_length 2
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
 
@@ -22,7 +22,7 @@ void spawn_projectile(float x, float y, float dx, float dy) {
       projectiles[i].active = 1;
       projectiles[i].rect.w = projectile_width; // size of projectile
       projectiles[i].rect.h = projectile_length;
-      printf("projectile shot \n");
+      //printf("projectile shot \n");
       return;
     }
   }

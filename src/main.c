@@ -11,6 +11,7 @@
 #include "enemies.h"
 #include "bullet.h"
 #include "cannon.h"
+#include "menu.h"
 #define MAX_BULLETS 100
 #define MAX_ENEMIES 30
 #define WINDOW_WIDTH 1160
@@ -42,13 +43,15 @@ typedef struct
     Bullet *pProjectiles[MAX_BULLETS];
     SDL_Texture *pStartImage, *pStartImage2;
     bool networkMenu;
+    Uint32 attackDelay;
+    Uint32 lastAttackTime;
+
 } Game;
 
 int getTime(Game *pGame);
 void updateGameTime(Game *pGame);
 void updateNrOfEnemies(Game *pGame);
 void resetEnemy(Game *pGame);
-void showMenu(SDL_Renderer *renderer, TTF_Font *font, const char *ipAdress);
 
 int initiate(Game *pGame) 
 {
@@ -128,12 +131,8 @@ int initiate(Game *pGame)
     pGame->pGameOverText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"GAME OVER",WINDOW_WIDTH/2,WINDOW_HEIGHT/5);
     pGame->pEnemyImage = initiateEnemy(pGame->pRenderer);
     pGame->pCannon = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-    if(!pGame->pFont)
-    {
-        printf("Error: %s\n",TTF_GetError());
-        return 0;
-    }
+    pGame->attackDelay = 250;
+    pGame->lastAttackTime = 0;
 
     pGame->pShip = createShip(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     if (!pGame->pShip)
@@ -175,7 +174,7 @@ void run(Game *pGame)
         float delta_time = (current_time - last_time) /
         1000.0f; // calculates time passed since last frame
         last_time = current_time;   // needed for shooting
-
+        Uint32 now = SDL_GetTicks();
         SDL_GetMouseState(&x,&y);
         SDL_Point mousePoint = {x,y};       //Kolla position för musen
 
@@ -263,7 +262,11 @@ void run(Game *pGame)
             else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP))
             {
                 handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
-                handleCannonEvent(pGame->pCannon, &event); // what makes cannon shoot
+                if (now - pGame->lastAttackTime >= pGame->attackDelay)
+                {
+                    handleCannonEvent(pGame->pCannon, &event);
+                    pGame->lastAttackTime = now;
+                }
             }  
             else if (pGame->state == PAUSED && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
             {
@@ -341,7 +344,7 @@ void run(Game *pGame)
             SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage2, NULL, &dstRect2);
             if (pGame->networkMenu == true)
             {
-                showMenu(pGame->pRenderer, pGame->pSmallFont, ipAdress);
+                showNetworkMenu(pGame->pRenderer, pGame->pSmallFont, ipAdress);
             }
             SDL_RenderPresent(pGame->pRenderer);    //Draw the start text
         }
@@ -430,53 +433,4 @@ int main(int argc, char** argv)
     run(&game);
     closeGame(&game);
     return 0;
-}
-
-// Modify the showMenu function to include the IP address display
-void showMenu(SDL_Renderer *renderer, TTF_Font *font, const char *ipAdress)
-{
-    // Menu box size and position
-    int menuWidth = 800;
-    int menuHeight = 250;
-    int x = (WINDOW_WIDTH - menuWidth) / 2;
-    int y = (WINDOW_HEIGHT - menuHeight) / 2 - 205;
-
-    // Draw black box
-    SDL_Rect box = {x, y, menuWidth, menuHeight};
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black
-    SDL_RenderFillRect(renderer, &box);
-    
-    // Draw white border
-    SDL_SetRenderDrawColor(renderer, 238,168,65, 255);
-    SDL_RenderDrawRect(renderer, &box);
-
-    // Draw text input box
-    SDL_Rect textBox = {x+50, y+125, menuWidth-100, menuHeight-150};
-    SDL_SetRenderDrawColor(renderer, 238,168,65, 0); // White
-    SDL_RenderFillRect(renderer, &textBox);
-
-    // Draw title text
-    SDL_Color textColor = {238,168,65};
-    SDL_Surface *surface = TTF_RenderText_Solid(font, "             Enter IP Adress: ", textColor);
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_Rect textRect = {x + 25, y + 10, surface->w, surface->h};
-    SDL_FreeSurface(surface);
-    SDL_RenderCopy(renderer, texture, NULL, &textRect);
-    SDL_DestroyTexture(texture);
-
-    // Draw the IP address text if it exists
-    if (strlen(ipAdress) > 0) {
-        SDL_Color BLACK = {0, 0, 0};  // Text color
-        SDL_Surface *ipSurface = TTF_RenderText_Solid(font, ipAdress, BLACK);
-        if (ipSurface) {
-            SDL_Texture *ipTexture = SDL_CreateTextureFromSurface(renderer, ipSurface);
-            SDL_FreeSurface(ipSurface);
-            
-            if (ipTexture) {
-                SDL_Rect ipRect = {x + 60, y + 145, ipSurface->w, ipSurface->h};
-                SDL_RenderCopy(renderer, ipTexture, NULL, &ipRect);
-                SDL_DestroyTexture(ipTexture);
-            }
-        }
-    }
 }
