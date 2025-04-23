@@ -12,7 +12,7 @@
 #include "text.h"
 
 struct game{
-    SDL_Window *pWindow;
+    SDL_Window *pWindow;                    
     SDL_Renderer *pRenderer;
     Rocket *pRocket[MAX_ROCKETS];
     int nr_of_rockets, rocketNr;
