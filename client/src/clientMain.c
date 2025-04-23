@@ -10,8 +10,8 @@
 #include "sound.h"
 #include "text.h"
 
-#define WINDOW_WIDTH 200
-#define WINDOW_HEIGHT 200
+#define WINDOW_WIDTH 500
+#define WINDOW_HEIGHT 400
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
 enum GameState { START, ONGOING, GAME_OVER };
@@ -134,25 +134,17 @@ void run(Game *pGame) {
     //playMusic(pGame->pMusic, -1);
 
     while (isRunning) {
-        
+    
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
+            } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+                handleShipEvent(pGame->pShip, &event);
             } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
                 strcpy((char*)pGame->pPacket->data, "Hej pa dig!");
                 pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
                 SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
-
-                if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
-                    printf("Server recieved a command from %x:%d: %s\n",
-                                                pGame->pPacket->address.host, 
-                                                pGame->pPacket->address.port,
-                                                (char*)pGame->pPacket->data);
-                }
-                //printf("Sent: %s\n", (char*)pGame->pPacket->data);
-                
-                //pGame->pPacket->len = sizeof(ClientData);
-
+                SDL_Delay(10);
             } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2){
                 isRunning = false;
             }
@@ -160,13 +152,11 @@ void run(Game *pGame) {
                 printf("Received from server: %s\n", (char*)pGame->pPacket->data);
             }
         }
-
+        updateShipVelocity(pGame->pShip);
+        updateShip(pGame->pShip);
         SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
-        SDL_RenderClear(pGame->pRenderer);   
-        
-        drawText(pGame->pStartText);
-        drawText(pGame->pExitText);
-        drawText(pGame->pGameName);
+        SDL_RenderClear(pGame->pRenderer);
+        drawShip(pGame->pShip);   
         SDL_RenderPresent(pGame->pRenderer);
         
     }

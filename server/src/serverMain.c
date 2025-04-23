@@ -10,8 +10,8 @@
 #include "sound.h"
 #include "text.h"
 
-#define WINDOW_WIDTH 200
-#define WINDOW_HEIGHT 200
+#define WINDOW_WIDTH 500
+#define WINDOW_HEIGHT 400
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 #define MAX_PLAYERS 2
 
@@ -71,9 +71,8 @@ int initiate(Game *pGame) {
         return 0;
     }
 
-    pGame->pWindow = SDL_CreateWindow("",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+    pGame->pWindow = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                    WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     if (!pGame->pWindow) {
         printf("Window Error: %s\n", SDL_GetError());
         return 0;
@@ -91,9 +90,12 @@ int initiate(Game *pGame) {
         return 0;
     }
 
-	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Start [1]",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
-    pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
-    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"Exit [2]",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
+	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,
+                                "Start [1]",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
+    pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,
+                                "SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
+    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,
+                                "Exit [2]",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
     if(!pGame->pFont){
         printf("Error: %s\n",TTF_GetError());
         return 0;
@@ -149,7 +151,7 @@ void run(Game *pGame) {
                                         pGame->pPacket->address.port, 
                                         (char*)pGame->pPacket->data);
             
-            strcpy((char*)pGame->pPacket->data, "Har far du svar fran server.\n");
+            strcpy((char*)pGame->pPacket->data, "Har far du svar fran server.");
             pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
             SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
             
@@ -159,12 +161,9 @@ void run(Game *pGame) {
             //SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
             //printf("Response sent.\n");
         }
-
-
         SDL_Delay(8);
     }
 }
-
 
 void closeGame(Game *pGame) {
     if (pGame->pShip) destroyShip(pGame->pShip);
