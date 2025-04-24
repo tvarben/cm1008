@@ -9,7 +9,6 @@ struct enemyImage{
     SDL_Texture *pTexture;    
 };
 
-
 struct enemy{
     float x, y, vx, vy;
     float health;
@@ -20,9 +19,7 @@ struct enemy{
     SDL_Texture *pTexture;
     SDL_Rect rect;
     SDL_Rect rectHitbox;
-
 };
-
 
 static void getStartValues(Enemy *name);
 
@@ -112,7 +109,7 @@ void updateEnemy(Enemy *pEnemy){
             pEnemy->y > pEnemy->window_height || pEnemy->y + pEnemy->rect.h < 0)
         {
             //getStartValues(pEnemy); //immediatly respawns enemy once it leaves windows
-            disableEnemy(pEnemy);  
+            pEnemy->active = false;
             return;
         }
         pEnemy->rect.x=pEnemy->x;
@@ -149,4 +146,15 @@ void damageEnemy(Enemy *pEnemy, int damage)
 {
     pEnemy->health -= damage;
     printf("enemy health: %.2f\n", pEnemy->health);
+}
+bool checkIfActive(Enemy *pEnemy, int nrOfEnemies)
+{
+    if(pEnemy->active==true)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }

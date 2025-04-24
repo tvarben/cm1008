@@ -331,6 +331,7 @@ void run(Game *pGame)
                         printf("enemy num: %d \n", k);
                         damageEnemy(pGame->pEnemies[k], 50);
                         disableEnemy(pGame->pEnemies[k]);
+                        removeProjectile(i);
                     }
                 }
             }
@@ -421,17 +422,22 @@ void updateNrOfEnemies(Game *pGame)
     {
         (pGame->timeForNextEnemy)+=1;//seconds till next enemy
         pGame->pEnemies[pGame->nrOfEnemies] = createEnemy(pGame->pEnemyImage,WINDOW_WIDTH,WINDOW_HEIGHT);
-        pGame->nrOfEnemies++; 
-    }    
+        pGame->nrOfEnemies++;
+    }
+    for(int i=0;i<pGame->nrOfEnemies;i++)
+    {
+      if(checkIfActive(pGame->pEnemies[i], pGame->nrOfEnemies))
+      printf("Active %d\n", i);
+    }
 }
 
 void resetEnemy(Game *pGame)
 {
     for(int i=0;i<pGame->nrOfEnemies;i++) destroyEnemy(pGame->pEnemies[i]);
-    pGame->nrOfEnemies = 3;
+    pGame->nrOfEnemies = 0;
     for(int i=0;i<pGame->nrOfEnemies;i++)
     {
-        pGame->pEnemies[i] = createEnemy(pGame->pEnemyImage,WINDOW_WIDTH,WINDOW_HEIGHT);
+      pGame->pEnemies[i] = createEnemy(pGame->pEnemyImage,WINDOW_WIDTH,WINDOW_HEIGHT);
     }
 }
 

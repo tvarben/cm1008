@@ -61,11 +61,19 @@ void render_projectiles(SDL_Renderer *renderer) {
 SDL_Rect getRectBullet(Bullet *pBullet) { return pBullet->rect; }
 
 void getProjectileRects(SDL_Rect rectArray[]) {
+  SDL_Rect emptyRect ={0,0,0,0};
   for (int i = 0; i < MAX_PROJECTILES; i++) {
     if (!projectiles[i].active)
-      continue;
-    rectArray[i] = projectiles[i].rect;
+    {
+      rectArray[i] = emptyRect;
+    }
+    else
+    {
+      rectArray[i] = projectiles[i].rect;
+    }
+
   }
+
   return;
 }
 void resetAllBullets()
@@ -74,5 +82,10 @@ void resetAllBullets()
   {
     projectiles[i].active=false;
   }
+  return;
+}
+void removeProjectile(int i)
+{
+  projectiles[i].active = false;
   return;
 }
