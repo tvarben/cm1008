@@ -137,40 +137,24 @@ void run(Game *pGame) {
     resetShip(pGame->pShip);
 
     while (isRunning) {
-        while(SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) {
-            memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
-            
-            applyShipCommand(pGame->pShip, cData.command);
-
-            //SDL_Event* event = (SDL_Event*)pGame->pPacket->data;
-            //handleShipEvent(pGame, &event);
-        }
-        SDL_Delay(8);
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
-            } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
-                handleShipEvent(pGame->pShip, &event);
             }
         }
+        
+        while(SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) {
+            memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
+            applyShipCommand(pGame->pShip, cData.command);
+        }
+        SDL_Delay(8);
+        
         updateShipVelocity(pGame->pShip);
         updateShip(pGame->pShip);
         SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
         SDL_RenderClear(pGame->pRenderer);   
         drawShip(pGame->pShip);
-        //drawText(pGame->pStartText);
         SDL_RenderPresent(pGame->pRenderer);
-        
-        /*if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
-            printf("Server recieved a command from %x:%d: %s\n",
-                                        pGame->pPacket->address.host, 
-                                        pGame->pPacket->address.port, 
-                                        (char*)pGame->pPacket->data);
-            
-            strcpy((char*)pGame->pPacket->data, "Har far du svar fran server.");
-            pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
-            SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
-        }*/
     }
 }
 
