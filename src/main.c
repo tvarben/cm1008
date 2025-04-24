@@ -312,7 +312,8 @@ void run(Game *pGame)
             drawCannon(pGame->pCannon);
             render_projectiles(pGame->pRenderer); // test      
             for(int i=0;i<pGame->nrOfEnemies;i++) drawEnemy(pGame->pEnemies[i]);
-            for(int i=0;i<pGame->nrOfEnemies;i++){
+            for(int i=0;i<pGame->nrOfEnemies;i++)
+            {
                 if(shipCollision(pGame->pShip, getRectEnemy(pGame->pEnemies[i]))){
                     pGame->state = GAME_OVER;
                 }
@@ -420,15 +421,16 @@ void updateNrOfEnemies(Game *pGame)
 {
     if(getTime(pGame)>pGame->timeForNextEnemy && pGame->nrOfEnemies<MAX_ENEMIES)
     {
-        (pGame->timeForNextEnemy)+=1;//seconds till next enemy
+        (pGame->timeForNextEnemy)+=1;   //seconds till next enemy
         pGame->pEnemies[pGame->nrOfEnemies] = createEnemy(pGame->pEnemyImage,WINDOW_WIDTH,WINDOW_HEIGHT);
+        //printEnemyHealth(pGame->pEnemies[pGame->nrOfEnemies]);
         pGame->nrOfEnemies++;
     }
-    for(int i=0;i<pGame->nrOfEnemies;i++)
-    {
-      if(checkIfActive(pGame->pEnemies[i], pGame->nrOfEnemies))
-      printf("Active %d\n", i);
-    }
+    // for(int i=0;i<pGame->nrOfEnemies;i++)
+    // {
+    //   if(checkIfActive(pGame->pEnemies[i], pGame->nrOfEnemies))
+    //   printf("Active %d\n", i);
+    // }
 }
 
 void resetEnemy(Game *pGame)

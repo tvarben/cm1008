@@ -18,6 +18,7 @@ void destroyEnemyImage(EnemyImage *pEnemyImage);
 void disableEnemy(Enemy *pEnemy);
 void damageEnemy(Enemy *pEnemy, int damage);
 bool checkIfActive(Enemy *pEnemy, int nrOfEnemies);
+void printEnemyHealth(Enemy *pEnemy);
 
 
 #endif

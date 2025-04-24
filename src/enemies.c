@@ -71,6 +71,8 @@ static void getStartValues(Enemy *pEnemy){
     pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
     pEnemy->rectHitbox.w = pEnemy->rect.w - 20;
     pEnemy->rectHitbox.h = pEnemy->rect.h - 15;
+    pEnemy->damage = 50;
+    pEnemy->health = 100;
     if (startSpawnOnTheLeft == 1)
     {
     pEnemy->x = pEnemy->window_width;
@@ -79,8 +81,6 @@ static void getStartValues(Enemy *pEnemy){
     float speed = 5.0f;
     pEnemy->vx = -speed; // rakt åt vänster
     pEnemy->vy = 0;      // ingen rörelse i y-led
-    pEnemy->damage = 50;
-    pEnemy->health = 100;
    
     }
     else 
@@ -147,6 +147,7 @@ void damageEnemy(Enemy *pEnemy, int damage)
     pEnemy->health -= damage;
     printf("enemy health: %.2f\n", pEnemy->health);
 }
+
 bool checkIfActive(Enemy *pEnemy, int nrOfEnemies)
 {
     if(pEnemy->active==true)
@@ -157,4 +158,8 @@ bool checkIfActive(Enemy *pEnemy, int nrOfEnemies)
     {
         return false;
     }
+}
+void printEnemyHealth(Enemy *pEnemy)
+{
+    printf("%d\n",pEnemy->health);
 }
