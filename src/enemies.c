@@ -73,7 +73,7 @@ static void getStartValues(Enemy *pEnemy){
     pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
     pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
     pEnemy->rectHitbox.w = pEnemy->rect.w - 20;
-    pEnemy->rectHitbox.h = pEnemy->rect.h - 20;
+    pEnemy->rectHitbox.h = pEnemy->rect.h - 15;
     if (startSpawnOnTheLeft == 1)
     {
     pEnemy->x = pEnemy->window_width;
