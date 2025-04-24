@@ -238,8 +238,6 @@ void close(Game *pGame){
     if(pGame->pFont) TTF_CloseFont(pGame->pFont);
     if(pGame->pScoreFont) TTF_CloseFont(pGame->pScoreFont);
 
-
-
     SDLNet_Quit();
     TTF_Quit();    
     SDL_Quit();

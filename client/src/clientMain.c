@@ -238,12 +238,17 @@ void closeGame(Game *pGame) {
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
 
-    if(pGame->pStartText) destroyText(pGame->pStartText);
-    if(pGame->pFont) TTF_CloseFont(pGame->pFont); 
+    if (pGame->pStartText) destroyText(pGame->pStartText);
+    if (pGame->pGameName) destroyText(pGame->pGameName);
+    if (pGame->pExitText) destroyText(pGame->pExitText);
+    if (pGame->pFont) TTF_CloseFont(pGame->pFont); 
 
-    closeMusic(pGame->pMusic);
+    if (pGame->pMusic) closeMusic(pGame->pMusic);
+    if (pGame->pSocket) SDLNet_UDP_Close(pGame->pSocket);
+    if (pGame->pPacket) SDLNet_FreePacket(pGame->pPacket);
 
     SDLNet_Quit();
+    TTF_Quit();
     IMG_Quit();
     SDL_Quit();
 }
