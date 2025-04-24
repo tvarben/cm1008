@@ -22,6 +22,7 @@ typedef enum GameState GameState;
 typedef struct {
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
+    //Ship *pShip[MAX_PLAYERS];
     Ship *pShip;
     GameState state;
     Mix_Music *pMusic;
@@ -114,7 +115,7 @@ int initiate(Game *pGame) {
     pGame->pPacket->address.host = pGame->serverAddress.host;
     pGame->pPacket->address.port = pGame->serverAddress.port;
 
-    pGame->pShip = createShip(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+    pGame->pShip = createShip(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     if (!pGame->pShip) {
         printf("Ship creation failed.\n");
         return 0;

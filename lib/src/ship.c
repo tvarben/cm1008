@@ -15,9 +15,11 @@ struct Ship {
     bool keyLeft, keyRight, keyUp, keyDown;
 };
 
-Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int windowHeight) {
+Ship* createShip(SDL_Renderer* renderer, int windowWidth, int windowHeight) {
     Ship* s = malloc(sizeof(Ship));
     if (!s) return NULL;
+    int x = windowWidth / 2;
+    int y = windowHeight /2;
 
     s->vx = 0;
     s->vy = 0;
@@ -52,6 +54,7 @@ Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int wind
 
     return s;
 }
+
 void handleShipEvent(Ship* s, SDL_Event* event) {
     bool down = event->type == SDL_KEYDOWN;
 

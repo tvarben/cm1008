@@ -6,7 +6,7 @@
 
 typedef struct Ship Ship;
 
-Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int windowHeight);
+Ship* createShip(SDL_Renderer* renderer, int windowWidth, int windowHeight);
 void setShipVelocity(Ship* s, int vx, int vy);  // NEW
 void updateShip(Ship* s);
 void drawShip(Ship* s);
