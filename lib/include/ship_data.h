@@ -8,8 +8,8 @@ typedef enum{
     MOVE_DOWN,
     MOVE_LEFT,
     MOVE_RIGHT,
+    STOP_SHIP,
     SHOOT,
-    PAUSE,
     QUIT
 }ClientCommand;
 

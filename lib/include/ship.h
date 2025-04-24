@@ -2,6 +2,7 @@
 #define SHIP_H
 
 #include <SDL2/SDL.h>
+#include "ship_data.h"
 
 typedef struct Ship Ship;
 
@@ -13,5 +14,6 @@ void resetShip(Ship* s);
 void handleShipEvent(Ship* s, SDL_Event* event);
 void updateShipVelocity(Ship* s); 
 void destroyShip(Ship* s);
+void applyShipCommand(Ship* s, ClientCommand c);
 
 #endif
