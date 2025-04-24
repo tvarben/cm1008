@@ -16,9 +16,6 @@
 #define WINDOW_HEIGHT 400
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
-enum GameState { START, ONGOING, GAME_OVER };
-typedef enum GameState GameState;
-
 typedef struct {
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
@@ -29,12 +26,9 @@ typedef struct {
     Mix_Music *pMusic;
 	TTF_Font *pFont;
 	Text *pStartText, *pGameName, *pExitText;
-
     ClientCommand command;
-
     IPaddress clients[MAX_PLAYERS];
     int nrOfClients;
-
     UDPsocket pSocket;
     IPaddress serverAddress;
     UDPpacket *pPacket;
@@ -53,7 +47,6 @@ int main(int argc, char** argv) {
     closeGame(&game);
     return 0;
 }
-
 
 int initiate(Game *pGame) {
     srand(time(NULL));
@@ -190,6 +183,21 @@ void run(Game *pGame) {
     }
 }
 
+int getClientIndex(Game *pGame, IPaddress *clientAddr) {
+    for (int i = 0; i < pGame->nrOfClients; i++) {
+        if (pGame->clients[i].host == clientAddr->host &&
+            pGame->clients[i].port == clientAddr->port) {
+            return i; // Existing client
+        }
+    }
+    if (pGame->nrOfClients < MAX_PLAYERS) {
+        // New client
+        pGame->clients[pGame->nrOfClients] = *clientAddr;
+        return pGame->nrOfClients++;
+    }
+    return -1; // Too many clients
+}
+
 void closeGame(Game *pGame) {
     for (int i = 0; i < MAX_PLAYERS; i++) if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
     //if (pGame->pShip) destroyShip(pGame->pShip);
@@ -207,20 +215,3 @@ void closeGame(Game *pGame) {
     IMG_Quit();
     SDL_Quit();
 }
-
-int getClientIndex(Game *pGame, IPaddress *clientAddr) {
-    for (int i = 0; i < pGame->nrOfClients; i++) {
-        if (pGame->clients[i].host == clientAddr->host &&
-            pGame->clients[i].port == clientAddr->port) {
-            return i; // Existing client
-        }
-    }
-    if (pGame->nrOfClients < MAX_PLAYERS) {
-        // New client
-        pGame->clients[pGame->nrOfClients] = *clientAddr;
-        return pGame->nrOfClients++;
-    }
-    return -1; // Too many clients
-}
-
-
