@@ -1,7 +1,7 @@
 #ifndef SHIP_DATA_H
 #define SHIP_DATA_H
 
-#define MAX_PLAYERS 2
+#define MAX_PLAYERS 3
 
 typedef enum{
     MOVE_UP,
