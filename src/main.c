@@ -158,7 +158,7 @@ int initiate(Game *pGame)
 void run(Game *pGame)
 {
     bool isRunning = true;
-    SDL_Rect rectArray[MAX_PROJECTILES] = {0,0,0,0};
+    SDL_Rect emptyRect={0,0,0,0}, rectArray[MAX_PROJECTILES] = {0,0,0,0};
     char ipAdress[16] = {""};
     int stringIndex = 0;
     SDL_Event event;
@@ -282,6 +282,11 @@ void run(Game *pGame)
                 {
                     resetShip(pGame->pShip);
                     resetEnemy(pGame);
+                    resetAllBullets();
+                    for(int i=0;i<MAX_PROJECTILES;i++)
+                    {
+                      rectArray[i]=emptyRect;
+                    }
                     pGame->state = START;
                 }
             }   

@@ -68,3 +68,11 @@ void getProjectileRects(SDL_Rect rectArray[]) {
   }
   return;
 }
+void resetAllBullets()
+{
+  for(int i=0;i<MAX_PROJECTILES;i++)
+  {
+    projectiles[i].active=false;
+  }
+  return;
+}
