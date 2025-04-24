@@ -6,6 +6,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_net.h>
+
 #include "ship.h"
 #include "sound.h"
 #include "text.h"
@@ -14,8 +15,6 @@
 #define WINDOW_WIDTH 500
 #define WINDOW_HEIGHT 400
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
-#define MAX_PLAYERS 2
-
 
 enum GameState { START, ONGOING, GAME_OVER };
 typedef enum GameState GameState;
@@ -74,7 +73,7 @@ int initiate(Game *pGame) {
         return 0;
     }
 
-    pGame->pWindow = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    pGame->pWindow = SDL_CreateWindow("Server", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                     WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     if (!pGame->pWindow) {
         printf("Window Error: %s\n", SDL_GetError());
@@ -135,14 +134,18 @@ void run(Game *pGame) {
     printf("Server is listening on port 2000...\n");
     SDL_Event event;
     ClientData cData;
+    resetShip(pGame->pShip);
 
     while (isRunning) {
         while(SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) {
             memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
-            SDL_Event* event = (SDL_Event*)pGame->pPacket->data;
-            handleShipEvent(pGame, &event);
-        }
+            
+            applyShipCommand(pGame->pShip, cData.command);
 
+            //SDL_Event* event = (SDL_Event*)pGame->pPacket->data;
+            //handleShipEvent(pGame, &event);
+        }
+        SDL_Delay(8);
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
@@ -150,7 +153,7 @@ void run(Game *pGame) {
                 handleShipEvent(pGame->pShip, &event);
             }
         }
-        //updateShipVelocity(pGame->pShip);
+        updateShipVelocity(pGame->pShip);
         updateShip(pGame->pShip);
         SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
         SDL_RenderClear(pGame->pRenderer);   
@@ -158,7 +161,7 @@ void run(Game *pGame) {
         //drawText(pGame->pStartText);
         SDL_RenderPresent(pGame->pRenderer);
         
-        if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
+        /*if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
             printf("Server recieved a command from %x:%d: %s\n",
                                         pGame->pPacket->address.host, 
                                         pGame->pPacket->address.port, 
@@ -167,14 +170,7 @@ void run(Game *pGame) {
             strcpy((char*)pGame->pPacket->data, "Har far du svar fran server.");
             pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
             SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
-            
-            //strcpy((char*) pGame->pPacket->data, "Message recieved!!!!!!!!!!!!!!!!");
-            //pGame->pPacket->len = strlen((char*)pGame->pPacket->data) +1;
-        
-            //SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
-            //printf("Response sent.\n");
-        }
-        SDL_Delay(8);
+        }*/
     }
 }
 

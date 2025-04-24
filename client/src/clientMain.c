@@ -6,6 +6,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_net.h>
+
 #include "ship.h"
 #include "sound.h"
 #include "text.h"
@@ -37,6 +38,7 @@ typedef struct {
 int initiate(Game *pGame);
 void run(Game *pGame);
 void closeGame(Game *pGame);
+void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame);
 
 int main(int argc, char** argv) {
     Game game = {0};
@@ -71,7 +73,7 @@ int initiate(Game *pGame) {
         return 0;
     }
 
-    pGame->pWindow = SDL_CreateWindow("",
+    pGame->pWindow = SDL_CreateWindow("Client",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     if (!pGame->pWindow) {
@@ -133,32 +135,18 @@ void run(Game *pGame) {
     bool isRunning = true;
     SDL_Event event;
     ClientData cData;
+    resetShip(pGame->pShip);
 
     //playMusic(pGame->pMusic, -1);
 
     while (isRunning) {
-
-
     
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
             } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
-                handleShipEvent(pGame->pShip, &event);
-                
-                cData.playerId = 1;
-                cData.command = MOVE_DOWN;
-
-                memcpy(pGame->pPacket->data, &cData, sizeof(ClientData));
-                pGame->pPacket->len = sizeof(ClientData);
-                SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
-            }/* else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-                strcpy((char*)pGame->pPacket->data, "Hej pa dig!");
-                pGame->pPacket->len = strlen((char*)pGame->pPacket->data) + 1;
-                SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
-                SDL_Delay(10);
-            }*/else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_2){
-                isRunning = false;
+                //handleShipEvent(pGame->pShip, &event);
+                handleInput(&event, cData.command, pGame);
             }
             if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
                 printf("Received from server: %s\n", (char*)pGame->pPacket->data);
@@ -171,6 +159,41 @@ void run(Game *pGame) {
         drawShip(pGame->pShip);   
         SDL_RenderPresent(pGame->pRenderer);
     }
+}
+
+void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame) {
+    ClientData cData;
+    SDL_Scancode key = pEvent->key.keysym.scancode;
+    cData.playerId = 1;
+    bool pressed = false;
+    if (pEvent->type == SDL_KEYDOWN || pEvent->type == SDL_KEYUP) {
+        switch(key) {
+            case SDL_SCANCODE_UP:
+                cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
+                handleShipEvent(pGame->pShip, pEvent);
+                printf("MOVE_UP SENT!\n");
+                break;
+            case SDL_SCANCODE_DOWN:
+                cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
+                handleShipEvent(pGame->pShip, pEvent);
+                printf("MOVE_DOWN SENT!\n");
+                break;
+            case SDL_SCANCODE_LEFT:
+                cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
+                handleShipEvent(pGame->pShip, pEvent);
+                printf("MOVE_LEFT SENT!\n");
+                break;
+            case SDL_SCANCODE_RIGHT:
+                cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
+                handleShipEvent(pGame->pShip, pEvent);
+                printf("MOVE_RIGHT SENT!\n");
+                break;
+        }
+    }
+
+    memcpy(pGame->pPacket->data, &cData, sizeof(ClientData));
+    pGame->pPacket->len = sizeof(ClientData);
+    SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
 }
 
 void closeGame(Game *pGame) {

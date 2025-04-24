@@ -1,8 +1,9 @@
-#include "ship.h"
 #include <SDL2/SDL_image.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include "ship.h"
+#include "ship_data.h"
 
 struct Ship {
     float x, y;
@@ -55,13 +56,17 @@ void handleShipEvent(Ship* s, SDL_Event* event) {
     bool down = event->type == SDL_KEYDOWN;
 
     switch (event->key.keysym.scancode) {
-        case SDL_SCANCODE_W: case SDL_SCANCODE_UP:
+        case SDL_SCANCODE_W: 
+        case SDL_SCANCODE_UP:
             s->keyUp = down; break;
-        case SDL_SCANCODE_S: case SDL_SCANCODE_DOWN:
+        case SDL_SCANCODE_S: 
+        case SDL_SCANCODE_DOWN:
             s->keyDown = down; break;
-        case SDL_SCANCODE_A: case SDL_SCANCODE_LEFT:
+        case SDL_SCANCODE_A: 
+        case SDL_SCANCODE_LEFT:
             s->keyLeft = down; break;
-        case SDL_SCANCODE_D: case SDL_SCANCODE_RIGHT:
+        case SDL_SCANCODE_D: 
+        case SDL_SCANCODE_RIGHT:
             s->keyRight = down; break;
         default: break;
     }
@@ -121,9 +126,11 @@ void destroyShip(Ship* s) {
     }
 }
 
-/*
-void applyShipCommand(Ship* s, ClientCommand command) {
-    switch (command) {
+void applyShipCommand(Ship* s, ClientCommand c) {
+    switch (c) {
+        case STOP_SHIP:
+            s->keyDown = s->keyUp = s->keyLeft = s->keyRight = false;
+            break;
         case MOVE_UP:
             s->keyUp = true;
             s->keyDown = false;
@@ -140,12 +147,9 @@ void applyShipCommand(Ship* s, ClientCommand command) {
             s->keyRight = true;
             s->keyLeft = false;
             break;
-        case PAUSE:
         case SHOOT:
         case QUIT:
         default:
             break;
     }
-    handleShipEvent(pGame->pShip, &event);
 }
-*/
