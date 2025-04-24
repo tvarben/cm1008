@@ -16,9 +16,6 @@
 #define WINDOW_HEIGHT 400
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
-typedef enum  { START, ONGOING, GAME_OVER 
-} GameState;
-
 typedef struct {
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
@@ -146,9 +143,9 @@ void run(Game *pGame) {
     bool isRunning = true;
     SDL_Event event;
     ClientData cData;
-    for(int i = 0; i < MAX_PLAYERS; i++) {
+    /*for(int i = 0; i < MAX_PLAYERS; i++) {    ////////// No need to call anymore
         resetShip(pGame->pShips[i]);
-    }
+    }*/
     //playMusic(pGame->pMusic, -1);
 
     while (isRunning) {
