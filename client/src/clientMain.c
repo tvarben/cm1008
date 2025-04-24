@@ -145,7 +145,6 @@ void run(Game *pGame) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
             } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
-                //handleShipEvent(pGame->pShip, &event);
                 handleInput(&event, cData.command, pGame);
             }
             if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
