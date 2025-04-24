@@ -6,149 +6,147 @@
 #include "ship_data.h"
 
 struct Ship {
-    float x, y;
+    float x, y, xStart, yStart;
     int vx, vy;
     int windowWidth, windowHeight;
     SDL_Renderer* renderer;
     SDL_Texture* texture;
-    SDL_Rect rect;
+    SDL_Rect shipRect;
     bool keyLeft, keyRight, keyUp, keyDown;
 };
 
-Ship* createShip(SDL_Renderer* renderer, int windowWidth, int windowHeight) {
-    Ship* s = malloc(sizeof(Ship));
-    if (!s) return NULL;
-    int x = windowWidth / 2;
-    int y = windowHeight /2;
+Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int windowHeight) {
+    Ship* pShip = malloc(sizeof(Ship));
+    if (!pShip) return NULL;
 
-    s->vx = 0;
-    s->vy = 0;
-    s->windowWidth = windowWidth;
-    s->windowHeight = windowHeight;
-    s->renderer = renderer;
+    pShip->vx = 0;
+    pShip->vy = 0;
+    pShip->windowWidth = windowWidth;
+    pShip->windowHeight = windowHeight;
+    pShip->renderer = renderer;
 
     SDL_Surface* surface = IMG_Load("../lib/resources//Ship.png");
     if (!surface) {
         printf("Error loading Ship.png: %s\n", IMG_GetError());
-        free(s);
+        free(pShip);
         return NULL;
     }
 
-    s->texture = SDL_CreateTextureFromSurface(renderer, surface);
+    pShip->texture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface); // Free the surface after creating the texture to be readyu for the next picture
 
-    if (!s->texture) {
+    if (!pShip->texture) {
         printf("Error creating texture: %s\n", SDL_GetError());
-        free(s);
+        free(pShip);
         return NULL;
     }
 
-    SDL_QueryTexture(s->texture, NULL, NULL, &s->rect.w, &s->rect.h);
-    s->rect.w /= 4;
-    s->rect.h /= 4;
+    SDL_QueryTexture(pShip->texture, NULL, NULL, &pShip->shipRect.w, &pShip->shipRect.h);
+    pShip->shipRect.w /= 4;
+    pShip->shipRect.h /= 4;
 
-    s->x = x - s->rect.w / 2;
-    s->y = y - s->rect.h / 2;
-    s->rect.x = (int)s->x;
-    s->rect.y = (int)s->y;
+    pShip->x = pShip->xStart - pShip->shipRect.w / 2;
+    pShip->y = (pShip->yStart - pShip->shipRect.h / 2) + ((playerId+1)*100);
+    pShip->shipRect.x = (int)pShip->xStart;
+    pShip->shipRect.y = (int)pShip->yStart;
 
-    return s;
+    return pShip;
 }
 
-void handleShipEvent(Ship* s, SDL_Event* event) {
+void handleShipEvent(Ship* pShip, SDL_Event* event) {
     bool down = event->type == SDL_KEYDOWN;
 
     switch (event->key.keysym.scancode) {
         case SDL_SCANCODE_W: 
         case SDL_SCANCODE_UP:
-            s->keyUp = down; break;
+            pShip->keyUp = down; break;
         case SDL_SCANCODE_S: 
         case SDL_SCANCODE_DOWN:
-            s->keyDown = down; break;
+            pShip->keyDown = down; break;
         case SDL_SCANCODE_A: 
         case SDL_SCANCODE_LEFT:
-            s->keyLeft = down; break;
+            pShip->keyLeft = down; break;
         case SDL_SCANCODE_D: 
         case SDL_SCANCODE_RIGHT:
-            s->keyRight = down; break;
+            pShip->keyRight = down; break;
         default: break;
     }
 }
-void setShipVelocity(Ship* s, int vx, int vy) {
-    s->vx = vx;
-    s->vy = vy;
+void setShipVelocity(Ship* pShip, int vx, int vy) {
+    pShip->vx = vx;
+    pShip->vy = vy;
 }
-void updateShipVelocity(Ship* s) {
+void updateShipVelocity(Ship* pShip) {
     int vx = 0, vy = 0;
 
-    if (s->keyLeft && !s->keyRight) vx = -1;
-    else if (s->keyRight && !s->keyLeft) vx = 1;
+    if (pShip->keyLeft && !pShip->keyRight) vx = -1;
+    else if (pShip->keyRight && !pShip->keyLeft) vx = 1;
 
-    if (s->keyUp && !s->keyDown) vy = -1;
-    else if (s->keyDown && !s->keyUp) vy = 1;
+    if (pShip->keyUp && !pShip->keyDown) vy = -1;
+    else if (pShip->keyDown && !pShip->keyUp) vy = 1;
 
-    s->vx = vx;
-    s->vy = vy;
+    pShip->vx = vx;
+    pShip->vy = vy;
 }
 
 
-void updateShip(Ship* s) {
+void updateShip(Ship* pShip) {
     const int speed = 4; // constant speed
-    s->x += s->vx * speed;
-    s->y += s->vy * speed;
+    pShip->xStart += pShip->vx * speed;
+    pShip->yStart += pShip->vy * speed;
 
     // Stay within bounds
-    if (s->x < 0) s->x = 0;
-    if (s->y < 0) s->y = 0;
-    if (s->x > s->windowWidth - s->rect.w) s->x = s->windowWidth - s->rect.w;
-    if (s->y > s->windowHeight - s->rect.h) s->y = s->windowHeight - s->rect.h;
+    if (pShip->xStart < 0) pShip->xStart = 0;
+    if (pShip->yStart < 0) pShip->yStart = 0;
+    if (pShip->xStart > pShip->windowWidth - pShip->shipRect.w) pShip->xStart = pShip->windowWidth - pShip->shipRect.w;
+    if (pShip->yStart > pShip->windowHeight - pShip->shipRect.h) pShip->yStart = pShip->windowHeight - pShip->shipRect.h;
 
-    s->rect.x = (int)s->x;
-    s->rect.y = (int)s->y;
+    pShip->shipRect.x = (int)pShip->xStart;
+    pShip->shipRect.y = (int)pShip->yStart;
 }
 
-void drawShip(Ship* s) {
-    SDL_RenderCopy(s->renderer, s->texture, NULL, &s->rect);
+void drawShip(Ship* pShip) {
+    SDL_RenderCopy(pShip->renderer, pShip->texture, NULL, &pShip->shipRect);
 }
 
-void resetShip(Ship* s) {
-    s->x = s->windowWidth / 2.0f;
-    s->y = s->windowHeight / 2.0f;
-    s->vx = 0;
-    s->vy = 0;
-    s->keyUp = false;
-    s->keyDown = false;
-    s->keyLeft = false;
-    s->keyRight = false;
+void resetShip(Ship* pShip) {
+    pShip->xStart = pShip->windowWidth / 2.0f;
+    pShip->yStart = pShip->windowHeight / 2.0f;
+    pShip->vx = 0;
+    pShip->vy = 0;
+    pShip->keyUp = false;
+    pShip->keyDown = false;
+    pShip->keyLeft = false;
+    pShip->keyRight = false;
 }
 
-void destroyShip(Ship* s) {
-    if (s) {
-        if (s->texture) SDL_DestroyTexture(s->texture);
-        free(s);
+void destroyShip(Ship* pShip) {
+    if (pShip) {
+        if (pShip->texture) SDL_DestroyTexture(pShip->texture);
+        free(pShip);
     }
 }
 
-void applyShipCommand(Ship* s, ClientCommand c) {
+void applyShipCommand(Ship* pShip, ClientCommand c) {
     switch (c) {
         case STOP_SHIP:
-            s->keyDown = s->keyUp = s->keyLeft = s->keyRight = false;
+            pShip->keyDown = pShip->keyUp = pShip->keyLeft = pShip->keyRight = false;
             break;
         case MOVE_UP:
-            s->keyUp = true;
-            s->keyDown = false;
+            pShip->keyUp = true;
+            pShip->keyDown = false;
             break;
         case MOVE_DOWN:
-            s->keyDown = true;
-            s->keyUp = false;
+            pShip->keyDown = true;
+            pShip->keyUp = false;
             break;
         case MOVE_LEFT:
-            s->keyLeft = true;
-            s->keyRight = false;
+            pShip->keyLeft = true;
+            pShip->keyRight = false;
             break;
         case MOVE_RIGHT:
-            s->keyRight = true;
-            s->keyLeft = false;
+            pShip->keyRight = true;
+            pShip->keyLeft = false;
             break;
         case SHOOT:
         case QUIT:

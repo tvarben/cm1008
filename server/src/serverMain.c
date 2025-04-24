@@ -22,14 +22,18 @@ typedef enum GameState GameState;
 typedef struct {
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
-    //Ship *pShip[MAX_PLAYERS];
-    Ship *pShip;
+    Ship *pShips[MAX_PLAYERS];
+    int nrOfShips;
+    //Ship *pShip;
     GameState state;
     Mix_Music *pMusic;
 	TTF_Font *pFont;
 	Text *pStartText, *pGameName, *pExitText;
 
     ClientCommand command;
+
+    IPaddress clients[MAX_PLAYERS];
+    int nrOfClients;
 
     UDPsocket pSocket;
     IPaddress serverAddress;
@@ -39,6 +43,7 @@ typedef struct {
 int initiate(Game *pGame);
 void run(Game *pGame);
 void closeGame(Game *pGame);
+int getClientIndex(Game *pGame, IPaddress *clientAddr);
 
 int main(int argc, char** argv) {
     Game game = {0};
@@ -112,13 +117,22 @@ int initiate(Game *pGame) {
         return 0;
     }
 
-    pGame->pPacket->address.host = pGame->serverAddress.host;
-    pGame->pPacket->address.port = pGame->serverAddress.port;
+    //pGame->pPacket->address.host = pGame->serverAddress.host;
+    //pGame->pPacket->address.port = pGame->serverAddress.port;
 
-    pGame->pShip = createShip(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
-    if (!pGame->pShip) {
-        printf("Ship creation failed.\n");
-        return 0;
+    //pGame->pShip = createShip(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+    
+    for(int i = 0; i < MAX_PLAYERS; i++){
+        pGame->pShips[i] = createShip(i, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+    }
+    pGame->nrOfShips = MAX_PLAYERS;
+
+    for(int i = 0; i < MAX_PLAYERS; i++){
+        if (!pGame->pShips[i]) {
+            printf("Error: %s\n", SDL_GetError());
+            closeGame(pGame);
+            return 0;
+        }
     }
 
     if (!initMusic(&pGame->pMusic, MUSIC_FILEPATH)) {
@@ -135,8 +149,10 @@ void run(Game *pGame) {
     printf("Server is listening on port 2000...\n");
     SDL_Event event;
     ClientData cData;
-    resetShip(pGame->pShip);
-
+    for(int i=0 ; i< MAX_PLAYERS; i++){
+        resetShip(pGame->pShips[i]);
+    }
+    
     while (isRunning) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -144,23 +160,39 @@ void run(Game *pGame) {
             }
         }
         
-        while(SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) {
+        while(SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) { ///
             memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
-            applyShipCommand(pGame->pShip, cData.command);
+            /*for(int i=0; i<MAX_PLAYERS; i++){
+                applyShipCommand(pGame->pShips[i], cData.command);
+                //handleShipEvent(pGame->pShips[i], pGame);
+            }*/
+            int clientIndex = getClientIndex(pGame, &pGame->pPacket->address);
+            if (clientIndex >= 0 && clientIndex < MAX_PLAYERS) {
+            applyShipCommand(pGame->pShips[clientIndex], cData.command);
+            }
         }
         SDL_Delay(8);
         
-        updateShipVelocity(pGame->pShip);
-        updateShip(pGame->pShip);
+        for(int i = 0; i < MAX_PLAYERS; i++) {
+            if (pGame->pShips[i]) {
+                updateShipVelocity(pGame->pShips[i]);
+                updateShip(pGame->pShips[i]);
+            }
+        }
+        //updateShipVelocity(pGame->pShip);
+        //updateShip(pGame->pShip);
         SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
         SDL_RenderClear(pGame->pRenderer);   
-        drawShip(pGame->pShip);
+        for(int i=0 ; i<MAX_PLAYERS ; i++){
+            drawShip(pGame->pShips[i]);
+        }
         SDL_RenderPresent(pGame->pRenderer);
     }
 }
 
 void closeGame(Game *pGame) {
-    if (pGame->pShip) destroyShip(pGame->pShip);
+    for (int i = 0; i < MAX_PLAYERS; i++) if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
+    //if (pGame->pShip) destroyShip(pGame->pShip);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
 
@@ -175,3 +207,20 @@ void closeGame(Game *pGame) {
     IMG_Quit();
     SDL_Quit();
 }
+
+int getClientIndex(Game *pGame, IPaddress *clientAddr) {
+    for (int i = 0; i < pGame->nrOfClients; i++) {
+        if (pGame->clients[i].host == clientAddr->host &&
+            pGame->clients[i].port == clientAddr->port) {
+            return i; // Existing client
+        }
+    }
+    if (pGame->nrOfClients < MAX_PLAYERS) {
+        // New client
+        pGame->clients[pGame->nrOfClients] = *clientAddr;
+        return pGame->nrOfClients++;
+    }
+    return -1; // Too many clients
+}
+
+

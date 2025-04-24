@@ -174,7 +174,7 @@ void run(Game *pGame) {
                     SDL_Delay(8);  // Delay to limit the frame rate
                 }
                 
-                for (int i = 0; i < pGame->nrOfShips; i++) {
+                for (int i = 0; i < MAX_PLAYERS; i++) {
                     if (pGame->pShips[i]) {
                         updateShipVelocity(pGame->pShips[i]);
                         updateShip(pGame->pShips[i]);

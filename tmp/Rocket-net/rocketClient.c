@@ -99,7 +99,7 @@ int initiate(Game *pGame){
     pGame->pPacket->address.host = pGame->serverAddress.host;
     pGame->pPacket->address.port = pGame->serverAddress.port;
 
-    for(int i=0;i<MAX_ROCKETS;i++)
+    for(int i=0;i<MAX_ROCKETS;i++)   
         pGame->pRocket[i] = createRocket(i,pGame->pRenderer,WINDOW_WIDTH,WINDOW_HEIGHT);
     pGame->nr_of_rockets = MAX_ROCKETS;
     pGame->pStars = createStars(WINDOW_WIDTH*WINDOW_HEIGHT/10000,WINDOW_WIDTH,WINDOW_HEIGHT);
