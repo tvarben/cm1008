@@ -6,8 +6,8 @@
 #include "ship_data.h"
 
 struct Ship {
-    float x, y, xStart, yStart; //x och y används inte? kolla rad 50
-    int vx, vy;
+    float x, y, vx, vy, xStart, yStart; //x och y används inte? kolla rad 50
+    //int vx, vy;
     int windowWidth, windowHeight;
     SDL_Renderer* renderer;
     SDL_Texture* texture;
@@ -167,4 +167,9 @@ void applyShipCommand(Ship* pShip, ClientCommand c) {
         default:
             break;
     }
+}    
+
+void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
+        pShipData->x = pShip->xStart;
+        pShipData->y = pShip->yStart;
 }

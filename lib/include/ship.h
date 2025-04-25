@@ -15,5 +15,6 @@ void handleShipEvent(Ship* s, SDL_Event* event);
 void updateShipVelocity(Ship* s); 
 void destroyShip(Ship* s);
 void applyShipCommand(Ship* s, ClientCommand c);
+void getShipDataPackage(Ship* pShip, ShipData* pShipData);
 
 #endif

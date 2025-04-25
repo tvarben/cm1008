@@ -28,7 +28,7 @@ struct rocketData{
     int angle, alive;
     BulletData bData;
 };
-typedef struct rocketData RocketData;   
+typedef struct rocketData RocketData;
 
 struct serverData{
     RocketData rockets[MAX_ROCKETS];
