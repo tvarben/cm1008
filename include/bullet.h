@@ -1,6 +1,7 @@
 #ifndef BULLET_H
 #define BULLET_H
 #include "ship.h"
+#include "sound.h"
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 #define MAX_PROJECTILES 100
