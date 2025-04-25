@@ -6,7 +6,7 @@
 #include "ship_data.h"
 
 struct Ship {
-    float x, y, xStart, yStart;
+    float x, y, xStart, yStart; //x och y används inte? kolla rad 50
     int vx, vy;
     int windowWidth, windowHeight;
     SDL_Renderer* renderer;
@@ -46,9 +46,19 @@ Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int wind
     pShip->shipRect.w /= 4;
     pShip->shipRect.h /= 4;
 
-    pShip->xStart = pShip->x = pShip->shipRect.x = windowWidth/2-pShip->shipRect.h/2;
-    pShip->yStart = pShip->y = pShip->shipRect.y = (playerId*100) + 50;
+    pShip->xStart /*= pShip->x */= pShip->shipRect.x = windowWidth/2-pShip->shipRect.h/2;
+    pShip->yStart /*= pShip->y */= pShip->shipRect.y = (playerId*100) + 50;
+
     
+    /*SDL_QueryTexture(s->texture, NULL, NULL, &s->rect.w, &s->rect.h);
+    s->rect.w /= 4;
+    s->rect.h /= 4;
+
+    s->x = x - s->rect.w / 2;
+    s->y = y - s->rect.h / 2;
+    s->rect.x = (int)s->x;
+    s->rect.y = (int)s->y;*/
+
     /*pShip->x = pShip->xStart - pShip->shipRect.w / 2;
     pShip->y = (pShip->yStart - pShip->shipRect.h / 2) + ((playerId+1)*100);
     pShip->shipRect.x = (int)pShip->xStart;
@@ -94,7 +104,6 @@ void updateShipVelocity(Ship* pShip) {
     pShip->vx = vx;
     pShip->vy = vy;
 }
-
 
 void updateShip(Ship* pShip) {
     const int speed = 4; // constant speed
