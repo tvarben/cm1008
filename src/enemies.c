@@ -11,8 +11,8 @@ struct enemyImage{
 
 struct enemy{
     float x, y, vx, vy;
-    float health;
-    float damage;
+    int health;
+    int damage;
     bool active;
     int window_width,window_height,renderAngle;
     SDL_Renderer *pRenderer;
@@ -71,8 +71,8 @@ static void getStartValues(Enemy *pEnemy){
     pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
     pEnemy->rectHitbox.w = pEnemy->rect.w - 20;
     pEnemy->rectHitbox.h = pEnemy->rect.h - 15;
-    pEnemy->damage = 50;
-    pEnemy->health = 100;
+    pEnemy->damage = 1;
+    pEnemy->health = 2;
     if (startSpawnOnTheLeft == 1)
     {
     pEnemy->x = pEnemy->window_width;
@@ -134,18 +134,22 @@ void destroyEnemyImage(EnemyImage *pEnemyImage){
     SDL_DestroyTexture(pEnemyImage->pTexture);
 }
 
-void disableEnemy(Enemy *pEnemy)
-{
-    if(pEnemy->health <= 0)
-    {
-    pEnemy->active = false;
-    }
-}
+// void disableEnemy(Enemy *pEnemy)
+// {
+//     if(pEnemy->health <= 0)
+//     {
+//     pEnemy->active = false;
+//     }
+// }
 
 void damageEnemy(Enemy *pEnemy, int damage)
 {
     pEnemy->health -= damage;
-    printf("enemy health: %.2f\n", pEnemy->health);
+    if(pEnemy->health <= 0)
+    {
+    pEnemy->active = false;
+    }
+    if (pEnemy->health < 0) pEnemy->health = 0;
 }
 
 bool checkIfActive(Enemy *pEnemy, int nrOfEnemies)
@@ -161,5 +165,5 @@ bool checkIfActive(Enemy *pEnemy, int nrOfEnemies)
 }
 void printEnemyHealth(Enemy *pEnemy)
 {
-    printf("%d\n",pEnemy->health);
+    printf("Health: %d\n",pEnemy->health);
 }

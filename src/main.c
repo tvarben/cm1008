@@ -328,11 +328,13 @@ void run(Game *pGame)
                     SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies[k]);
                     if (SDL_HasIntersection(&enemyRect, &bulletRect))
                     {
-                        printf("CLOWN DOWN \n");
+                        //printf("CLOWN DOWN \n");
                         printf("enemy num: %d \n", k);
-                        damageEnemy(pGame->pEnemies[k], 50);
-                        disableEnemy(pGame->pEnemies[k]);
+                        printEnemyHealth(pGame->pEnemies[k]);
+                        damageEnemy(pGame->pEnemies[k], 1);
                         removeProjectile(i);
+                        rectArray[i]=emptyRect;
+                        //for(int i=0;i<pGame->nrOfEnemies;i++) printEnemyHealth(pGame->pEnemies[i]);
                     }
                 }
             }
@@ -343,7 +345,7 @@ void run(Game *pGame)
         else if (pGame->state == START) 
         {
             
-            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);  //Important to set the color before clearing the screen 
+            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);      //Important to set the color before clearing the screen 
             SDL_RenderClear(pGame->pRenderer);                         //Clear the first frame when the game starts, otherwise issues on mac/linux 
             drawText(pGame->pSingleplayerText);                        //Clear the first frame when the game starts, otherwise issues on mac/linux 
             drawText(pGame->pMultiplayerText);
