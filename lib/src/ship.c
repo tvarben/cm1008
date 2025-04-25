@@ -6,7 +6,7 @@
 #include "ship_data.h"
 
 struct Ship {
-    float x, y, xStart, yStart;
+    float x, y, xStart, yStart; //x och y används inte? kolla rad 50
     int vx, vy;
     int windowWidth, windowHeight;
     SDL_Renderer* renderer;
@@ -24,6 +24,7 @@ Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int wind
     pShip->windowWidth = windowWidth;
     pShip->windowHeight = windowHeight;
     pShip->renderer = renderer;
+    pShip->keyDown=pShip->keyUp=pShip->keyRight=pShip->keyLeft=false;
 
     SDL_Surface* surface = IMG_Load("../lib/resources//Ship.png");
     if (!surface) {
@@ -45,11 +46,24 @@ Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int wind
     pShip->shipRect.w /= 4;
     pShip->shipRect.h /= 4;
 
-    pShip->x = pShip->xStart - pShip->shipRect.w / 2;
+    pShip->xStart /*= pShip->x */= pShip->shipRect.x = windowWidth/2-pShip->shipRect.h/2;
+    pShip->yStart /*= pShip->y */= pShip->shipRect.y = (playerId*100) + 50;
+
+    
+    /*SDL_QueryTexture(s->texture, NULL, NULL, &s->rect.w, &s->rect.h);
+    s->rect.w /= 4;
+    s->rect.h /= 4;
+
+    s->x = x - s->rect.w / 2;
+    s->y = y - s->rect.h / 2;
+    s->rect.x = (int)s->x;
+    s->rect.y = (int)s->y;*/
+
+    /*pShip->x = pShip->xStart - pShip->shipRect.w / 2;
     pShip->y = (pShip->yStart - pShip->shipRect.h / 2) + ((playerId+1)*100);
     pShip->shipRect.x = (int)pShip->xStart;
-    pShip->shipRect.y = (int)pShip->yStart;
-
+    pShip->shipRect.y = (int)pShip->yStart;*/
+    
     return pShip;
 }
 
@@ -72,10 +86,12 @@ void handleShipEvent(Ship* pShip, SDL_Event* event) {
         default: break;
     }
 }
+
 void setShipVelocity(Ship* pShip, int vx, int vy) {
     pShip->vx = vx;
     pShip->vy = vy;
 }
+
 void updateShipVelocity(Ship* pShip) {
     int vx = 0, vy = 0;
 
@@ -89,7 +105,6 @@ void updateShipVelocity(Ship* pShip) {
     pShip->vy = vy;
 }
 
-
 void updateShip(Ship* pShip) {
     const int speed = 4; // constant speed
     pShip->xStart += pShip->vx * speed;
@@ -98,8 +113,10 @@ void updateShip(Ship* pShip) {
     // Stay within bounds
     if (pShip->xStart < 0) pShip->xStart = 0;
     if (pShip->yStart < 0) pShip->yStart = 0;
-    if (pShip->xStart > pShip->windowWidth - pShip->shipRect.w) pShip->xStart = pShip->windowWidth - pShip->shipRect.w;
-    if (pShip->yStart > pShip->windowHeight - pShip->shipRect.h) pShip->yStart = pShip->windowHeight - pShip->shipRect.h;
+    if (pShip->xStart > pShip->windowWidth - pShip->shipRect.w) 
+        pShip->xStart = pShip->windowWidth - pShip->shipRect.w;
+    if (pShip->yStart > pShip->windowHeight - pShip->shipRect.h) 
+        pShip->yStart = pShip->windowHeight - pShip->shipRect.h;
 
     pShip->shipRect.x = (int)pShip->xStart;
     pShip->shipRect.y = (int)pShip->yStart;
@@ -110,14 +127,11 @@ void drawShip(Ship* pShip) {
 }
 
 void resetShip(Ship* pShip) {
-    pShip->xStart = pShip->windowWidth / 2.0f;
-    pShip->yStart = pShip->windowHeight / 2.0f;
+    //pShip->xStart = pShip->windowWidth / 2.0f;
+    //pShip->yStart = pShip->windowHeight / 2.0f;
     pShip->vx = 0;
     pShip->vy = 0;
-    pShip->keyUp = false;
-    pShip->keyDown = false;
-    pShip->keyLeft = false;
-    pShip->keyRight = false;
+    pShip->keyRight = pShip->keyLeft = pShip->keyDown = pShip->keyUp = false;
 }
 
 void destroyShip(Ship* pShip) {

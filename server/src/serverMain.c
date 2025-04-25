@@ -16,9 +16,6 @@
 #define WINDOW_HEIGHT 400
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
-enum GameState { START, ONGOING, GAME_OVER };
-typedef enum GameState GameState;
-
 typedef struct {
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
@@ -29,12 +26,9 @@ typedef struct {
     Mix_Music *pMusic;
 	TTF_Font *pFont;
 	Text *pStartText, *pGameName, *pExitText;
-
     ClientCommand command;
-
     IPaddress clients[MAX_PLAYERS];
     int nrOfClients;
-
     UDPsocket pSocket;
     IPaddress serverAddress;
     UDPpacket *pPacket;
@@ -53,7 +47,6 @@ int main(int argc, char** argv) {
     closeGame(&game);
     return 0;
 }
-
 
 int initiate(Game *pGame) {
     srand(time(NULL));
@@ -190,24 +183,6 @@ void run(Game *pGame) {
     }
 }
 
-void closeGame(Game *pGame) {
-    for (int i = 0; i < MAX_PLAYERS; i++) if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
-    //if (pGame->pShip) destroyShip(pGame->pShip);
-    if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
-    if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
-
-    if (pGame->pStartText) destroyText(pGame->pStartText);
-    if (pGame->pFont) TTF_CloseFont(pGame->pFont); 
-
-    if (pGame->pMusic) closeMusic(pGame->pMusic);
-    if (pGame->pSocket) SDLNet_UDP_Close(pGame->pSocket);
-    if (pGame->pPacket) SDLNet_FreePacket(pGame->pPacket);
-
-    SDLNet_Quit();
-    IMG_Quit();
-    SDL_Quit();
-}
-
 int getClientIndex(Game *pGame, IPaddress *clientAddr) {
     for (int i = 0; i < pGame->nrOfClients; i++) {
         if (pGame->clients[i].host == clientAddr->host &&
@@ -223,4 +198,23 @@ int getClientIndex(Game *pGame, IPaddress *clientAddr) {
     return -1; // Too many clients
 }
 
+void closeGame(Game *pGame) {
+    for (int i = 0; i < MAX_PLAYERS; i++) if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
+    //if (pGame->pShip) destroyShip(pGame->pShip);
+    if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
+    if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
 
+    if (pGame->pStartText) destroyText(pGame->pStartText);
+    if (pGame->pGameName) destroyText(pGame->pGameName);
+    if (pGame->pExitText) destroyText(pGame->pExitText);
+    if (pGame->pFont) TTF_CloseFont(pGame->pFont); 
+
+    if (pGame->pMusic) closeMusic(pGame->pMusic);
+    if (pGame->pSocket) SDLNet_UDP_Close(pGame->pSocket);
+    if (pGame->pPacket) SDLNet_FreePacket(pGame->pPacket);
+
+    SDLNet_Quit();
+    TTF_Quit();
+    IMG_Quit();
+    SDL_Quit();
+}

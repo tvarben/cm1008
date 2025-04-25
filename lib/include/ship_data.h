@@ -3,6 +3,12 @@
 
 #define MAX_PLAYERS 3
 
+typedef enum {
+    START, 
+    ONGOING, 
+    GAME_OVER 
+}GameState;
+
 typedef enum{
     MOVE_UP,
     MOVE_DOWN,

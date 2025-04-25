@@ -16,9 +16,6 @@
 #define WINDOW_HEIGHT 400
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
-typedef enum  { START, ONGOING, GAME_OVER 
-} GameState;
-
 typedef struct {
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
@@ -146,9 +143,9 @@ void run(Game *pGame) {
     bool isRunning = true;
     SDL_Event event;
     ClientData cData;
-    for(int i = 0; i < MAX_PLAYERS; i++) {
+    /*for(int i = 0; i < MAX_PLAYERS; i++) {    ////////// No need to call anymore
         resetShip(pGame->pShips[i]);
-    }
+    }*/
     //playMusic(pGame->pMusic, -1);
 
     while (isRunning) {
@@ -241,12 +238,17 @@ void closeGame(Game *pGame) {
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
 
-    if(pGame->pStartText) destroyText(pGame->pStartText);
-    if(pGame->pFont) TTF_CloseFont(pGame->pFont); 
+    if (pGame->pStartText) destroyText(pGame->pStartText);
+    if (pGame->pGameName) destroyText(pGame->pGameName);
+    if (pGame->pExitText) destroyText(pGame->pExitText);
+    if (pGame->pFont) TTF_CloseFont(pGame->pFont); 
 
-    closeMusic(pGame->pMusic);
+    if (pGame->pMusic) closeMusic(pGame->pMusic);
+    if (pGame->pSocket) SDLNet_UDP_Close(pGame->pSocket);
+    if (pGame->pPacket) SDLNet_FreePacket(pGame->pPacket);
 
     SDLNet_Quit();
+    TTF_Quit();
     IMG_Quit();
     SDL_Quit();
 }
