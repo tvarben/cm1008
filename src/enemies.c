@@ -142,12 +142,13 @@ void destroyEnemyImage(EnemyImage *pEnemyImage){
 //     }
 // }
 
-void damageEnemy(Enemy *pEnemy, int damage)
+void damageEnemy(Enemy *pEnemy, int damage, int i)
 {
     pEnemy->health -= damage;
-    if(pEnemy->health <= 0)
+    if(pEnemy->health <= 0 && pEnemy->active == true)
     {
     pEnemy->active = false;
+    printf("Enemy nr %d dead\n", i);
     }
     if (pEnemy->health < 0) pEnemy->health = 0;
 }
@@ -165,5 +166,8 @@ bool checkIfActive(Enemy *pEnemy, int nrOfEnemies)
 }
 void printEnemyHealth(Enemy *pEnemy)
 {
-    printf("Health: %d\n",pEnemy->health);
+    if(pEnemy->active == true)
+    {
+        printf("Health: %d\n",pEnemy->health);
+    }
 }

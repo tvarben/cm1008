@@ -328,13 +328,11 @@ void run(Game *pGame)
                     SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies[k]);
                     if (SDL_HasIntersection(&enemyRect, &bulletRect))
                     {
-                        //printf("CLOWN DOWN \n");
-                        printf("enemy num: %d \n", k);
+                        //printf("enemy num: %d \n", k);
                         printEnemyHealth(pGame->pEnemies[k]);
-                        damageEnemy(pGame->pEnemies[k], 1);
+                        damageEnemy(pGame->pEnemies[k], 1, k);
                         removeProjectile(i);
                         rectArray[i]=emptyRect;
-                        //for(int i=0;i<pGame->nrOfEnemies;i++) printEnemyHealth(pGame->pEnemies[i]);
                     }
                 }
             }
