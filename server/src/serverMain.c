@@ -190,7 +190,7 @@ void run(Game *pGame) {
                 for(int i = 0; i < MAX_PLAYERS; i++) {
                     if (pGame->pShips[i]) {
                         updateShipVelocity(pGame->pShips[i]);
-                        updateShip(pGame->pShips[i]);
+                        updateShipServer(pGame->pShips[i]);
                     }
                 }
                 //updateShipVelocity(pGame->pShip);

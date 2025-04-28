@@ -170,7 +170,7 @@ void run(Game *pGame) {
                 for (int i = 0; i < MAX_PLAYERS; i++) {
                     if (pGame->pShips[i]) {
                         updateShipVelocity(pGame->pShips[i]);
-                        updateShip(pGame->pShips[i]);
+                        updateShip(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
                     }
                 }
                 //updateShipVelocity(pGame->pShips[0]);
@@ -251,21 +251,25 @@ void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame) {
             case SDL_SCANCODE_UP:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
                 //handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
+                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
                 printf("MOVE_UP SENT!\n");
                 break;
             case SDL_SCANCODE_DOWN:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
                 //handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
+                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
                 printf("MOVE_DOWN SENT!\n");
                 break;
             case SDL_SCANCODE_LEFT:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
                 //handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
+                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
                 printf("MOVE_LEFT SENT!\n");
                 break;
             case SDL_SCANCODE_RIGHT:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
                 //handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
+                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
                 printf("MOVE_RIGHT SENT!\n");
                 break;
             default:

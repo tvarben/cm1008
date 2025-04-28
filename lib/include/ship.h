@@ -16,8 +16,8 @@ typedef struct ship Ship;
 }Ship;*/
 
 Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int windowHeight);
-void setShipVelocity(Ship* s, int vx, int vy);  // NEW
-void updateShip(Ship* s);
+void updateShip(Ship* pShip, int shipId, int myShipId);  // NEW
+void updateShipServer(Ship* pShip); // NEW
 void drawShip(Ship* s);
 void resetShip(Ship* s);
 void handleShipEvent(Ship* s, SDL_Event* event);
