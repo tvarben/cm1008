@@ -25,6 +25,6 @@ void updateShipVelocity(Ship* s);
 void destroyShip(Ship* s);
 void applyShipCommand(Ship* s, ClientCommand c);
 void getShipDataPackage(Ship* pShip, ShipData* pShipData);
-void updateShipsWithServerData(Ship *pShip, ShipData *pShipData);
-
+//void updateShipsWithServerData(Ship *pShip, ShipData *pShipData);
+void updateShipsWithServerData(Ship *pShips[MAX_PLAYERS], const ShipData *pShipData[MAX_PLAYERS]);
 #endif
