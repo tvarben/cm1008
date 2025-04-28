@@ -183,7 +183,7 @@ void run(Game *pGame) {
                 //updateShipVelocity(pGame->pShip);
                 //updateShip(pGame->pShip);
                 SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
-                SDL_RenderClear(pGame->pRenderer);   
+                SDL_RenderClear(pGame->pRenderer);
                 for(int i=0; i<MAX_PLAYERS; i++){
                     drawShip(pGame->pShips[i]);
                 }
