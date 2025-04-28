@@ -20,7 +20,7 @@ typedef struct {
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
     Ship *pShips[MAX_PLAYERS];
-    int nrOfShips;
+    int nrOfShips, shipId;
     //Ship *pShip;
     GameState state;
     Mix_Music *pMusic;
@@ -38,6 +38,9 @@ int initiate(Game *pGame);
 void run(Game *pGame);
 void closeGame(Game *pGame);
 void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame);
+bool connectToServer(Game *pGame);
+void receiveDataFromServer();
+void updateWithServerData(Game *pGame);
 
 int main(int argc, char** argv) {
     Game game = {0};
@@ -152,32 +155,29 @@ void run(Game *pGame) {
     
         switch (pGame->state) {
             case ONGOING:
-                while (SDL_PollEvent(&event)) {
+                while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
+                    updateWithServerData(pGame);
+                    printf("Update with server data.\n");
+                }
+
+                if (SDL_PollEvent(&event)) {
                     if (event.type == SDL_QUIT) {
                         isRunning = false;
                     } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
                         handleInput(&event, cData.command, pGame);
                     }
-
                     /*for(int i = 0; i < pGame->nrOfShips; i++){
                             drawShip(pGame->pShips[i]);
                     }*/
-
-
-                    if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
-                        printf("Received from server: %s\n", (char*)pGame->pPacket->data);
-                    }
-
+                    
                     SDL_Delay(8);  // Delay to limit the frame rate
                 }
-                
                 for (int i = 0; i < MAX_PLAYERS; i++) {
                     if (pGame->pShips[i]) {
                         updateShipVelocity(pGame->pShips[i]);
                         updateShip(pGame->pShips[i]);
                     }
                 }
-                
                 //updateShipVelocity(pGame->pShips[0]);
                 //updateShip(pGame->pShips[0]);
                 SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
@@ -188,37 +188,81 @@ void run(Game *pGame) {
                 SDL_RenderPresent(pGame->pRenderer);
                 break;
             case START:
-                pGame->state = ONGOING;
+                if (SDL_PollEvent(&event)) {
+                    if (event.type == SDL_QUIT) {
+                        isRunning = false;
+                    } else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
+                        if(connectToServer(pGame)) {
+                            printf("Connected to server");
+                            pGame->state = ONGOING;
+                        }
+                    }
+                }
+                SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
+                SDL_RenderClear(pGame->pRenderer);
+                SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
+                SDL_RenderPresent(pGame->pRenderer);
+
+                //pGame->state = START;
                 break;
         }
     }
 }
 
+void updateWithServerData(Game *pGame) {
+    ServerData serverData;/////// test
+    memcpy(&serverData, pGame->pPacket->data, sizeof(ServerData));
+    pGame->shipId= serverData.sDPlayerId;////// test
+}
+
+bool connectToServer(Game *pGame) {
+    memcpy(pGame->pPacket->data, "TRYING TO CONNECT", sizeof("TRYING TO CONNECT") +1);
+    pGame->pPacket->len = sizeof("TRYING TO CONNECT") +1;
+    SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+
+    bool connected = false;
+    while (!connected) {
+        if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
+            printf("*Received from server: %s\n", (char*)pGame->pPacket->data);
+                
+            ServerData serverData;/////// test
+            memcpy(&serverData, pGame->pPacket->data, sizeof(ServerData));
+            pGame->shipId= serverData.sDPlayerId;////// test
+            connected = true;
+        }
+    }
+    return connected;
+}
+
+void receiveDataFromServer() {
+    printf("receiveDataFromServer().\n");
+}
+
 void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame) {
     ClientData cData;
     SDL_Scancode key = pEvent->key.keysym.scancode;
-    cData.playerId = 1;
+    //cData.cDPlayerId = pGame->shipId;
     bool pressed = false;
     if (pEvent->type == SDL_KEYDOWN || pEvent->type == SDL_KEYUP) {
         switch(key) {
             case SDL_SCANCODE_UP:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
-                handleShipEvent(pGame->pShips[0], pEvent);
+                handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
                 printf("MOVE_UP SENT!\n");
                 break;
             case SDL_SCANCODE_DOWN:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
-                handleShipEvent(pGame->pShips[0], pEvent);
+                handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
                 printf("MOVE_DOWN SENT!\n");
                 break;
             case SDL_SCANCODE_LEFT:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
-                handleShipEvent(pGame->pShips[0], pEvent);
+                handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
                 printf("MOVE_LEFT SENT!\n");
                 break;
             case SDL_SCANCODE_RIGHT:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
-                handleShipEvent(pGame->pShips[0], pEvent);
+                handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
                 printf("MOVE_RIGHT SENT!\n");
                 break;
             default:
@@ -231,6 +275,8 @@ void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame) {
     pGame->pPacket->len = sizeof(ClientData);
     SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
 }
+
+
 
 void closeGame(Game *pGame) {
     for (int i = 0; i < MAX_PLAYERS;i++) if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
