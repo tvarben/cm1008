@@ -179,11 +179,13 @@ void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
     pShip->yStart = pShipData->y;
 }*/
 
-void updateShipsWithServerData(Ship *pShips[MAX_PLAYERS], const ShipData *pShipData[MAX_PLAYERS]) {
-    for(int i=0; i<MAX_PLAYERS; i++){
-        if(pShips[i]){
-            pShips[i]->x = pShipData[i]->x;
-            pShips[i]->y = pShipData[i]->y;
-        }  
+void updateShipsWithServerData(Ship *pShips[MAX_PLAYERS], ShipData pShipData[MAX_PLAYERS]) {
+    for(int i = 0; i < MAX_PLAYERS; i++) {
+        if (pShips[i]) {
+            pShips[i]->xStart = pShipData[i].x;  // <- use xStart, not x
+            pShips[i]->yStart = pShipData[i].y;
+            pShips[i]->shipRect.x = (int)pShipData[i].x;
+            pShips[i]->shipRect.y = (int)pShipData[i].y;
+        }
     }
 }
