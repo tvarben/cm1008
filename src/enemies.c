@@ -65,7 +65,6 @@ Enemy *createEnemy(EnemyImage *pEnemyImage, int window_width, int window_height)
 }
 
 static void getStartValues(Enemy *pEnemy){
-    srand(time(NULL));
     int startSpawnOnTheLeft =  rand() % 2; //0 or 1
     pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
     pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
@@ -94,11 +93,14 @@ static void getStartValues(Enemy *pEnemy){
     }
 }
 
-SDL_Rect getRectEnemy(Enemy *pEnemy){
+SDL_Rect getRectEnemy(Enemy *pEnemy)
+{
     if (pEnemy->active == true)
     {
         return pEnemy->rectHitbox;
     }
+    SDL_Rect empty = {0,0,0,0};
+    return empty;
 }
 void updateEnemy(Enemy *pEnemy){
     if(pEnemy->active == true)
@@ -134,13 +136,13 @@ void destroyEnemyImage(EnemyImage *pEnemyImage){
     SDL_DestroyTexture(pEnemyImage->pTexture);
 }
 
-// void disableEnemy(Enemy *pEnemy)
-// {
-//     if(pEnemy->health <= 0)
-//     {
-//     pEnemy->active = false;
-//     }
-// }
+void disableEnemy(Enemy *pEnemy)
+{
+    if(pEnemy->health <= 0)
+    {
+    pEnemy->active = false;
+    }
+}
 
 void damageEnemy(Enemy *pEnemy, int damage, int i)
 {
@@ -153,16 +155,31 @@ void damageEnemy(Enemy *pEnemy, int damage, int i)
     if (pEnemy->health < 0) pEnemy->health = 0;
 }
 
-bool checkIfActive(Enemy *pEnemy, int nrOfEnemies)
+bool isInWindow(Enemy *pEnemy)
 {
-    if(pEnemy->active==true)
+    if (pEnemy->x > pEnemy->window_width || pEnemy->x + pEnemy->rect.w < 0 ||
+        pEnemy->y > pEnemy->window_height || pEnemy->y + pEnemy->rect.h < 0)
     {
-        return true;
+        disableEnemy(pEnemy);  
+        return false;
     }
     else
     {
+        return true;
+    }
+}
+
+bool isEnemyActive(Enemy *pEnemy)
+{
+    if (pEnemy->active == false)
+    {
         return false;
     }
+    else
+    {
+        return true;
+    }
+    
 }
 void printEnemyHealth(Enemy *pEnemy)
 {

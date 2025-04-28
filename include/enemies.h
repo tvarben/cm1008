@@ -17,7 +17,8 @@ SDL_Rect getRectEnemy(Enemy *pEnemy);
 void destroyEnemyImage(EnemyImage *pEnemyImage);
 void disableEnemy(Enemy *pEnemy);
 void damageEnemy(Enemy *pEnemy, int damage, int i);
-bool checkIfActive(Enemy *pEnemy, int nrOfEnemies);
+bool isInWindow(Enemy *pEnemy);
+bool isEnemyActive(Enemy *pEnemy);
 void printEnemyHealth(Enemy *pEnemy);
 
 
