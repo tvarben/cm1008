@@ -149,7 +149,7 @@ void run(Game *pGame) {
     while (isRunning) {
         switch(pGame->state) {
             case ONGOING:
-                //sendServerData(pGame);
+                sendServerData(pGame);
                 if (SDL_PollEvent(&event)) {
                     if (event.type == SDL_QUIT) {
                         isRunning = false;
@@ -195,7 +195,7 @@ void run(Game *pGame) {
                 }
                 //updateShipVelocity(pGame->pShip);
                 //updateShip(pGame->pShip);
-                SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
+                SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
                 SDL_RenderClear(pGame->pRenderer);
                 for(int i=0; i<MAX_PLAYERS; i++){
                     drawShip(pGame->pShips[i]);
@@ -211,7 +211,7 @@ void run(Game *pGame) {
                 break;
             }
         }
-        SDL_Delay(8);
+        //SDL_Delay(8);
 }
 
 
