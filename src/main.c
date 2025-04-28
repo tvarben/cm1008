@@ -14,7 +14,7 @@
 #include "cannon.h"
 #include "menu.h"
 #define MAX_BULLETS 100
-#define MAX_ENEMIES 10
+#define MAX_ENEMIES 100
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
 #define MUSIC_FILEPATH "./resources/music.wav"
@@ -52,8 +52,8 @@ typedef struct
 int getTime(Game *pGame);
 void updateGameTime(Game *pGame);
 void resetEnemy(Game *pGame);
-void spawnEnemy(Game *pGame);
-void updateEnemies(Game *pGame);
+void spawnEnemies(Game *pGame, int ammount);
+void updateEnemies(Game *pGame, int ammount);
 bool areTheyAllDead(Game *pGame);
 
 int initiate(Game *pGame) 
@@ -162,6 +162,7 @@ int initiate(Game *pGame)
 void run(Game *pGame)
 {
     int killedEnemies = 0;
+    int nrOfEnemiesToSpawn = 4;
     bool isRunning = true;
     SDL_Rect emptyRect={0,0,0,0}, rectArray[MAX_PROJECTILES] = {0,0,0,0};
     char ipAdress[16] = {""};
@@ -226,10 +227,7 @@ void run(Game *pGame)
                 {
                     resetShip(pGame->pShip);
                     resetEnemy(pGame);
-                    spawnEnemy(pGame); // 4 gånger?
-                    spawnEnemy(pGame);
-                    spawnEnemy(pGame);
-                    spawnEnemy(pGame);
+                    spawnEnemies(pGame, nrOfEnemiesToSpawn);
                     pGame->state = ONGOING;
                     pGame->networkMenu = false;
                     pGame->pausedTime = 0;
@@ -249,6 +247,21 @@ void run(Game *pGame)
             {
                 pGame->networkMenu = false;
             }
+            else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_V)
+            {
+                printf("CURRENT NUMBER OF ENEMIES: %d \n", pGame->nrOfEnemies);
+                for (int i = 0; i < pGame->nrOfEnemies; i++)
+                {
+                    if (isEnemyActive(pGame->pEnemies[i]) == false)
+                    {
+                        printf("Enemy %d is inactive \n", i);
+                    }
+                    else
+                    {
+                        printf("Enemy %d is active \n", i);
+                    }
+                }
+            }      
             else if (pGame->state == START && pGame->networkMenu == true && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE && stringIndex > 0)
             {
                 ipAdress[stringIndex-1] = '\0';
@@ -309,7 +322,7 @@ void run(Game *pGame)
             
             update_projectiles(delta_time); // update based on time since last frame passed
             updateGameTime(pGame);
-            updateEnemies(pGame);
+            updateEnemies(pGame, nrOfEnemiesToSpawn);
             updateShipVelocity(pGame->pShip);           // resolve velocity based on key states
             updateShip(pGame->pShip);
             updateCannon(pGame->pCannon, pGame->pShip);
@@ -358,8 +371,7 @@ void run(Game *pGame)
                     }
                 }
             }
-            if (pGame->pScoreText)
-            drawText(pGame->pScoreText);
+            if (pGame->pScoreText) drawText(pGame->pScoreText);
             SDL_RenderPresent(pGame->pRenderer);
         } 
         else if (pGame->state == START) 
@@ -440,21 +452,41 @@ void updateGameTime(Game *pGame)
     }
 }
 
-void spawnEnemy(Game *pGame)
+void spawnEnemies(Game *pGame, int ammount)
 {
-    pGame->pEnemies[pGame->nrOfEnemies] = createEnemy(pGame->pEnemyImage,WINDOW_WIDTH,WINDOW_HEIGHT);
-    pGame->nrOfEnemies++; 
+    for (int i = 0; i < ammount; i++)
+    {
+        pGame->pEnemies[pGame->nrOfEnemies] = createEnemy(pGame->pEnemyImage,WINDOW_WIDTH,WINDOW_HEIGHT);
+        pGame->nrOfEnemies++;
+    }
 }
 
-void updateEnemies(Game *pGame)
+void updateEnemies(Game *pGame, int ammount)
 {
-    if (areTheyAllDead(pGame))
+    if (areTheyAllDead(pGame)) //yes this looks like shit 
     {
         pGame->nrOfEnemies = 0;
-        spawnEnemy(pGame);
-        spawnEnemy(pGame);
-        spawnEnemy(pGame);
-        spawnEnemy(pGame);
+        spawnEnemies(pGame, ammount);
+        if (pGame->gameTime >= 20)
+        {
+            spawnEnemies(pGame, ammount);
+            if (pGame->gameTime >= 40)
+            {
+                spawnEnemies(pGame, ammount);
+                if (pGame->gameTime >= 60)
+                {
+                    spawnEnemies(pGame, ammount);
+                    if (pGame->gameTime >= 80)
+                    {
+                        spawnEnemies(pGame, ammount);
+                        if (pGame->gameTime >= 100)
+                        {
+                            spawnEnemies(pGame, ammount);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 void resetEnemy(Game *pGame)
