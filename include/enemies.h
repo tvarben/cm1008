@@ -1,6 +1,8 @@
 #ifndef ENEMIES_H
 #define ENEMIES_H
 #include <SDL2/SDL.h>
+#include <stdbool.h>
+
 
 typedef struct enemyImage EnemyImage;
 typedef struct enemy Enemy;
@@ -13,5 +15,11 @@ void drawEnemy(Enemy *pEnemy);
 void destroyEnemy(Enemy *pEnemy);
 SDL_Rect getRectEnemy(Enemy *pEnemy);
 void destroyEnemyImage(EnemyImage *pEnemyImage);
+void disableEnemy(Enemy *pEnemy);
+void damageEnemy(Enemy *pEnemy, int damage, int i);
+bool isInWindow(Enemy *pEnemy);
+bool isEnemyActive(Enemy *pEnemy);
+void printEnemyHealth(Enemy *pEnemy);
+
 
 #endif

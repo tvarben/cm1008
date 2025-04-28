@@ -14,9 +14,9 @@ struct Cannon {
   SDL_Renderer *renderer;
   SDL_Texture *texture;
   SDL_Rect rect;
+  bool lastFacedLeft;
   bool spacebar, moveLeftQ, moveRightE,
       moveDownN; // keys decide direction of bullet
-  int nrOfBullets;
 };
 
 Cannon *createCannon(SDL_Renderer *renderer, int windowWidth,
@@ -28,9 +28,9 @@ Cannon *createCannon(SDL_Renderer *renderer, int windowWidth,
   c->windowWidth = windowWidth;
   c->windowHeight = windowHeight;
   c->renderer = renderer;
-  c->dy = 100; // direction cannon shoots when press space at start of the game
-  c->dx = 0;
-  c->nrOfBullets = 0;
+  c->dy = 0; // direction cannon shoots when press space at start of the game
+  c->dx = 100;
+  c->lastFacedLeft = false;
   SDL_Surface *surface = IMG_Load("resources/ship_cannon.png");
   if (!surface) {
     printf("Error loading Cannon.png: %s\n", IMG_GetError());
@@ -57,7 +57,8 @@ Cannon *createCannon(SDL_Renderer *renderer, int windowWidth,
 }
 
 void drawCannon(Cannon *c) {
-  SDL_RenderCopy(c->renderer, c->texture, NULL, &c->rect);
+  SDL_RendererFlip flip = c->lastFacedLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+  SDL_RenderCopyEx(c->renderer, c->texture, NULL, &c->rect, 0, NULL, flip);
 }
 
 void destroyCannon(Cannon *c) {
@@ -69,44 +70,35 @@ void destroyCannon(Cannon *c) {
 }
 
 void updateCannon(Cannon *pCannon, Ship *pShip) {
-  // offset from where ship spawns to adjust where we
-  // want to place cannon. change later to adjust for sprite sheet
-  double cannonLocationX = 5;
+  double cannonLocationX = 28;
   double cannonLocationY = 15;
 
   pCannon->rect.y = getShipY(pShip) + cannonLocationY;
   pCannon->rect.x = getShipX(pShip) + cannonLocationX;
 
-  //printf("Y coordinate: %d\n", pCannon->rect.y);
-  //printf("X coordinate: %d\n", pCannon->rect.x);
-}
-
-void handleCannonEvent(Cannon *c, SDL_Event *event) {
-  switch (event->key.keysym.scancode) {
-  case SDL_SCANCODE_SPACE:
-    printf("spacebar click registered\n");
-    spawn_projectile(c->rect.x, c->rect.y, c->dx, c->dy); // fires projectile
-    (c->nrOfBullets)++;
-    break;
-
-  case SDL_SCANCODE_E:
-    c->dy = 0;
-    c->dx = 100;
-    break;
-  case SDL_SCANCODE_Q:
-    c->dy = 0;
-    c->dx = -100;
-    break;
-  case SDL_SCANCODE_N:
-    c->dy = 100;
-    c->dx = 0;
-  default:
-    break;
-    // might need default statement
-    // test
-    break;
+  if (isLeft(pShip)) {
+    pCannon->lastFacedLeft = true;
+    pCannon->dx = -100;
+    pCannon->dy = 0;
+  } else {
+    pCannon->lastFacedLeft = false;
+    pCannon->dx = 100;
+    pCannon->dy = 0;
   }
 }
+
+  void handleCannonEvent(Cannon *c, SDL_Event *event) {
+    //printf("FIRING AWAY SIR! ('_')/ \n");
+    if (event->type == SDL_KEYDOWN && event->key.keysym.scancode == SDL_SCANCODE_SPACE) {
+      if (c->lastFacedLeft) {
+        spawn_projectile(c->rect.x - 8, c->rect.y + 15, -1000, 0);
+        //printf("left\n");
+      } else {
+        spawn_projectile(c->rect.x + 20, c->rect.y + 15, 1000, 0);
+        //printf("right\n");
+      }
+    }
+  }
 
 void resetCannon(Cannon *c) {
   c->spacebar = false;
@@ -114,4 +106,3 @@ void resetCannon(Cannon *c) {
   c->moveLeftQ = false;
   c->moveRightE = false;
 }
-int getNrOfBullets(Cannon *c) { return c->nrOfBullets; }

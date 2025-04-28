@@ -12,5 +12,4 @@ void destroyCannon(Cannon *s);
 void updateCannon(Cannon *pCannon, Ship *pShip);
 void handleCannonEvent(Cannon *c, SDL_Event *event);
 void resetCannon(Cannon *c);
-int getNrOfBullets(Cannon *c);
 #endif

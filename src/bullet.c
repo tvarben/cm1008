@@ -20,25 +20,16 @@ void spawn_projectile(float x, float y, float dx, float dy) {
       projectiles[i].y = y;
       projectiles[i].vx = dx;
       projectiles[i].vy = dy;
-      projectiles[i].active = true;             // true
+      projectiles[i].active = 1;
       projectiles[i].rect.w = projectile_width; // size of projectile
       projectiles[i].rect.h = projectile_length;
       playSound(&pPew, "./resources/pew.wav");
-      printf("projectile shot \n");
+      //printf("projectile shot \n");
       return;
     }
   }
 }
-/*SDL_Rect getRectProjectile(Bullet projectile[]) {*/
-/*  for (int i = 0; i < MAX_PROJECTILES; i++) {*/
-/*    if (projectile[i].active == true) {*/
-/*      return projectile[i].rect;*/
-/*    }*/
-/*    SDL_Rect empty = {0, 0, 0, 0};*/
-/*    return empty;*/
-/*  }*/
-/*}*/
-/**/
+
 void update_projectiles(float delta_time) {
   //
   for (int i = 0; i < MAX_PROJECTILES; i++) {
@@ -46,10 +37,10 @@ void update_projectiles(float delta_time) {
       projectiles[i].x += projectiles[i].vx * delta_time;
       projectiles[i].y += projectiles[i].vy * delta_time;
 
-      // Deactivate if off screen (based on window size)
+      // Deactivate if off screen (based on wndiow size)
       if (projectiles[i].x < 0 || projectiles[i].x > WINDOW_WIDTH ||
           projectiles[i].y < 0 || projectiles[i].y > WINDOW_HEIGHT) {
-        projectiles[i].active = false;
+        projectiles[i].active = 0;
       }
 
       // Update rect position for rendering
@@ -72,10 +63,31 @@ void render_projectiles(SDL_Renderer *renderer) {
 SDL_Rect getRectBullet(Bullet *pBullet) { return pBullet->rect; }
 
 void getProjectileRects(SDL_Rect rectArray[]) {
+  SDL_Rect emptyRect ={0,0,0,0};
   for (int i = 0; i < MAX_PROJECTILES; i++) {
     if (!projectiles[i].active)
-      continue;
-    rectArray[i] = projectiles[i].rect;
+    {
+      rectArray[i] = emptyRect;
+    }
+    else
+    {
+      rectArray[i] = projectiles[i].rect;
+    }
+
   }
+
+  return;
+}
+void resetAllBullets()
+{
+  for(int i=0;i<MAX_PROJECTILES;i++)
+  {
+    projectiles[i].active=false;
+  }
+  return;
+}
+void removeProjectile(int i)
+{
+  projectiles[i].active = false;
   return;
 }
