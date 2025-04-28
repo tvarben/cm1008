@@ -161,6 +161,7 @@ int initiate(Game *pGame)
 
 void run(Game *pGame)
 {
+    int killedEnemies = 0;
     bool isRunning = true;
     SDL_Rect emptyRect={0,0,0,0}, rectArray[MAX_PROJECTILES] = {0,0,0,0};
     char ipAdress[16] = {""};
@@ -282,6 +283,7 @@ void run(Game *pGame)
             else if (pGame->state == PAUSED && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
             {
                 pGame->pausedTime += SDL_GetTicks64() - pGame->pauseStartTime;
+                killedEnemies = 0;
                 pGame->state = ONGOING;
             }
             else if (pGame->state == GAME_OVER && event.type == SDL_MOUSEBUTTONDOWN)
@@ -296,6 +298,7 @@ void run(Game *pGame)
                       rectArray[i]=emptyRect;
                     }
                     pGame->state = START;
+                    killedEnemies = 0;
                 }
             }   
         }
@@ -312,10 +315,6 @@ void run(Game *pGame)
             updateCannon(pGame->pCannon, pGame->pShip);
             for(int i=0;i<pGame->nrOfEnemies;i++){
                  updateEnemy(pGame->pEnemies[i]);
-                 if (isInWindow(pGame->pEnemies[i]) == false)
-                 {
-                    printf("Enemy %d has fled \n", i+1);
-                 }                 
             }
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);
             SDL_RenderClear(pGame->pRenderer);
@@ -350,6 +349,10 @@ void run(Game *pGame)
                         //printf("enemy num: %d \n", k);
                         printEnemyHealth(pGame->pEnemies[k]);
                         damageEnemy(pGame->pEnemies[k], 1, k);
+                        if (isEnemyActive(pGame->pEnemies[k]) == false)
+                        {
+                            killedEnemies++;
+                        }
                         removeProjectile(i);
                         rectArray[i]=emptyRect;
                     }
@@ -389,6 +392,7 @@ void run(Game *pGame)
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);  
             drawText(pGame->pGameOverText);
             drawText(pGame->pMenuText);
+            printf("YOU KILLED %d ALIENS! \n", killedEnemies);
             SDL_RenderPresent(pGame->pRenderer);
             if (SDL_PointInRect(&mousePoint, MenuRect)) {
                 setTextColor(pGame->pMenuText, 255, 255, 100, pGame->pFont, "MENU");
