@@ -213,14 +213,13 @@ void updateWithServerData(Game *pGame) {
     ServerData serverData;/////// test
     memcpy(&serverData, pGame->pPacket->data, sizeof(ServerData));
     pGame->shipId= serverData.sDPlayerId;////// test
+    updateShipsWithServerData(pGame->pShips, &serverData.ships);
     
-    //updateShipsWithServerData(pGame->pShips, serverData.ships);
-    
-    for(int i = 0; i < MAX_PLAYERS; i++) {
+    /*for(int i = 0; i < MAX_PLAYERS; i++) {
         //pGame->pShips[i]->x = serverData.ships[i].x;
         //pGame->pShips[i]->y = serverData.ships[i].y;
-        updateShipsWithServerData(pGame->pShips[i], serverData.ships);
-    }
+        updateShipsWithServerData(pGame->pShips[i], &serverData.ships[i]);
+    }*/
 }
 
 bool connectToServer(Game *pGame) {
