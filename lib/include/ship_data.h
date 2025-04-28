@@ -20,7 +20,7 @@ typedef enum{
 }ClientCommand;
 
 typedef struct{
-    int playerId;
+    int cDPlayerId;
     ClientCommand command;
 }ClientData;
 
@@ -31,7 +31,7 @@ typedef struct{
 
 typedef struct{
     ShipData ships[MAX_PLAYERS];
-    int playerId;
+    int sDPlayerId;
     GameState gState;
 }ServerData;
 
