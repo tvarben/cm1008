@@ -8,6 +8,7 @@
 struct ship {
     float x, y, vx, vy, xStart, yStart; //x och y används inte? kolla rad 50
     //int vx, vy;
+    float targetX, targetY; // for smooth movement
     int windowWidth, windowHeight;
     SDL_Renderer* renderer;
     SDL_Texture* texture;
@@ -26,9 +27,9 @@ Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int wind
     pShip->renderer = renderer;
     pShip->keyDown=pShip->keyUp=pShip->keyRight=pShip->keyLeft=false;
 
-    SDL_Surface* surface = IMG_Load("../lib/resources//Ship.png");
+    SDL_Surface* surface = IMG_Load("../lib/resources//player.png");
     if (!surface) {
-        printf("Error loading Ship.png: %s\n", IMG_GetError());
+        printf("Error loading player.png: %s\n", IMG_GetError());
         free(pShip);
         return NULL;
     }
@@ -48,6 +49,10 @@ Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int wind
 
     pShip->xStart /*= pShip->x */= pShip->shipRect.x = windowWidth/2-pShip->shipRect.h/2;
     pShip->yStart /*= pShip->y */= pShip->shipRect.y = (playerId*100) + 50;
+
+    // For smooth movement, initialize target position to start position
+    pShip->targetX = pShip->xStart;
+    pShip->targetY = pShip->yStart;
 
     
     /*SDL_QueryTexture(s->texture, NULL, NULL, &s->rect.w, &s->rect.h);
@@ -105,22 +110,51 @@ void updateShipVelocity(Ship* pShip) {
     pShip->vy = vy;
 }
 
-void updateShip(Ship* pShip) {
-    const int speed = 4; // constant speed
+// For client-side prediction + interpolation
+void updateShip(Ship* pShip, int shipId, int myShipId) {
+    const int speed = 4;
+    
+    if (shipId == myShipId) {
+        pShip->xStart += pShip->vx * speed;
+        pShip->yStart += pShip->vy * speed;
+    } else {
+        const float lerpFactor = 0.15f;
+        pShip->xStart += (pShip->targetX - pShip->xStart) * lerpFactor;
+        pShip->yStart += (pShip->targetY - pShip->yStart) * lerpFactor;
+    }
+
+    pShip->shipRect.x = (int)pShip->xStart;
+    pShip->shipRect.y = (int)pShip->yStart;
+
+     // BOUNDARY CHECK 
+     if (pShip->xStart < 0) pShip->xStart = 0;
+     if (pShip->yStart < 0) pShip->yStart = 0;
+     if (pShip->xStart > pShip->windowWidth - pShip->shipRect.w) 
+         pShip->xStart = pShip->windowWidth - pShip->shipRect.w;
+     if (pShip->yStart > pShip->windowHeight - pShip->shipRect.h) 
+         pShip->yStart = pShip->windowHeight - pShip->shipRect.h;
+
+}
+
+// For server (no client prediction, pure physics)
+void updateShipServer(Ship* pShip) {
+    const int speed = 4;
+
     pShip->xStart += pShip->vx * speed;
     pShip->yStart += pShip->vy * speed;
 
-    // Stay within bounds
+    pShip->shipRect.x = (int)pShip->xStart;
+    pShip->shipRect.y = (int)pShip->yStart;
+
+    // BOUNDARY CHECK
     if (pShip->xStart < 0) pShip->xStart = 0;
     if (pShip->yStart < 0) pShip->yStart = 0;
     if (pShip->xStart > pShip->windowWidth - pShip->shipRect.w) 
         pShip->xStart = pShip->windowWidth - pShip->shipRect.w;
     if (pShip->yStart > pShip->windowHeight - pShip->shipRect.h) 
         pShip->yStart = pShip->windowHeight - pShip->shipRect.h;
-
-    pShip->shipRect.x = (int)pShip->xStart;
-    pShip->shipRect.y = (int)pShip->yStart;
 }
+
 
 void drawShip(Ship* pShip) {
     SDL_RenderCopy(pShip->renderer, pShip->texture, NULL, &pShip->shipRect);
@@ -182,10 +216,10 @@ void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
 void updateShipsWithServerData(Ship *pShips[MAX_PLAYERS], ShipData pShipData[MAX_PLAYERS]) {
     for(int i = 0; i < MAX_PLAYERS; i++) {
         if (pShips[i]) {
-            pShips[i]->xStart = pShipData[i].x;  // <- use xStart, not x
-            pShips[i]->yStart = pShipData[i].y;
-            pShips[i]->shipRect.x = (int)pShipData[i].x;
-            pShips[i]->shipRect.y = (int)pShipData[i].y;
+            pShips[i]->targetX  = pShipData[i].x;  // <- use xStart, not x
+            pShips[i]->targetY = pShipData[i].y;
+            //pShips[i]->shipRect.x = (int)pShipData[i].x;
+            //pShips[i]->shipRect.y = (int)pShipData[i].y;
         }
     }
 }
