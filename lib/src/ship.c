@@ -5,7 +5,7 @@
 #include "ship.h"
 #include "ship_data.h"
 
-struct Ship {
+struct ship {
     float x, y, vx, vy, xStart, yStart; //x och y används inte? kolla rad 50
     //int vx, vy;
     int windowWidth, windowHeight;
@@ -172,4 +172,9 @@ void applyShipCommand(Ship* pShip, ClientCommand c) {
 void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
         pShipData->x = pShip->xStart;
         pShipData->y = pShip->yStart;
+}
+
+void updateShipsWithServerData(Ship *pShip, ShipData *pShipData) {
+    pShip->xStart = pShipData->x;
+    pShip->yStart = pShipData->y;
 }
