@@ -29,6 +29,7 @@ typedef struct
     Ship *pShip;
     GameState state;
     Mix_Music *pMusic;
+    Mix_Chunk *pSFX;
 	TTF_Font *pFont, *pSmallFont;
 	Text *pSingleplayerText, *pGameName, *pExitText, *pPauseText, *pScoreText, *pMultiplayerText, *pMenuText, *pGameOverText;
     Stars *pStars;
@@ -352,6 +353,7 @@ void run(Game *pGame)
                         damageEnemy(pGame->pEnemies[k], 1, k);
                         removeProjectile(i);
                         rectArray[i]=emptyRect;
+                        playSound(&pGame->pSFX,"./resources/pew (2).wav", 1);
                     }
                 }
             }

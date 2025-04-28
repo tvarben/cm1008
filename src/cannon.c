@@ -91,12 +91,13 @@ void updateCannon(Cannon *pCannon, Ship *pShip) {
     //printf("FIRING AWAY SIR! ('_')/ \n");
     if (event->type == SDL_KEYDOWN && event->key.keysym.scancode == SDL_SCANCODE_SPACE) {
       if (c->lastFacedLeft) {
-        spawn_projectile(c->rect.x - 8, c->rect.y + 15, -1000, 0);
+        spawn_projectile(c->rect.x - 8, c->rect.y, -1000, 0);
         //printf("left\n");
       } else {
-        spawn_projectile(c->rect.x + 20, c->rect.y + 15, 1000, 0);
+        spawn_projectile(c->rect.x + 20, c->rect.y, 1000, 0);
         //printf("right\n");
       }
+      
     }
   }
 

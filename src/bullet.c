@@ -23,7 +23,7 @@ void spawn_projectile(float x, float y, float dx, float dy) {
       projectiles[i].active = 1;
       projectiles[i].rect.w = projectile_width; // size of projectile
       projectiles[i].rect.h = projectile_length;
-      playSound(&pPew, "./resources/pew.wav");
+      playSound(&pPew, "./resources/pew.wav", -1);
       //printf("projectile shot \n");
       return;
     }

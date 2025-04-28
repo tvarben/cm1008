@@ -27,9 +27,9 @@ void playMusic(Mix_Music *pMusic, int loops) {
 	}
 }
 
-void playSound(Mix_Chunk **ppSound, char *filepath) {
+void playSound(Mix_Chunk **ppSound, char *filepath, int channel) {
 	*ppSound = Mix_LoadWAV(filepath);
-	if(Mix_PlayChannel(-1, *ppSound, 0) == -1)
+	if(Mix_PlayChannel(channel, *ppSound, 0) == -1)
 		printf("Error: %s\n", Mix_GetError);
 }
 

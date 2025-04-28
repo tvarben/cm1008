@@ -5,7 +5,7 @@
 
 int initMusic(Mix_Music **ppMusic, char *filepath);
 void playMusic(Mix_Music *pMusic, int loops);
-void playSound(Mix_Chunk **ppSound, char *filepath);
+void playSound(Mix_Chunk **ppSound, char *filepath, int channel);
 void closeMusic(Mix_Music *pMusic);
 
 #endif 
