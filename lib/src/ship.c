@@ -187,11 +187,16 @@ void applyShipCommand(Ship* pShip, ClientCommand c) {
 void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
         pShipData->x = pShip->xStart;
         pShipData->y = pShip->yStart;
+        pShipData->vx = pShip->vx;
+        pShipData->vy = pShip->vy;
 }
 
-void updateShipsWithServerData(Ship *pShip, ShipData *pShipData) {
-    pShip->xStart = pShipData->x;
-    pShip->yStart = pShipData->y;
+void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int myShipId) {
+    if (shipId == myShipId) return;
+    pShip->targetX = pShipData->x;
+    pShip->targetY = pShipData->y;
+    pShip->vx = pShipData->vx;
+    pShip->vy = pShipData->vy;
 }
 
 /*void updateShipsWithServerData(Ship *pShips[MAX_PLAYERS], ShipData pShipData[MAX_PLAYERS]) {
