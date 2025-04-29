@@ -18,5 +18,6 @@ int getShipX(Ship *s);
 int getShipY(Ship *s);
 int shipCollision(Ship *pShip, SDL_Rect rect);
 bool isLeft(Ship *pShip);
+bool damageShip(Ship *pShip);
 
 #endif

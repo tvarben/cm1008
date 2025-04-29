@@ -349,7 +349,12 @@ void run(Game *pGame)
             }
              for(int i=0;i<pGame->nrOfEnemies;i++){
                 if(shipCollision(pGame->pShip, getRectEnemy(pGame->pEnemies[i]))){
-                    pGame->state = GAME_OVER;
+                    damageEnemy(pGame->pEnemies[i], 2 , i);
+                    if(damageShip(pGame->pShip))
+                    {
+                        printf("YOU DIED, GG\n");
+                        pGame->state = GAME_OVER;
+                    }
                 }
             }
             if(pGame->pScoreText) drawText(pGame->pScoreText);
@@ -412,7 +417,7 @@ void run(Game *pGame)
             destroyText(pKillCountText);
             drawText(pGame->pGameOverText);
             drawText(pGame->pMenuText);
-            printf("YOU KILLED %d ALIENS! \n", killedEnemies);
+            //printf("YOU KILLED %d ALIENS! \n", killedEnemies);
             SDL_RenderPresent(pGame->pRenderer);
             if (SDL_PointInRect(&mousePoint, MenuRect)) {
                 setTextColor(pGame->pMenuText, 255, 255, 100, pGame->pFont, "MENU");
@@ -471,7 +476,7 @@ void spawnEnemies(Game *pGame, int ammount)
 
 void updateEnemies(Game *pGame, int ammount)
 {
-    if (areTheyAllDead(pGame)) //yes this looks like shit 
+    if (areTheyAllDead(pGame)) //yes this looks like shit
     {
         pGame->nrOfEnemies = 0;
         spawnEnemies(pGame, ammount);

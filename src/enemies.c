@@ -72,7 +72,8 @@ static void getStartValues(Enemy *pEnemy){
     pEnemy->rectHitbox.h = pEnemy->rect.h - 10;
     pEnemy->damage = 1;
     pEnemy->health = 2;
-    float speed = rand() % (50 - 15 + 1) + 15;
+    //float speed = rand() % (15 - 10 + 1) + 5; //för laptop
+    float speed = rand() % (30 - 15 + 1) + 10; // För stationär
 
     if (startSpawnOnTheLeft == 1)
     {
