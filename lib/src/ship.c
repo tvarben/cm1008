@@ -155,7 +155,6 @@ void updateShipServer(Ship* pShip) {
         pShip->yStart = pShip->windowHeight - pShip->shipRect.h;
 }
 
-
 void drawShip(Ship* pShip) {
     SDL_RenderCopy(pShip->renderer, pShip->texture, NULL, &pShip->shipRect);
 }
@@ -208,12 +207,12 @@ void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
         pShipData->y = pShip->yStart;
 }
 
-/*void updateShipsWithServerData(Ship *pShip, ShipData *pShipData) {
+void updateShipsWithServerData(Ship *pShip, ShipData *pShipData) {
     pShip->xStart = pShipData->x;
     pShip->yStart = pShipData->y;
-}*/
+}
 
-void updateShipsWithServerData(Ship *pShips[MAX_PLAYERS], ShipData pShipData[MAX_PLAYERS]) {
+/*void updateShipsWithServerData(Ship *pShips[MAX_PLAYERS], ShipData pShipData[MAX_PLAYERS]) {
     for(int i = 0; i < MAX_PLAYERS; i++) {
         if (pShips[i]) {
             pShips[i]->targetX  = pShipData[i].x;  // <- use xStart, not x
@@ -222,4 +221,4 @@ void updateShipsWithServerData(Ship *pShips[MAX_PLAYERS], ShipData pShipData[MAX
             //pShips[i]->shipRect.y = (int)pShipData[i].y;
         }
     }
-}
+}*/
