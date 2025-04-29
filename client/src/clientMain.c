@@ -170,12 +170,9 @@ void run(Game *pGame) {
                 for (int i = 0; i < MAX_PLAYERS; i++) {
                     if (pGame->pShips[i]) {
                         updateShipVelocity(pGame->pShips[i]);
-                        updateShip(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
+                        updateShipOnClients(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
                     }
                 }
-                //updateShipVelocity(pGame->pShips[0]);
-                //updateShip(pGame->pShips[0]);
-
                 SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
                 SDL_RenderClear(pGame->pRenderer);
                 for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -198,7 +195,6 @@ void run(Game *pGame) {
                 SDL_RenderClear(pGame->pRenderer);
                 SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
                 SDL_RenderPresent(pGame->pRenderer);
-                //pGame->state = START;
                 break;
         }
     }
@@ -208,7 +204,6 @@ void updateWithServerData(Game *pGame) {
     ServerData serverData;/////// test
     memcpy(&serverData, pGame->pPacket->data, sizeof(ServerData));
     pGame->shipId= serverData.sDPlayerId;////// test
-    //updateShipsWithServerData(pGame->pShips, serverData.ships);
     for(int i = 0; i < MAX_PLAYERS; i++) {
         if (pGame->pShips[i])
             updateShipsWithServerData(pGame->pShips[i], &serverData.ships[i], i, pGame->shipId);
@@ -240,51 +235,38 @@ void receiveDataFromServer() {
 
 void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame) {
     ClientData cData;
+    cData.cDPlayerId = pGame->shipId;
     SDL_Scancode key = pEvent->key.keysym.scancode;
-    //cData.cDPlayerId = pGame->shipId;
-    bool pressed = false;
     if (pEvent->type == SDL_KEYDOWN || pEvent->type == SDL_KEYUP) {
         switch(key) {
             case SDL_SCANCODE_UP:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
-                //handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
                 applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
-                //printf("MOVE_UP SENT!\n");
                 break;
             case SDL_SCANCODE_DOWN:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
-                //handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
                 applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
-                //printf("MOVE_DOWN SENT!\n");
                 break;
             case SDL_SCANCODE_LEFT:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
-                //handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
                 applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
-                //printf("MOVE_LEFT SENT!\n");
                 break;
             case SDL_SCANCODE_RIGHT:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
-                //handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
                 applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
-                //printf("MOVE_RIGHT SENT!\n");
                 break;
             default:
                 cData.command = STOP_SHIP;
                 break;
         }
     }
-
     memcpy(pGame->pPacket->data, &cData, sizeof(ClientData));
     pGame->pPacket->len = sizeof(ClientData);
     SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
 }
 
-
-
 void closeGame(Game *pGame) {
     for (int i = 0; i < MAX_PLAYERS;i++) if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
-    //if (pGame->pShip) destroyShip(pGame->pShip);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
 

@@ -30,9 +30,9 @@ typedef struct{
 }ShipData;
 
 typedef struct{
-    ShipData ships[MAX_PLAYERS];
-    int sDPlayerId;
     GameState gState;
+    int sDPlayerId;
+    ShipData ships[MAX_PLAYERS];
 }ServerData;
 
 #endif
