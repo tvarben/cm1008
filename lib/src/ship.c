@@ -192,9 +192,14 @@ void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
 }
 
 void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int myShipId) {
-    if (shipId == myShipId) return;
-    pShip->targetX = pShipData->x;
-    pShip->targetY = pShipData->y;
+    if (shipId == myShipId) return; // test
+    const float networkDelayEstimate = 0.1f; 
+    const int speed = 4;
+    pShip->targetX = pShipData->x + pShipData->vx * speed * networkDelayEstimate;
+    pShip->targetY = pShipData->y + pShipData->vy * speed * networkDelayEstimate; // test
+
+    //pShip->targetX = pShipData->x;
+    //pShip->targetY = pShipData->y;
     pShip->vx = pShipData->vx;
     pShip->vy = pShipData->vy;
 }
