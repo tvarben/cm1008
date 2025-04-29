@@ -157,22 +157,17 @@ void run(Game *pGame) {
                 }
                 if(SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) { ///
                     memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
-                
                     int clientIndex = getClientIndex(pGame, &pGame->pPacket->address); 
-                    pGame->serverData.sDPlayerId = clientIndex; ///// test
+                    if (clientIndex >= 0 && clientIndex < MAX_PLAYERS)
+                        applyShipCommand(pGame->pShips[clientIndex], cData.command);
+
+                    /*pGame->serverData.sDPlayerId = clientIndex; ///// test
                     memcpy(pGame->pPacket->data, &(pGame->serverData), sizeof(ServerData));
                     pGame->pPacket->len = sizeof(ServerData);
                     pGame->pPacket->address = pGame->clients[clientIndex];
-                    SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket); ///// test
+                    SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket); ///// test*/
 
-                    
-
-
-
-
-
-
-                    if (clientIndex >= 0 && clientIndex < MAX_PLAYERS) {
+                    /*if (clientIndex >= 0 && clientIndex < MAX_PLAYERS) {
                         applyShipCommand(pGame->pShips[clientIndex], cData.command);
                         for (int i = 0; i < pGame->nrOfClients; i++) {
                             Uint32 ip = SDL_SwapBE32(pGame->clients[i].host);
@@ -185,7 +180,7 @@ void run(Game *pGame) {
                             ip & 0xFF,
                             port);
                         }
-                    }
+                    }*/
                 }
                 for(int i = 0; i < MAX_PLAYERS; i++) {
                     if (pGame->pShips[i]) {
