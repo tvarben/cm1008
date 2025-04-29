@@ -157,7 +157,7 @@ void run(Game *pGame) {
             case ONGOING:
                 while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
                     updateWithServerData(pGame);
-                    printf("Update with server data.\n");
+                    //printf("Update with server data.\n");
                 }
 
                 if (SDL_PollEvent(&event)) {
@@ -189,7 +189,7 @@ void run(Game *pGame) {
                         isRunning = false;
                     } else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
                         if(connectToServer(pGame)) {
-                            printf("Connected to server");
+                            //printf("Connected to server");
                             pGame->state = ONGOING;
                         }
                     }
@@ -198,7 +198,6 @@ void run(Game *pGame) {
                 SDL_RenderClear(pGame->pRenderer);
                 SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
                 SDL_RenderPresent(pGame->pRenderer);
-
                 //pGame->state = START;
                 break;
         }
@@ -252,25 +251,25 @@ void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame) {
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
                 //handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
                 applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
-                printf("MOVE_UP SENT!\n");
+                //printf("MOVE_UP SENT!\n");
                 break;
             case SDL_SCANCODE_DOWN:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
                 //handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
                 applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
-                printf("MOVE_DOWN SENT!\n");
+                //printf("MOVE_DOWN SENT!\n");
                 break;
             case SDL_SCANCODE_LEFT:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
                 //handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
                 applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
-                printf("MOVE_LEFT SENT!\n");
+                //printf("MOVE_LEFT SENT!\n");
                 break;
             case SDL_SCANCODE_RIGHT:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
                 //handleShipEvent(pGame->pShips[pGame->shipId], pEvent);
                 applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
-                printf("MOVE_RIGHT SENT!\n");
+                //printf("MOVE_RIGHT SENT!\n");
                 break;
             default:
                 cData.command = STOP_SHIP;
