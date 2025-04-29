@@ -18,6 +18,7 @@
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
 #define MUSIC_FILEPATH "./resources/music.wav"
+#define SHOOT_SFX_FILEPATH "./resources/pew.wav"
 
 enum GameState { START, ONGOING, PAUSED, GAME_OVER };
 typedef enum GameState GameState;
@@ -28,6 +29,7 @@ typedef struct
     SDL_Renderer *pRenderer;
     Ship *pShip;
     GameState state;
+    Mix_Chunk *pSFX;
     Mix_Music *pMusic;
 	TTF_Font *pFont, *pSmallFont;
 	Text *pSingleplayerText, *pGameName, *pExitText, *pPauseText, *pScoreText, *pMultiplayerText, *pMenuText, *pGameOverText;
@@ -286,6 +288,7 @@ void run(Game *pGame)
                 if (now - pGame->lastAttackTime >= pGame->attackDelay)
                 {
                     handleCannonEvent(pGame->pCannon, &event);
+                    playSound(&pGame->pSFX,SHOOT_SFX_FILEPATH, 1);
                     pGame->lastAttackTime = now;
                 }
             }
@@ -402,6 +405,11 @@ void run(Game *pGame)
         else if (pGame->state == GAME_OVER)
         {
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);  
+            char scoreText[64];
+            sprintf(scoreText, "You Killed %d Aliens", killedEnemies);
+            Text *pKillCountText = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, scoreText, WINDOW_WIDTH/2, WINDOW_HEIGHT/3);
+            drawText(pKillCountText);
+            destroyText(pKillCountText);
             drawText(pGame->pGameOverText);
             drawText(pGame->pMenuText);
             printf("YOU KILLED %d ALIENS! \n", killedEnemies);
