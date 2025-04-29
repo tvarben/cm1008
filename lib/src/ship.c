@@ -5,6 +5,8 @@
 #include "ship.h"
 #include "ship_data.h"
 
+#define SPEED 3
+
 struct ship {
     float x, y, vx, vy, xStart, yStart; //x och y används inte? kolla rad 50
     //int vx, vy;
@@ -54,7 +56,7 @@ Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int wind
     return pShip;
 }
 
-void handleShipEvent(Ship* pShip, SDL_Event* event) {
+/*void handleShipEvent(Ship* pShip, SDL_Event* event) {
     bool down = event->type == SDL_KEYDOWN;
 
     switch (event->key.keysym.scancode) {
@@ -72,7 +74,7 @@ void handleShipEvent(Ship* pShip, SDL_Event* event) {
             pShip->keyRight = down; break;
         default: break;
     }
-}
+}*/
 
 void setShipVelocity(Ship* pShip, int vx, int vy) {
     pShip->vx = vx;
@@ -93,38 +95,30 @@ void updateShipVelocity(Ship* pShip) {
 }
 
 // For client-side prediction + interpolation
-void updateShip(Ship* pShip, int shipId, int myShipId) {
-    const int speed = 4;
+void updateShipOnClients(Ship* pShip, int shipId, int myShipId) {
+    const float lerpFactor = 0.5f;
     
     if (shipId == myShipId) {
-        pShip->xStart += pShip->vx * speed;
-        pShip->yStart += pShip->vy * speed;
+        pShip->xStart += pShip->vx * SPEED;
+        pShip->yStart += pShip->vy * SPEED;
     } else {
-        const float lerpFactor = 0.15f;
         pShip->xStart += (pShip->targetX - pShip->xStart) * lerpFactor;
         pShip->yStart += (pShip->targetY - pShip->yStart) * lerpFactor;
     }
-
-    pShip->shipRect.x = (int)pShip->xStart;
-    pShip->shipRect.y = (int)pShip->yStart;
-
-     // BOUNDARY CHECK 
-     if (pShip->xStart < 0) pShip->xStart = 0;
-     if (pShip->yStart < 0) pShip->yStart = 0;
-     if (pShip->xStart > pShip->windowWidth - pShip->shipRect.w) 
-         pShip->xStart = pShip->windowWidth - pShip->shipRect.w;
-     if (pShip->yStart > pShip->windowHeight - pShip->shipRect.h) 
-         pShip->yStart = pShip->windowHeight - pShip->shipRect.h;
-
+    
+    stayInWindow(pShip);
 }
 
 // For server (no client prediction, pure physics)
-void updateShipServer(Ship* pShip) {
-    const int speed = 4;
+void updateShipOnServer(Ship* pShip) {
 
-    pShip->xStart += pShip->vx * speed;
-    pShip->yStart += pShip->vy * speed;
+    pShip->xStart += pShip->vx * SPEED;
+    pShip->yStart += pShip->vy * SPEED;
 
+    stayInWindow(pShip);
+}
+
+void stayInWindow(Ship* pShip) {
     pShip->shipRect.x = (int)pShip->xStart;
     pShip->shipRect.y = (int)pShip->yStart;
 
@@ -185,32 +179,15 @@ void applyShipCommand(Ship* pShip, ClientCommand c) {
 }    
 
 void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
-        pShipData->x = pShip->xStart;
-        pShipData->y = pShip->yStart;
-        pShipData->vx = pShip->vx;
-        pShipData->vy = pShip->vy;
+    pShipData->x = pShip->xStart;
+    pShipData->y = pShip->yStart;
+    pShipData->vx = pShip->vx;
+    pShipData->vy = pShip->vy;
 }
 
 void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int myShipId) {
-    if (shipId == myShipId) return; // test
-    const float networkDelayEstimate = 0.1f; 
-    const int speed = 4;
-    pShip->targetX = pShipData->x + pShipData->vx * speed * networkDelayEstimate;
-    pShip->targetY = pShipData->y + pShipData->vy * speed * networkDelayEstimate; // test
-
-    //pShip->targetX = pShipData->x;
-    //pShip->targetY = pShipData->y;
+    pShip->targetX = pShipData->x;
+    pShip->targetY = pShipData->y;
     pShip->vx = pShipData->vx;
     pShip->vy = pShipData->vy;
 }
-
-/*void updateShipsWithServerData(Ship *pShips[MAX_PLAYERS], ShipData pShipData[MAX_PLAYERS]) {
-    for(int i = 0; i < MAX_PLAYERS; i++) {
-        if (pShips[i]) {
-            pShips[i]->targetX  = pShipData[i].x;  // <- use xStart, not x
-            pShips[i]->targetY = pShipData[i].y;
-            //pShips[i]->shipRect.x = (int)pShipData[i].x;
-            //pShips[i]->shipRect.y = (int)pShipData[i].y;
-        }
-    }
-}*/

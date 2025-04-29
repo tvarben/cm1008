@@ -141,35 +141,15 @@ void run(Game *pGame) {
                 }
                 while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) { ///
                     memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
+                    //cData.cDPlayerId; kasnke blir bättre???
                     int clientIndex = getClientIndex(pGame, &pGame->pPacket->address); 
                     if (clientIndex >= 0 && clientIndex < MAX_PLAYERS)
                         applyShipCommand(pGame->pShips[clientIndex], cData.command);
-
-                    /*pGame->serverData.sDPlayerId = clientIndex; ///// test
-                    memcpy(pGame->pPacket->data, &(pGame->serverData), sizeof(ServerData));
-                    pGame->pPacket->len = sizeof(ServerData);
-                    pGame->pPacket->address = pGame->clients[clientIndex];
-                    SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket); ///// test*/
-
-                    /*if (clientIndex >= 0 && clientIndex < MAX_PLAYERS) {
-                        applyShipCommand(pGame->pShips[clientIndex], cData.command);
-                        for (int i = 0; i < pGame->nrOfClients; i++) {
-                            Uint32 ip = SDL_SwapBE32(pGame->clients[i].host);
-                            Uint16 port = SDL_SwapBE16(pGame->clients[i].port);
-
-                            printf("Client %d: %d.%d.%d.%d:%d\n", i,
-                            (ip >> 24) & 0xFF,
-                            (ip >> 16) & 0xFF,
-                            (ip >> 8) & 0xFF,
-                            ip & 0xFF,
-                            port);
-                        }
-                    }*/
                 }
                 for(int i = 0; i < MAX_PLAYERS; i++) {
                     if (pGame->pShips[i]) {
                         updateShipVelocity(pGame->pShips[i]);
-                        updateShipServer(pGame->pShips[i]);
+                        updateShipOnServer(pGame->pShips[i]);
                     }
                 }
                 SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
@@ -178,7 +158,7 @@ void run(Game *pGame) {
                     drawShip(pGame->pShips[i]);
                 }
                 SDL_RenderPresent(pGame->pRenderer);
-                SDL_Delay(4);
+                SDL_Delay(2);
                 break;
             
             case START:
@@ -217,7 +197,20 @@ int getClientIndex(Game *pGame, IPaddress *clientAddr) {
     if (pGame->nrOfClients < MAX_PLAYERS) {
         // New client
         pGame->clients[pGame->nrOfClients] = *clientAddr;
-        return pGame->nrOfClients++;
+        pGame->nrOfClients++;
+        
+        for (int i = 0; i < pGame->nrOfClients; i++) {
+            Uint32 ip = SDL_SwapBE32(pGame->clients[i].host);
+            Uint16 port = SDL_SwapBE16(pGame->clients[i].port);
+
+            printf("Client %d: %d.%d.%d.%d:%d\n", i,
+            (ip >> 24) & 0xFF,
+            (ip >> 16) & 0xFF,
+            (ip >> 8) & 0xFF,
+            ip & 0xFF,
+            port);
+        }
+        return pGame->nrOfClients;
     }
     return -1; // Too many clients
 }
