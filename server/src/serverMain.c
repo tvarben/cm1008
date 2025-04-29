@@ -139,7 +139,7 @@ void run(Game *pGame) {
                         isRunning = false;
                     }
                 }
-                if(SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) { ///
+                while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) { ///
                     memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
                     int clientIndex = getClientIndex(pGame, &pGame->pPacket->address); 
                     if (clientIndex >= 0 && clientIndex < MAX_PLAYERS)
@@ -178,6 +178,7 @@ void run(Game *pGame) {
                     drawShip(pGame->pShips[i]);
                 }
                 SDL_RenderPresent(pGame->pRenderer);
+                SDL_Delay(4);
                 break;
             
             case START:
