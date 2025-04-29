@@ -112,11 +112,6 @@ int initiate(Game *pGame) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 0;
     }
-
-    //pGame->pPacket->address.host = pGame->serverAddress.host;
-    //pGame->pPacket->address.port = pGame->serverAddress.port;
-
-    //pGame->pShip = createShip(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     
     for(int i = 0; i < MAX_PLAYERS; i++){
         pGame->pShips[i] = createShip(i, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);

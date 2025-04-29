@@ -5,15 +5,6 @@
 #include "ship_data.h"
 
 typedef struct ship Ship;
-/*typedef struct {
-    float x, y, vx, vy, xStart, yStart; //x och y används inte? kolla rad 50
-    //int vx, vy;
-    int windowWidth, windowHeight;
-    SDL_Renderer* renderer;
-    SDL_Texture* texture;
-    SDL_Rect shipRect;
-    bool keyLeft, keyRight, keyUp, keyDown;
-}Ship;*/
 
 Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int windowHeight);
 void updateShip(Ship* pShip, int shipId, int myShipId);  // NEW
@@ -25,6 +16,6 @@ void updateShipVelocity(Ship* s);
 void destroyShip(Ship* s);
 void applyShipCommand(Ship* s, ClientCommand c);
 void getShipDataPackage(Ship* pShip, ShipData* pShipData);
-//void updateShipsWithServerData(Ship *pShip, ShipData *pShipData);
-void updateShipsWithServerData(Ship *pShips[MAX_PLAYERS], ShipData pShipData[MAX_PLAYERS]);
+void updateShipsWithServerData(Ship *pShip, ShipData *pShipData);
+//void updateShipsWithServerData(Ship *pShips[MAX_PLAYERS], ShipData pShipData[MAX_PLAYERS]);
 #endif
