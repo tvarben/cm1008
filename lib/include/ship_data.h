@@ -25,7 +25,7 @@ typedef struct{
 }ClientData;
 
 typedef struct{
-    float x, y;
+    float x, y, vx, vy;
     //int vx, vy;   //Is vx, vy needed?
 }ShipData;
 

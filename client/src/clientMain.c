@@ -211,7 +211,7 @@ void updateWithServerData(Game *pGame) {
     //updateShipsWithServerData(pGame->pShips, serverData.ships);
     for(int i = 0; i < MAX_PLAYERS; i++) {
         if (pGame->pShips[i])
-            updateShipsWithServerData(pGame->pShips[i], &serverData.ships[i]);
+            updateShipsWithServerData(pGame->pShips[i], &serverData.ships[i], i, pGame->shipId);
     }
 }
 
