@@ -21,7 +21,6 @@ typedef struct {
     SDL_Renderer *pRenderer;
     Ship *pShips[MAX_PLAYERS];
     int nrOfShips;
-    //Ship *pShip;
     GameState state;
     Mix_Music *pMusic;
 	TTF_Font *pFont;
@@ -30,9 +29,7 @@ typedef struct {
     IPaddress clients[MAX_PLAYERS];
     int nrOfClients;
     UDPsocket pSocket;
-    //IPaddress serverAddress;
     UDPpacket *pPacket;
-
     ServerData serverData;
 } Game;
 
@@ -45,7 +42,6 @@ void sendServerData(Game* pGame);
 int main(int argc, char** argv) {
     Game game = {0};
     if (!initiate(&game)) return 1;
-
     run(&game);
     closeGame(&game);
     return 0;
@@ -74,26 +70,22 @@ int initiate(Game *pGame) {
         SDL_Quit();
         return 0;
     }
-
     pGame->pWindow = SDL_CreateWindow("Server", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                     WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     if (!pGame->pWindow) {
         printf("Window Error: %s\n", SDL_GetError());
         return 0;
     }
-
     pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!pGame->pRenderer) {
         printf("Renderer Error: %s\n", SDL_GetError());
         return 0;
     }
-
 	pGame->pFont = TTF_OpenFont("../lib/resources/arial.ttf", 100);
     if(!pGame->pFont ) {
         printf("Error: %s\n",TTF_GetError());
         return 0;
     }
-
 	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,
                                 "Start [1]",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
     pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,
@@ -117,7 +109,6 @@ int initiate(Game *pGame) {
         pGame->pShips[i] = createShip(i, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
     pGame->nrOfShips = MAX_PLAYERS;
-
     for(int i = 0; i < MAX_PLAYERS; i++){
         if (!pGame->pShips[i]) {
             printf("Error: %s\n", SDL_GetError());
@@ -125,12 +116,10 @@ int initiate(Game *pGame) {
             return 0;
         }
     }
-
     if (!initMusic(&pGame->pMusic, MUSIC_FILEPATH)) {
         printf("Error: %s\n",Mix_GetError());
         return 0;
     }
-
     pGame->state = START;
     return 1;
 }
@@ -183,8 +172,6 @@ void run(Game *pGame) {
                         updateShipServer(pGame->pShips[i]);
                     }
                 }
-                //updateShipVelocity(pGame->pShip);
-                //updateShip(pGame->pShip);
                 SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
                 SDL_RenderClear(pGame->pRenderer);
                 for(int i=0; i<MAX_PLAYERS; i++){
@@ -199,11 +186,9 @@ void run(Game *pGame) {
             case GAME_OVER:
                 pGame->state = START;
                 break;
-            }
         }
-        //SDL_Delay(8);
+    }
 }
-
 
 void sendServerData(Game* pGame) {
     pGame->serverData.gState = pGame->state;
@@ -219,7 +204,6 @@ void sendServerData(Game* pGame) {
         pGame->pPacket->address = pGame->clients[i];
         SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
     }
-
 }
 
 int getClientIndex(Game *pGame, IPaddress *clientAddr) {
