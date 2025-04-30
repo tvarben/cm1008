@@ -8,9 +8,8 @@
 #define SPEED 3
 
 struct ship {
-    float x, y, vx, vy, xStart, yStart; //x och y används inte? kolla rad 50
-    //int vx, vy;
-    float targetX, targetY; // for smooth movement
+    float x, y, vx, vy, xStart, yStart, targetX, targetY; //x och y används inte? kolla rad 50
+    //float targetX, targetY; // for smooth movement
     int windowWidth, windowHeight;
     SDL_Renderer* renderer;
     SDL_Texture* texture;
