@@ -10,8 +10,8 @@
 #include "ship.h"
 #include "sound.h"
 #include "text.h"
+#include "menu.h"
 #include "ship_data.h"
-
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
@@ -20,16 +20,12 @@ typedef struct {
     SDL_Renderer *pRenderer;
     Ship *pShips[MAX_PLAYERS];
     int nrOfShips, shipId;
-    //Ship *pShip;
     GameState state;
     Mix_Music *pMusic;
 	TTF_Font *pFont, *pSmallFont;
 	Text *pStartText;
     Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pScoreText, *pMultiPlayerText, *pMenuText, *pGameOverText;
-
-
     ClientCommand command;
-
     UDPsocket pSocket;
     IPaddress serverAddress;
     UDPpacket *pPacket;
@@ -110,10 +106,10 @@ int initiate(Game *pGame) {
         printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
         return 0;
     }
-    if (SDLNet_ResolveHost(&(pGame->serverAddress), "127.0.0.1", 2000)) {
+    /*if (SDLNet_ResolveHost(&(pGame->serverAddress), "127.0.0.1", 2000)) {
         printf("SDLNet_ResolveHost(127.0.0.1 2000): %s\n", SDLNet_GetError());
         return 0;
-    }
+    }*/
     if (!(pGame->pPacket = SDLNet_AllocPacket(512))) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 0;
@@ -152,7 +148,7 @@ void run(Game *pGame) {
     ClientData cData;
     int x, y;
     //playMusic(pGame->pMusic, -1);
-    //const SDL_Rect *startRect = getTextRect(pGame->pSinglePlayerText);
+    //const SDL_Rect *singleRect = getTextRect(pGame->pSinglePlayerText);
     //const SDL_Rect *exitRect = getTextRect(pGame->pExitText);       //Hämta position för rect för Exit-texten
     //const SDL_Rect *multiRect = getTextRect(pGame->pMultiPlayerText);
     //const SDL_Rect *menuRect = getTextRect(pGame->pMenuText);
@@ -189,12 +185,12 @@ void run(Game *pGame) {
             case START:
                 SDL_GetMouseState(&x,&y);
                 SDL_Point mousePoint = {x,y};
-                const SDL_Rect *startRect = getTextRect(pGame->pSinglePlayerText);
+                const SDL_Rect *singleRect = getTextRect(pGame->pSinglePlayerText);
                 const SDL_Rect *exitRect = getTextRect(pGame->pExitText);       //Hämta position för rect för Exit-texten
                 const SDL_Rect *multiRect = getTextRect(pGame->pMultiPlayerText);
                 const SDL_Rect *gameRect = getTextRect(pGame->pGameName);
             
-                if (SDL_PointInRect(&mousePoint, startRect)) {
+                if (SDL_PointInRect(&mousePoint, singleRect)) {
                     setTextColor(pGame->pSinglePlayerText, 255, 255, 255, pGame->pSmallFont, "Singleplayer");
                 } else {
                     setTextColor(pGame->pSinglePlayerText, 255, 0, 0, pGame->pSmallFont, "Singleplayer");
@@ -211,16 +207,38 @@ void run(Game *pGame) {
                 }
             
                 if (SDL_PollEvent(&event)) {
-                    if (event.type == SDL_QUIT) {
+                    if (event.type == SDL_QUIT || event.type == SDL_MOUSEBUTTONDOWN && SDL_PointInRect(&mousePoint, exitRect)) {
                         isRunning = false;
-                    } else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
-                        if(connectToServer(pGame)) {
-                            //printf("Connected to server");
-                            pGame->state = ONGOING;
+                    } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+                        if(SDL_PointInRect(&mousePoint, multiRect)) {
+                            /*if(connectToServer(pGame)) {
+                                //printf("Connected to server");
+                                pGame->state = ONGOING;
+                            }*/
+                            char* ip = enterIPAddress(pGame->pRenderer, pGame->pSmallFont);
+                            if (ip && strlen(ip) > 0) {
+                                if (SDLNet_ResolveHost(&(pGame->serverAddress), ip, 2000) == 0) {
+                                    pGame->pPacket->address.host = pGame->serverAddress.host;
+                                    pGame->pPacket->address.port = pGame->serverAddress.port;
+                                    if(connectToServer(pGame)) {
+                                        pGame->state = ONGOING;
+                                    }
+                                }else{
+                                    printf("Invalid IP: %s\n", ip);
+                                }
+                            //printf("Multiplayer chosen.\n");
+                            //pGame->state = ONGOING;
+                            } else if(SDL_PointInRect(&mousePoint, gameRect)) {
+                                if (SDL_PointInRect(&mousePoint, gameRect)) {
+                                    printf("Game name chosen.\n");
+                                }
+                            } else if(SDL_PointInRect(&mousePoint, singleRect)) {
+                                printf("Singleplayer chosen.\n");
+                            }
                         }
                     }
                 }
-                SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
+                SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);
                 SDL_RenderClear(pGame->pRenderer);
                 SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
                 drawText(pGame->pSinglePlayerText);
@@ -229,6 +247,7 @@ void run(Game *pGame) {
                 //drawStars(pGame->pStars,pGame->pRenderer);
                 drawText(pGame->pGameName);
                 SDL_RenderPresent(pGame->pRenderer);
+                SDL_Delay(8);
                 break;
         }
     }

@@ -192,41 +192,27 @@ void run(Game *pGame)
         const SDL_Rect *MenuRect = getTextRect(pGame->pMenuText);
 
 
-        if (SDL_PointInRect(&mousePoint, startRect))
-        {
+        if (SDL_PointInRect(&mousePoint, startRect)) {
             setTextColor(pGame->pSingleplayerText, 255, 255, 100, pGame->pSmallFont, "Singleplayer");
-        }
-        else
-        {
+        } else {
             setTextColor(pGame->pSingleplayerText, 238, 168, 65, pGame->pSmallFont, "Singleplayer");
         }
-        if (SDL_PointInRect(&mousePoint, exitRect))
-        {
+        if (SDL_PointInRect(&mousePoint, exitRect)) {
             setTextColor(pGame->pExitText, 255, 100, 100, pGame->pSmallFont, "Exit");
-        } 
-        else
-        {
+        } else {
             setTextColor(pGame->pExitText, 238, 168, 65, pGame->pSmallFont, "Exit");
         }
-        if (SDL_PointInRect(&mousePoint, multiRect))
-        {
+        if (SDL_PointInRect(&mousePoint, multiRect)) {
             setTextColor(pGame->pMultiplayerText, 255, 100, 100, pGame->pSmallFont, "Multiplayer");
-        }
-        else
-        {
+        } else {
             setTextColor(pGame->pMultiplayerText, 238, 168, 65, pGame->pSmallFont, "Multiplayer");
         }
 
-        while (SDL_PollEvent(&event))
-        {
-            if (event.type == SDL_QUIT)
-            {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
                 isRunning = false;
-            }
-            else if (pGame->state == START && event.type == SDL_MOUSEBUTTONDOWN)
-            {
-                if (SDL_PointInRect(&mousePoint, startRect))
-                {
+            } else if (pGame->state == START && event.type == SDL_MOUSEBUTTONDOWN) {
+                if (SDL_PointInRect(&mousePoint, startRect)) {
                     resetShip(pGame->pShip);
                     resetEnemy(pGame);
                     spawnEnemies(pGame, nrOfEnemiesToSpawn);
@@ -235,82 +221,54 @@ void run(Game *pGame)
                     pGame->pausedTime = 0;
                     pGame->startTime = SDL_GetTicks64();
                     pGame->gameTime = -1;       
-                } 
-                else if (SDL_PointInRect(&mousePoint, exitRect))
-                {
+                } else if (SDL_PointInRect(&mousePoint, exitRect)) {
                     isRunning = false;
-                }
-                else if (SDL_PointInRect(&mousePoint, multiRect))
-                {
+                } else if (SDL_PointInRect(&mousePoint, multiRect)) {
                     pGame->networkMenu = true;
                 }
             }
-            else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-            {
+            else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){
                 pGame->networkMenu = false;
-            }
-            else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_V)
-            {
+            }else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_V){
                 printf("CURRENT NUMBER OF ENEMIES: %d \n", pGame->nrOfEnemies);
-                for (int i = 0; i < pGame->nrOfEnemies; i++)
-                {
-                    if (isEnemyActive(pGame->pEnemies[i]) == false)
-                    {
+                for (int i = 0; i < pGame->nrOfEnemies; i++){
+                    if (isEnemyActive(pGame->pEnemies[i]) == false){
                         printf("Enemy %d is inactive \n", i);
-                    }
-                    else
-                    {
+                    }else{
                         printf("Enemy %d is active \n", i);
                     }
                 }
-            }      
-            else if (pGame->state == START && pGame->networkMenu == true && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE && stringIndex > 0)
-            {
+            }else if (pGame->state == START && pGame->networkMenu == true && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE && stringIndex > 0){
                 ipAdress[stringIndex-1] = '\0';
                 stringIndex--;
-            }
-            else if (pGame->state == START && pGame->networkMenu == true && event.type == SDL_KEYDOWN)
-            {
+            }else if (pGame->state == START && pGame->networkMenu == true && event.type == SDL_KEYDOWN){
                 SDL_Keycode keycode = event.key.keysym.sym;
-                if ((char)keycode <= '9' && (char)keycode >= '0' && stringIndex < 15 || (char)keycode =='.' )
-                {
+                if ((char)keycode <= '9' && (char)keycode >= '0' && stringIndex < 15 || (char)keycode =='.' ){
                     ipAdress[stringIndex] = (char)keycode;
                     stringIndex++;
                 }
-            }
-            else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-            {
+            }else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){
                 pGame->state = PAUSED;
                 pGame->pauseStartTime = SDL_GetTicks64();
-            }   
-            else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE)
-            {
+            }else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE){
                 if (now - pGame->lastAttackTime >= pGame->attackDelay)
                 {
                     handleCannonEvent(pGame->pCannon, &event);
                     playSound(&pGame->pSFX,SHOOT_SFX_FILEPATH, 1);
                     pGame->lastAttackTime = now;
                 }
-            }
-            else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP))
-            {
+            }else if (pGame->state == ONGOING && (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)){
                 handleShipEvent(pGame->pShip, &event);  // track which keys are pressed
-            }    
-            else if (pGame->state == PAUSED && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-            {
+            }else if (pGame->state == PAUSED && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){
                 pGame->pausedTime += SDL_GetTicks64() - pGame->pauseStartTime;
                 killedEnemies = 0;
                 pGame->state = ONGOING;
-            }
-            else if (pGame->state == GAME_OVER && event.type == SDL_MOUSEBUTTONDOWN)
-            {
-                if(SDL_PointInRect(&mousePoint, MenuRect))
-                {
+            }else if (pGame->state == GAME_OVER && event.type == SDL_MOUSEBUTTONDOWN){
+                if(SDL_PointInRect(&mousePoint, MenuRect)){
                     resetShip(pGame->pShip);
                     resetEnemy(pGame);
                     resetAllBullets();
-                    for(int i=0;i<MAX_PROJECTILES;i++)
-                    {
+                    for(int i=0;i<MAX_PROJECTILES;i++){
                       rectArray[i]=emptyRect;
                     }
                     pGame->state = START;
@@ -319,8 +277,13 @@ void run(Game *pGame)
             }   
         }
 
-        if (pGame->state == ONGOING) 
-        {
+
+
+
+
+
+        
+        if (pGame->state == ONGOING) {
             if (Mix_PlayingMusic()) Mix_HaltMusic();
             
             update_projectiles(delta_time); // update based on time since last frame passed
@@ -340,33 +303,27 @@ void run(Game *pGame)
             drawShip(pGame->pShip);
             drawCannon(pGame->pCannon);
             render_projectiles(pGame->pRenderer); // test      
-            for(int i=0;i<pGame->nrOfEnemies;i++)
-            {
-                if (isEnemyActive(pGame->pEnemies[i]) == true)
-                {
+            for(int i=0;i<pGame->nrOfEnemies;i++){
+                if (isEnemyActive(pGame->pEnemies[i]) == true){
                     drawEnemy(pGame->pEnemies[i]);
                 }             
             }
-             for(int i=0;i<pGame->nrOfEnemies;i++){
+            for(int i=0;i<pGame->nrOfEnemies;i++){
                 if(shipCollision(pGame->pShip, getRectEnemy(pGame->pEnemies[i]))){
                     pGame->state = GAME_OVER;
                 }
             }
             if(pGame->pScoreText) drawText(pGame->pScoreText);
             getProjectileRects(rectArray);
-            for (int i = 0; i < MAX_PROJECTILES; i++)
-            {
+            for (int i = 0; i < MAX_PROJECTILES; i++){
                 SDL_Rect bulletRect = rectArray[i];
-                for (int k = 0; k < pGame->nrOfEnemies; k++)
-                {
+                for (int k = 0; k < pGame->nrOfEnemies; k++){
                     SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies[k]);
-                    if (SDL_HasIntersection(&enemyRect, &bulletRect))
-                    {
+                    if (SDL_HasIntersection(&enemyRect, &bulletRect)){
                         //printf("enemy num: %d \n", k);
                         printEnemyHealth(pGame->pEnemies[k]);
                         damageEnemy(pGame->pEnemies[k], 1, k);
-                        if (isEnemyActive(pGame->pEnemies[k]) == false)
-                        {
+                        if (isEnemyActive(pGame->pEnemies[k]) == false){
                             killedEnemies++;
                         }
                         removeProjectile(i);
@@ -377,9 +334,12 @@ void run(Game *pGame)
             if (pGame->pScoreText) drawText(pGame->pScoreText);
             SDL_RenderPresent(pGame->pRenderer);
         } 
-        else if (pGame->state == START) 
-        {
-            
+
+
+
+
+
+        else if (pGame->state == START) {
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);      //Important to set the color before clearing the screen 
             SDL_RenderClear(pGame->pRenderer);                         //Clear the first frame when the game starts, otherwise issues on mac/linux 
             drawText(pGame->pSingleplayerText);                        //Clear the first frame when the game starts, otherwise issues on mac/linux 
@@ -387,23 +347,18 @@ void run(Game *pGame)
             drawStars(pGame->pStars,pGame->pRenderer);
             drawText(pGame->pExitText);
             drawText(pGame->pGameName);
-            SDL_Rect dstRect = { 125, 500, 100, 100 };  // adjust position and size
+            SDL_Rect dstRect = { 125, 500, 100, 100 };  // adjust position and size, placering av planet/måne
             SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage, NULL, &dstRect);
-            SDL_Rect dstRect2 = { 1000, 125, 50, 50 };  // adjust position and size
+            SDL_Rect dstRect2 = { 1000, 125, 50, 50 };  // adjust position and size, placering av planet/måne
             SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage2, NULL, &dstRect2);
-            if (pGame->networkMenu == true)
-            {
+            if (pGame->networkMenu == true){
                 showNetworkMenu(pGame->pRenderer, pGame->pSmallFont, ipAdress);
             }
             SDL_RenderPresent(pGame->pRenderer);    //Draw the start text
-        }
-        else if (pGame->state == PAUSED)
-        {
+        }else if (pGame->state == PAUSED){
             drawText(pGame->pPauseText);
             SDL_RenderPresent(pGame->pRenderer);
-        }   
-        else if (pGame->state == GAME_OVER)
-        {
+        } else if (pGame->state == GAME_OVER){
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);  
             char scoreText[64];
             sprintf(scoreText, "You Killed %d Aliens", killedEnemies);
