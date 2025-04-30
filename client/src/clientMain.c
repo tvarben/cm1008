@@ -106,10 +106,10 @@ int initiate(Game *pGame) {
         printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
         return 0;
     }
-    /*if (SDLNet_ResolveHost(&(pGame->serverAddress), "127.0.0.1", 2000)) {
+    if (SDLNet_ResolveHost(&(pGame->serverAddress), "127.0.0.1", 2000)) {
         printf("SDLNet_ResolveHost(127.0.0.1 2000): %s\n", SDLNet_GetError());
         return 0;
-    }*/
+    }
     if (!(pGame->pPacket = SDLNet_AllocPacket(512))) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 0;
@@ -209,32 +209,16 @@ void run(Game *pGame) {
                 if (SDL_PollEvent(&event)) {
                     if (event.type == SDL_QUIT || event.type == SDL_MOUSEBUTTONDOWN && SDL_PointInRect(&mousePoint, exitRect)) {
                         isRunning = false;
-                    } else if (event.type == SDL_MOUSEBUTTONDOWN) {
-                        if(SDL_PointInRect(&mousePoint, multiRect)) {
+                    }else if (event.type == SDL_MOUSEBUTTONDOWN) {
+                        if(SDL_PointInRect(&mousePoint, singleRect)) {
+                            printf("Singleplayer chosen.\n");
+                        }else if(SDL_PointInRect(&mousePoint, multiRect)) {
+                            printf("Multiplayer chosen.\n");
                             /*if(connectToServer(pGame)) {
                                 //printf("Connected to server");
                                 pGame->state = ONGOING;
                             }*/
-                            char* ip = enterIPAddress(pGame->pRenderer, pGame->pSmallFont);
-                            if (ip && strlen(ip) > 0) {
-                                if (SDLNet_ResolveHost(&(pGame->serverAddress), ip, 2000) == 0) {
-                                    pGame->pPacket->address.host = pGame->serverAddress.host;
-                                    pGame->pPacket->address.port = pGame->serverAddress.port;
-                                    if(connectToServer(pGame)) {
-                                        pGame->state = ONGOING;
-                                    }
-                                }else{
-                                    printf("Invalid IP: %s\n", ip);
-                                }
-                            //printf("Multiplayer chosen.\n");
-                            //pGame->state = ONGOING;
-                            } else if(SDL_PointInRect(&mousePoint, gameRect)) {
-                                if (SDL_PointInRect(&mousePoint, gameRect)) {
-                                    printf("Game name chosen.\n");
-                                }
-                            } else if(SDL_PointInRect(&mousePoint, singleRect)) {
-                                printf("Singleplayer chosen.\n");
-                            }
+                           pGame->state = MULTIPLAYER;
                         }
                     }
                 }
@@ -248,6 +232,100 @@ void run(Game *pGame) {
                 drawText(pGame->pGameName);
                 SDL_RenderPresent(pGame->pRenderer);
                 SDL_Delay(8);
+                break;
+            case MULTIPLAYER:
+                SDL_StartTextInput(); // Enable text input
+                static char inputText[32] = ""; // Buffer to store the entered string
+                bool done = false;
+
+                while (!done) {
+                    // Handle events
+                    while (SDL_PollEvent(&event)) {
+                        if (event.type == SDL_QUIT) {
+                            isRunning = false;
+                            done = true;
+                        } else if (event.type == SDL_KEYDOWN) {
+                            if (event.key.keysym.sym == SDLK_BACKSPACE && strlen(inputText) > 0) {
+                                inputText[strlen(inputText) - 1] = '\0'; // Remove the last character
+                            } else if (event.key.keysym.sym == SDLK_RETURN) {
+                                printf("Entered IP: %s\n", inputText);
+
+                                // Attempt to resolve the entered IP address
+                                if (SDLNet_ResolveHost(&(pGame->serverAddress), inputText, 2000) == 0) {
+                                    printf("Resolved IP: %s\n", inputText);
+
+                                    // Attempt to connect to the server
+                                    if (connectToServer(pGame)) {
+                                        printf("Connected to server.\n");
+                                        pGame->state = ONGOING; // Transition to ONGOING state
+                                        done = true; // Exit the loop
+                                    } else {
+                                        printf("Failed to connect to server.\n");
+                                        pGame->state = START; // Return to START state
+                                    }
+                                } else {
+                                    printf("Failed to resolve IP: %s\n", inputText);
+                                    pGame->state = START; // Return to START state
+                                }
+
+                                done = true; // Exit the loop
+                            } else if (event.key.keysym.sym == SDLK_ESCAPE || event.key.keysym.sym == SDLK_SPACE) {
+                                pGame->state = START; // Go back to START state
+                                done = true;
+                            }
+                        } else if (event.type == SDL_TEXTINPUT) {
+                            if (strlen(inputText) < 31) {
+                                strncat(inputText, event.text.text, sizeof(inputText) - strlen(inputText) - 1); // Append the entered character
+                            }
+                        }
+                    }
+
+                    // Render the text box
+                    SDL_SetRenderDrawColor(pGame->pRenderer, 20, 20, 20, 255); // Dark background
+                    SDL_RenderClear(pGame->pRenderer);
+
+                    // Draw the input box
+                    SDL_Rect box = {200, 300, 600, 100};
+                    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255); // Black box
+                    SDL_RenderFillRect(pGame->pRenderer, &box);
+                    SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255); // White border
+                    SDL_RenderDrawRect(pGame->pRenderer, &box);
+
+                    // Render the entered text
+                    SDL_Color color = {255, 255, 255}; // White text
+                    SDL_Surface* textSurface = TTF_RenderText_Solid(pGame->pSmallFont, inputText, color);
+                    if (textSurface) {
+                        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(pGame->pRenderer, textSurface);
+                        SDL_Rect textRect = {box.x + 5, box.y + 10, textSurface->w, textSurface->h};
+                        SDL_RenderCopy(pGame->pRenderer, textTexture, NULL, &textRect);
+                        SDL_FreeSurface(textSurface);
+                        SDL_DestroyTexture(textTexture);
+                    }
+
+                    // Render the prompt text
+                    SDL_Surface* promptSurface1 = TTF_RenderText_Solid(pGame->pSmallFont, "Enter IP ADDRESS and press ENTER", color);
+                    if (promptSurface1) {
+                        SDL_Texture* promptTexture1 = SDL_CreateTextureFromSurface(pGame->pRenderer, promptSurface1);
+                        SDL_Rect promptRect1 = {box.x - 150, box.y - 200, promptSurface1->w, promptSurface1->h}; // Position above the input box
+                        SDL_RenderCopy(pGame->pRenderer, promptTexture1, NULL, &promptRect1);
+                        SDL_FreeSurface(promptSurface1);
+                        SDL_DestroyTexture(promptTexture1);
+                    }
+
+                    SDL_Surface* promptSurface2 = TTF_RenderText_Solid(pGame->pSmallFont, "or SPACE to go to the MAIN MENU", color);
+                    if (promptSurface2) {
+                        SDL_Texture* promptTexture2 = SDL_CreateTextureFromSurface(pGame->pRenderer, promptSurface2);
+                        SDL_Rect promptRect2 = {box.x - 150, box.y - 160, promptSurface2->w, promptSurface2->h}; // Position below the first line
+                        SDL_RenderCopy(pGame->pRenderer, promptTexture2, NULL, &promptRect2);
+                        SDL_FreeSurface(promptSurface2);
+                        SDL_DestroyTexture(promptTexture2);
+                    }
+
+                    SDL_RenderPresent(pGame->pRenderer); // Update the screen
+                    SDL_Delay(16); // Delay to limit CPU usage
+                }
+
+                SDL_StopTextInput(); // Disable text input
                 break;
         }
     }
@@ -269,6 +347,8 @@ bool connectToServer(Game *pGame) {
     SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
 
     bool connected = false;
+    Uint32 startTime = SDL_GetTicks(); // Get the current time in milliseconds
+    const Uint32 timeout = 5000;       // Set a timeout of 5000ms (5 seconds)
     while (!connected) {
         if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
             printf("*Received from server: %s\n", (char*)pGame->pPacket->data);
@@ -277,6 +357,10 @@ bool connectToServer(Game *pGame) {
             memcpy(&serverData, pGame->pPacket->data, sizeof(ServerData));
             pGame->shipId= serverData.sDPlayerId;////// test
             connected = true;
+        }
+        if (SDL_GetTicks() - startTime > timeout) {
+            printf("Connection timed out.\n");
+            break;
         }
     }
     return connected;

@@ -8,7 +8,8 @@
 typedef enum {
     START, 
     ONGOING, 
-    GAME_OVER 
+    GAME_OVER,
+    MULTIPLAYER 
 }GameState;
 
 typedef enum{
