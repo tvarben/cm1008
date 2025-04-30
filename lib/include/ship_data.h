@@ -2,6 +2,8 @@
 #define SHIP_DATA_H
 
 #define MAX_PLAYERS 2
+#define WINDOW_WIDTH 1280 //1160
+#define WINDOW_HEIGHT 720 //700
 
 typedef enum {
     START, 

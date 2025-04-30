@@ -12,8 +12,6 @@
 #include "text.h"
 #include "ship_data.h"
 
-#define WINDOW_WIDTH 500
-#define WINDOW_HEIGHT 400
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
 typedef struct {
@@ -133,7 +131,6 @@ void run(Game *pGame) {
     while (isRunning) { 
         switch(pGame->state) {
             case START:
-
                 pGame->state = ONGOING;
                 break;
             case ONGOING: //Lägg till getTicks()
