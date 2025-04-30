@@ -96,7 +96,7 @@ void updateShipVelocity(Ship* pShip) {
 
 // For client-side prediction + interpolation
 void updateShipOnClients(Ship* pShip, int shipId, int myShipId) {
-    const float lerpFactor = 0.5f;
+    const float lerpFactor = 0.75f; // 75% Adjust this value to control the interpolation speed, the closer to 1 the faster
     
     if (shipId == myShipId) {
         pShip->xStart += pShip->vx * SPEED;
@@ -105,7 +105,6 @@ void updateShipOnClients(Ship* pShip, int shipId, int myShipId) {
         pShip->xStart += (pShip->targetX - pShip->xStart) * lerpFactor;
         pShip->yStart += (pShip->targetY - pShip->yStart) * lerpFactor;
     }
-    
     stayInWindow(pShip);
 }
 
@@ -136,8 +135,6 @@ void drawShip(Ship* pShip) {
 }
 
 void resetShip(Ship* pShip) {
-    //pShip->xStart = pShip->windowWidth / 2.0f;
-    //pShip->yStart = pShip->windowHeight / 2.0f;
     pShip->vx = 0;
     pShip->vy = 0;
     pShip->keyRight = pShip->keyLeft = pShip->keyDown = pShip->keyUp = false;

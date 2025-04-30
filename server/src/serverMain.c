@@ -130,9 +130,13 @@ void run(Game *pGame) {
     SDL_Event event;
     ClientData cData;
     
-    while (isRunning) {
+    while (isRunning) { 
         switch(pGame->state) {
-            case ONGOING:
+            case START:
+
+                pGame->state = ONGOING;
+                break;
+            case ONGOING: //Lägg till getTicks()
                 sendServerData(pGame);
                 if (SDL_PollEvent(&event)) {
                     if (event.type == SDL_QUIT) {
@@ -159,10 +163,6 @@ void run(Game *pGame) {
                 }
                 SDL_RenderPresent(pGame->pRenderer);
                 SDL_Delay(2);
-                break;
-            
-            case START:
-                pGame->state = ONGOING;
                 break;
             case GAME_OVER:
                 pGame->state = START;
