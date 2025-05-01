@@ -1,6 +1,7 @@
 #include "../include/cannon.h"
 #include "../include/bullet.h"
 #include "ship.h"
+#include "sound.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_scancode.h>
@@ -88,15 +89,14 @@ void updateCannon(Cannon *pCannon, Ship *pShip) {
 }
 
   void handleCannonEvent(Cannon *c, SDL_Event *event) {
-    //printf("FIRING AWAY SIR! ('_')/ \n");
     if (event->type == SDL_KEYDOWN && event->key.keysym.scancode == SDL_SCANCODE_SPACE) {
       if (c->lastFacedLeft) {
-        spawn_projectile(c->rect.x - 8, c->rect.y, -500, 0);
-        //printf("left\n");
+        spawn_projectile(c->rect.x - 8, c->rect.y, -1000, 0);
       } else {
-        spawn_projectile(c->rect.x + 20, c->rect.y, 500, 0);
-        //printf("right\n");
+        spawn_projectile(c->rect.x + 20, c->rect.y, 1000, 0);
       }
+      Mix_Chunk *pBulletSFX;
+      playSound(&pBulletSFX,"resources/pew.wav",-1);
     }
   }
 
