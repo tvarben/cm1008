@@ -239,7 +239,6 @@ void run(Game *pGame) {
                 bool done = false;
 
                 while (!done) {
-                    // Handle events
                     while (SDL_PollEvent(&event)) {
                         if (event.type == SDL_QUIT) {
                             isRunning = false;
@@ -285,7 +284,7 @@ void run(Game *pGame) {
                     SDL_RenderClear(pGame->pRenderer);
 
                     // Draw the input box
-                    SDL_Rect box = {200, 300, 600, 100};
+                    SDL_Rect box = {300, 300, 600, 100};
                     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255); // Black box
                     SDL_RenderFillRect(pGame->pRenderer, &box);
                     SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255); // White border
@@ -303,19 +302,19 @@ void run(Game *pGame) {
                     }
 
                     // Render the prompt text
-                    SDL_Surface* promptSurface1 = TTF_RenderText_Solid(pGame->pSmallFont, "Enter IP ADDRESS and press ENTER", color);
+                    SDL_Surface* promptSurface1 = TTF_RenderText_Solid(pGame->pSmallFont, "Type in server IP ADDRESS and press ENTER", color);
                     if (promptSurface1) {
                         SDL_Texture* promptTexture1 = SDL_CreateTextureFromSurface(pGame->pRenderer, promptSurface1);
-                        SDL_Rect promptRect1 = {box.x - 150, box.y - 200, promptSurface1->w, promptSurface1->h}; // Position above the input box
+                        SDL_Rect promptRect1 = {box.x - 150, box.y - 150, promptSurface1->w, promptSurface1->h}; // Position above the input box
                         SDL_RenderCopy(pGame->pRenderer, promptTexture1, NULL, &promptRect1);
                         SDL_FreeSurface(promptSurface1);
                         SDL_DestroyTexture(promptTexture1);
                     }
 
-                    SDL_Surface* promptSurface2 = TTF_RenderText_Solid(pGame->pSmallFont, "or SPACE to go to the MAIN MENU", color);
+                    SDL_Surface* promptSurface2 = TTF_RenderText_Solid(pGame->pSmallFont, "or press SPACE to go to the MAIN MENU", color);
                     if (promptSurface2) {
                         SDL_Texture* promptTexture2 = SDL_CreateTextureFromSurface(pGame->pRenderer, promptSurface2);
-                        SDL_Rect promptRect2 = {box.x - 150, box.y - 160, promptSurface2->w, promptSurface2->h}; // Position below the first line
+                        SDL_Rect promptRect2 = {box.x -150, box.y + 150, promptSurface2->w, promptSurface2->h}; // Position below the first line
                         SDL_RenderCopy(pGame->pRenderer, promptTexture2, NULL, &promptRect2);
                         SDL_FreeSurface(promptSurface2);
                         SDL_DestroyTexture(promptTexture2);
