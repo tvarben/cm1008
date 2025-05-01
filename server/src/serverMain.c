@@ -15,6 +15,7 @@
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
+
 typedef struct {
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
@@ -125,7 +126,7 @@ int initiate(Game *pGame) {
 
 void run(Game *pGame) {
     bool isRunning = true;
-    printf("Server is listening on port %d...\n", SERVER_PORT);
+    printf("Server is listening on port %hu...\n", SERVER_PORT);
     SDL_Event event;
     ClientData cData;
     
