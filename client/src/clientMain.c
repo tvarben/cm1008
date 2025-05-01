@@ -125,8 +125,8 @@ int initiate(Game *pGame) {
         return 0;
     }
 
-    pGame->pPacket->address.host = pGame->serverAddress.host;
-    pGame->pPacket->address.port = pGame->serverAddress.port;
+    /*pGame->pPacket->address.host = pGame->serverAddress.host;
+    pGame->pPacket->address.port = pGame->serverAddress.port;*/
 
     //pGame->pShip = createShip(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -351,9 +351,21 @@ void updateWithServerData(Game *pGame) {
 }
 
 bool connectToServer(Game *pGame) {
-    memcpy(pGame->pPacket->data, "TRYING TO CONNECT", sizeof("TRYING TO CONNECT"));
-    pGame->pPacket->len = sizeof("TRYING TO CONNECT");
+    //memcpy(pGame->pPacket->data, "TRYING TO CONNECT", sizeof("TRYING TO CONNECT"));
+    //pGame->pPacket->len = sizeof("TRYING TO CONNECT");
+    const char *msg = "TRYING TO CONNECT";
+    memcpy(pGame->pPacket->data, msg, strlen(msg) + 1);
+    pGame->pPacket->len = strlen(msg) + 1;
+    pGame->pPacket->address = pGame->serverAddress;
     SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+
+
+    if (SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket) == 0) {
+        printf("Failed to send response: %s\n", SDLNet_GetError());
+    } else {
+        printf("Sent response to client.\n");
+    }
+
 
     bool connected = false;
     Uint32 startTime = SDL_GetTicks(); // Get the current time in milliseconds
