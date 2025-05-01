@@ -12,9 +12,7 @@
 #include "text.h"
 #include "ship_data.h"
 
-
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
-
 
 typedef struct {
     SDL_Window *pWindow;
@@ -41,8 +39,11 @@ void sendServerData(Game* pGame);
 
 int main(int argc, char** argv) {
     Game game = {0};
+    printf("doing intiate\n");
     if (!initiate(&game)) return 1;
+    printf("entering run\n");
     run(&game);
+    printf("entering close game from main\n");
     closeGame(&game);
     return 0;
 }
@@ -241,19 +242,26 @@ void closeGame(Game *pGame) {
     for (int i = 0; i < MAX_PLAYERS; i++) if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
     //if (pGame->pShip) destroyShip(pGame->pShip);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
+    printf("Renderer destroyed\n");
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
+    printf("Window\n");
 
     if (pGame->pStartText) destroyText(pGame->pStartText);
+    printf("starttext\n");
     if (pGame->pGameName) destroyText(pGame->pGameName);
     if (pGame->pExitText) destroyText(pGame->pExitText);
     if (pGame->pFont) TTF_CloseFont(pGame->pFont); 
 
     if (pGame->pMusic) closeMusic(pGame->pMusic);
     if (pGame->pSocket) SDLNet_UDP_Close(pGame->pSocket);
+    printf("socket\n");
     if (pGame->pPacket) SDLNet_FreePacket(pGame->pPacket);
+    printf("Freepacket\n");
 
     SDLNet_Quit();
+    printf("SDL_NETQuit()\n");
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();
+    printf("SDL_Quit");
 }
