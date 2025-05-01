@@ -309,6 +309,7 @@ void run(Game *pGame)
                     resetShip(pGame->pShip);
                     resetEnemy(pGame);
                     resetAllBullets();
+                    resetHealth(pGame->pShip);
                     for(int i=0;i<MAX_PROJECTILES;i++)
                     {
                       rectArray[i]=emptyRect;
@@ -350,6 +351,7 @@ void run(Game *pGame)
              for(int i=0;i<pGame->nrOfEnemies;i++){
                 if(shipCollision(pGame->pShip, getRectEnemy(pGame->pEnemies[i]))){
                     damageEnemy(pGame->pEnemies[i], 2 , i);
+                    killedEnemies++;
                     if(damageShip(pGame->pShip))
                     {
                         printf("YOU DIED, GG\n");

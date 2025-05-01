@@ -180,3 +180,8 @@ bool damageShip(Ship *pShip)
     }
     return false;
 }
+void resetHealth(Ship *pShip)
+{
+    pShip->health=2;
+    return;
+}
