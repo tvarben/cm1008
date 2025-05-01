@@ -170,6 +170,7 @@ bool isLeft(Ship *pShip)
         return false;
     }
 }
+
 bool damageShip(Ship *pShip)
 {
     pShip->health -=1;
@@ -180,6 +181,7 @@ bool damageShip(Ship *pShip)
     }
     return false;
 }
+
 void resetHealth(Ship *pShip)
 {
     pShip->health=2;

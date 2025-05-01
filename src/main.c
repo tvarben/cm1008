@@ -14,7 +14,7 @@
 #include "cannon.h"
 #include "menu.h"
 #define MAX_BULLETS 100
-#define MAX_ENEMIES 10
+#define MAX_ENEMIES 100
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
 #define MUSIC_FILEPATH "./resources/music.wav"
@@ -355,6 +355,7 @@ void run(Game *pGame)
                         printf("YOU DIED, GG\n");
                         pGame->state = GAME_OVER;
                     }
+                    playSound(&pGame->pSFX,"resources/Hurt.wav",-1);
                 }
             }
             if(pGame->pScoreText) drawText(pGame->pScoreText);
