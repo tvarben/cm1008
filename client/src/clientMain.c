@@ -112,10 +112,10 @@ int initiate(Game *pGame) {
         printf("Error: %s\n",TTF_GetError());
         return 0;
     } 
-    if (!(pGame->pSocket = SDLNet_UDP_Open(0))) {
+    /*if (!(pGame->pSocket = SDLNet_UDP_Open(0))) {
         printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
         return 0;
-    }
+    }*/
     /*if (SDLNet_ResolveHost(&(pGame->serverAddress), "127.0.0.1", SERVER_PORT)) {
         printf("SDLNet_ResolveHost(127.0.0.1 2000): %s\n", SDLNet_GetError());
         return 0;
@@ -127,6 +127,7 @@ int initiate(Game *pGame) {
 
     /*pGame->pPacket->address.host = pGame->serverAddress.host;
     pGame->pPacket->address.port = pGame->serverAddress.port;*/
+
 
     //pGame->pShip = createShip(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -246,7 +247,7 @@ void run(Game *pGame) {
             case MULTIPLAYER:
                 SDL_StartTextInput(); // Enable text input
                 static char enteredIPAddress[32] = ""; // Buffer to store the entered string
-                bool done = false;
+                bool done, socketOpened = false;
 
                 while (!done) {
                     while (SDL_PollEvent(&event)) {
@@ -262,7 +263,16 @@ void run(Game *pGame) {
                                 // Attempt to resolve the entered IP address
                                 if (SDLNet_ResolveHost(&(pGame->serverAddress), enteredIPAddress, SERVER_PORT) == 0) {
                                     printf("Resolved IP: %s\n", enteredIPAddress);
-
+                                    if (!socketOpened) {
+                                        if (!(pGame->pSocket = SDLNet_UDP_Open(0))) {
+                                            printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
+                                            done = true;
+                                            return;
+                                        }
+                                        socketOpened = true;
+                                    }
+                                    pGame->pPacket->address.host = pGame->serverAddress.host;
+                                    pGame->pPacket->address.port = pGame->serverAddress.port;
                                     // Attempt to connect to the server
                                     if (connectToServer(pGame)) {
                                         printf("Connected to server.\n");
