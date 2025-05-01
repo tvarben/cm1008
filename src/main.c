@@ -353,7 +353,7 @@ void run(Game *pGame)
                         damageEnemy(pGame->pEnemies[k], 1, k);
                         removeProjectile(i);
                         rectArray[i]=emptyRect;
-                        playSound(&pGame->pSFX,"./resources/pew (2).wav", 1);
+                        playSound(&pGame->pSFX,"./resources/Explosion.wav", 1);
                     }
                 }
             }
