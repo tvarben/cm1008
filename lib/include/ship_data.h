@@ -4,7 +4,7 @@
 #define MAX_PLAYERS 2
 #define WINDOW_WIDTH 1280 //1160
 #define WINDOW_HEIGHT 720 //700
-#define SERVER_PORT 2000
+#define SERVER_PORT 50004
 
 typedef enum {
     START, 
