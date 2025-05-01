@@ -13,7 +13,6 @@ Bullet projectiles[MAX_PROJECTILES]; // 100 bullets can be active at the time
 #define WINDOW_HEIGHT 700
 
 void spawn_projectile(float x, float y, float dx, float dy) {
-  Mix_Chunk *pPew = NULL;
   for (int i = 0; i < MAX_PROJECTILES; i++) {
     if (!projectiles[i].active) {
       projectiles[i].x = x;
@@ -23,7 +22,6 @@ void spawn_projectile(float x, float y, float dx, float dy) {
       projectiles[i].active = 1;
       projectiles[i].rect.w = projectile_width; // size of projectile
       projectiles[i].rect.h = projectile_length;
-      playSound(&pPew, "./resources/pew.wav", -1);
       //printf("projectile shot \n");
       return;
     }

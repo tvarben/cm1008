@@ -23,4 +23,6 @@ void render_projectiles(SDL_Renderer *renderer);
 
 SDL_Rect getRectProjectile(Bullet projectile[]);
 
+void resetAllBullets();
+void removeProjectile(int i);
 #endif

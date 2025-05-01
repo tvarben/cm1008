@@ -27,14 +27,16 @@ void playMusic(Mix_Music *pMusic, int loops) {
 	}
 }
 
+void closeMusic(Mix_Music *pMusic) {
+	if(pMusic) Mix_FreeMusic(pMusic);
+	Mix_CloseAudio();
+	Mix_Quit();
+}
+
+
 void playSound(Mix_Chunk **ppSound, char *filepath, int channel) {
 	*ppSound = Mix_LoadWAV(filepath);
 	if(Mix_PlayChannel(channel, *ppSound, 0) == -1)
 		printf("Error: %s\n", Mix_GetError);
 }
 
-void closeMusic(Mix_Music *pMusic) {
-	if(pMusic) Mix_FreeMusic(pMusic);
-	Mix_CloseAudio();
-	Mix_Quit();
-}

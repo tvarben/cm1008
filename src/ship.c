@@ -16,6 +16,7 @@ struct Ship {
     float rotationAngle;
     bool facingLeft;
     SDL_Rect hitbox; 
+    int health;
 };
 Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int windowHeight) {
     Ship* s = malloc(sizeof(Ship));
@@ -23,6 +24,7 @@ Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int wind
 
     s->vx = 0;
     s->vy = 0;
+    s->health = 2;
     s->windowWidth = windowWidth;
     s->windowHeight = windowHeight;
     s->renderer = renderer;
@@ -94,7 +96,8 @@ void updateShipVelocity(Ship* s) {
 }
 
 void updateShip(Ship* s) {
-    const int speed = 4; // constant speed
+    //const int speed = 2; // Laptop speed
+    const int speed = 5.5; // Stationär speed
     s->x += s->vx * speed;
     s->y += s->vy * speed;
 
@@ -166,4 +169,19 @@ bool isLeft(Ship *pShip)
     {
         return false;
     }
+}
+bool damageShip(Ship *pShip)
+{
+    pShip->health -=1;
+    printf("Ship health %d\n",pShip->health);
+    if(pShip->health <=0)
+    {
+        return true;
+    }
+    return false;
+}
+void resetHealth(Ship *pShip)
+{
+    pShip->health=2;
+    return;
 }

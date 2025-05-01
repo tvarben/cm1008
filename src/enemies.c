@@ -69,15 +69,17 @@ static void getStartValues(Enemy *pEnemy){
     pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
     pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
     pEnemy->rectHitbox.w = pEnemy->rect.w - 20;
-    pEnemy->rectHitbox.h = pEnemy->rect.h - 15;
+    pEnemy->rectHitbox.h = pEnemy->rect.h - 10;
     pEnemy->damage = 1;
     pEnemy->health = 2;
+    //float speed = rand() % (15 - 10 + 1) + 5; //för laptop
+    float speed = rand() % (30 - 15 + 1) + 10; // För stationär
+
     if (startSpawnOnTheLeft == 1)
     {
     pEnemy->x = pEnemy->window_width;
     pEnemy->y = rand() % (pEnemy->window_height - pEnemy->rect.h);
 
-    float speed = 5.0f;
     pEnemy->vx = -speed; // rakt åt vänster
     pEnemy->vy = 0;      // ingen rörelse i y-led
    
@@ -87,7 +89,6 @@ static void getStartValues(Enemy *pEnemy){
         pEnemy->x = 0; // also spawn at left
         pEnemy->y = rand() % (pEnemy->window_height - pEnemy->rect.h);
 
-        float speed = 5.0f;
         pEnemy->vx = speed; // move right
         pEnemy->vy = 0;
     }
