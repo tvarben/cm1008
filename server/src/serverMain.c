@@ -142,9 +142,32 @@ void run(Game *pGame) {
                         isRunning = false;
                     }
                 }
-                while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) { ///
+                while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) {
+                    // Check if it's a connection request
+                    Uint32 ip = SDL_SwapBE32(pGame->pPacket->address.host);
+                    Uint16 port = SDL_SwapBE16(pGame->pPacket->address.port);
+                    printf("Received packet from %d.%d.%d.%d:%d\n",
+                        (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF, port);
+
+                    if (strncmp((char*)pGame->pPacket->data, "TRYING TO CONNECT", 17) == 0) {
+                        printf("Received connection request.\n");
+                
+                        int clientIndex = getClientIndex(pGame, &pGame->pPacket->address);
+                        if (clientIndex >= 0 && clientIndex < MAX_PLAYERS) {
+                            // Respond with a minimal ServerData packet
+                            pGame->serverData.sDPlayerId = clientIndex;
+                            memcpy(pGame->pPacket->data, &pGame->serverData, sizeof(ServerData));
+                            pGame->pPacket->len = sizeof(ServerData);
+                            pGame->pPacket->address = pGame->clients[clientIndex];
+                
+                            SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+                            printf("Sent connection confirmation to client %d.\n", clientIndex);
+                        }
+                        continue; // Skip rest of loop for this packet
+                    }
+                
+                    // Otherwise, assume it's a ClientData struct
                     memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
-                    //cData.cDPlayerId; kasnke blir bättre???
                     int clientIndex = getClientIndex(pGame, &pGame->pPacket->address); 
                     if (clientIndex >= 0 && clientIndex < MAX_PLAYERS)
                         applyShipCommand(pGame->pShips[clientIndex], cData.command);
