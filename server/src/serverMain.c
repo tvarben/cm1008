@@ -12,6 +12,7 @@
 #include "text.h"
 #include "ship_data.h"
 
+
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
 typedef struct {
@@ -94,7 +95,7 @@ int initiate(Game *pGame) {
         printf("Error: %s\n",TTF_GetError());
         return 0;
     } 
-    if (!(pGame->pSocket = SDLNet_UDP_Open(2000))) {
+    if (!(pGame->pSocket = SDLNet_UDP_Open(SERVER_PORT))) {
         printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
         return 0;
     }
@@ -124,7 +125,7 @@ int initiate(Game *pGame) {
 
 void run(Game *pGame) {
     bool isRunning = true;
-    printf("Server is listening on port 2000...\n");
+    printf("Server is listening on port %d...\n", SERVER_PORT);
     SDL_Event event;
     ClientData cData;
     
