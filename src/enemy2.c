@@ -68,7 +68,7 @@ static void getStartValues2(Enemy2 *pEnemy2) {
   pEnemy2->rectHitbox.y = pEnemy2->rect.y + 10;
   pEnemy2->rectHitbox.w = pEnemy2->rect.w - 50;
   pEnemy2->rectHitbox.h = pEnemy2->rect.h - 50;
-  pEnemy2->damage = 4;
+  pEnemy2->damage = 2;
   pEnemy2->health = 4;                  // changed health
   float speed = rand() % (50 - 15 + 1); // velocity
   if (startSpawnOnTheLeft == 1) {
@@ -121,6 +121,8 @@ void drawEnemy2(Enemy2 *pEnemy2) {
     SDL_RenderCopyEx(pEnemy2->pRenderer, pEnemy2->pTexture, NULL,
                      &(pEnemy2->rect), 0, NULL,
                      SDL_FLIP_NONE); // made 0 to not rotate enemy.png
+    SDL_SetRenderDrawColor(pEnemy2->pRenderer, 255, 0, 0, 255);
+    SDL_RenderDrawRect(pEnemy2->pRenderer, &pEnemy2->rectHitbox);
   }
 }
 

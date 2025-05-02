@@ -517,14 +517,16 @@ void run(Game *pGame) {
         if (shipCollision(pGame->pShip, getRectEnemy(pGame->pEnemies[i]))) {
           damageEnemy(pGame->pEnemies[i], 2, i);
           killedEnemies++;
-          damageShip(pGame->pShip);
+          damageShip(pGame->pShip, 1);
         }
       }
       for (int j = 0; j < pGame->nrOfEnemies2; j++) {
         if (shipCollision(pGame->pShip, getRectEnemy2(pGame->pEnemies2[j]))) {
-          damageEnemy2(pGame->pEnemies2[j], 2, j);
-          killedEnemies++;
-          damageShip(pGame->pShip);
+          damageEnemy2(pGame->pEnemies2[j], 1, j);
+          damageShip(pGame->pShip, 2);
+          if (!isEnemy2Active(pGame->pEnemies2[j])) {
+            killedEnemies++;
+          }
         }
       }
       if (pGame->pScoreText)
@@ -689,7 +691,7 @@ void spawnEnemies(Game *pGame, int ammount) {
 }
 
 void updateEnemies(Game *pGame, int *ammount) {
-  if (areTheyAllDead(pGame)) // yes this looks like shit
+  if (areTheyAllDead(pGame) == true) // yes this looks like shit
   {
     (*ammount) += 2;
     pGame->nrOfEnemies = 0;
@@ -701,7 +703,6 @@ void resetEnemy(Game *pGame) {
   for (int i = 0; i < pGame->nrOfEnemies; i++) {
     destroyEnemy(pGame->pEnemies[i]);
   }
-  pGame->nrOfEnemies = 0;
   for (int j = 0; j < pGame->nrOfEnemies2; j++) {
     destroyEnemy2(pGame->pEnemies2[j]);
   }

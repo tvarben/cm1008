@@ -181,8 +181,8 @@ bool isLeft(Ship *pShip) {
     return false;
   }
 }
-void damageShip(Ship *pShip) {
-  pShip->health -= 1;
+void damageShip(Ship *pShip, int damage) {
+  pShip->health -= damage;
   printf("Ship health %d\n", pShip->health);
 }
 

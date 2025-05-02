@@ -116,6 +116,8 @@ void drawEnemy(Enemy *pEnemy) {
   if (pEnemy->active == true) {
     SDL_RenderCopyEx(pEnemy->pRenderer, pEnemy->pTexture, NULL, &(pEnemy->rect),
                      0, NULL, SDL_FLIP_NONE); // made 0 to not rotate enemy.png
+    SDL_SetRenderDrawColor(pEnemy->pRenderer, 255, 0, 0, 255);
+    SDL_RenderDrawRect(pEnemy->pRenderer, &pEnemy->rectHitbox);
   }
 }
 
