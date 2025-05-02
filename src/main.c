@@ -22,14 +22,9 @@
 #define MUSIC_FILEPATH "./resources/music.wav"
 #define SHOOT_SFX_FILEPATH "./resources/pew.wav"
 
-// new Enemies spawn succesfully.
-// enemy2 moves like a wave function
-
 // BUGS
-// enemy2 is too big
 // enemy2 hitbox is off
 // FIXES
-// experiment with alternative way to implement by changing in enemies.c
 enum GameState { START, ONGOING, PAUSED, GAME_OVER };
 typedef enum GameState GameState;
 
@@ -57,7 +52,8 @@ typedef struct {
   Uint64 pausedTime;
   Cannon *pCannon;
   Bullet *pProjectiles[MAX_BULLETS];
-  SDL_Texture *pStartImage, *pStartImage2, *pMapImage1, *pMapImage2;
+  SDL_Texture *pStartImage, *pStartImage2, *pMapImage1, *pMapImage2,
+      *pMapBackground2, *pMap2Planet, *MAP2PLANET2, *MAP2PLANET3;
   bool networkMenu;
   bool mapMenu;
   Uint32 attackDelay;
@@ -146,6 +142,67 @@ int initiate(Game *pGame) {
       SDL_CreateTextureFromSurface(pGame->pRenderer, tempSurface3);
   SDL_FreeSurface(tempSurface3);
   if (!pGame->pMapImage1) {
+    printf("Texture Creation Error: %s\n", SDL_GetError());
+    return 0;
+  }
+  SDL_Surface *someoneChangeTheNamesOfThesePls = IMG_Load("resources/MAP2.png");
+  if (!someoneChangeTheNamesOfThesePls) {
+    printf("Image Load Error: %s\n", IMG_GetError());
+    return 0;
+  }
+  pGame->pMapImage2 = SDL_CreateTextureFromSurface(
+      pGame->pRenderer, someoneChangeTheNamesOfThesePls);
+  SDL_FreeSurface(someoneChangeTheNamesOfThesePls);
+  if (!pGame->pMapImage2) {
+    printf("Texture Creation Error: %s\n", SDL_GetError());
+    return 0;
+  }
+  SDL_Surface *tempSurface4 = IMG_Load("resources/MAP2BACKGROUND.png");
+  if (!tempSurface4) {
+    printf("Image Load Error: %s\n", IMG_GetError());
+    return 0;
+  }
+  pGame->pMapBackground2 =
+      SDL_CreateTextureFromSurface(pGame->pRenderer, tempSurface4);
+  SDL_FreeSurface(tempSurface4);
+  if (!pGame->pMapBackground2) {
+    printf("Texture Creation Error: %s\n", SDL_GetError());
+    return 0;
+  }
+
+  SDL_Surface *tempSurface5 = IMG_Load("resources/BigRed.png");
+  if (!tempSurface5) {
+    printf("Image Load Error: %s\n", IMG_GetError());
+    return 0;
+  }
+  pGame->pMap2Planet =
+      SDL_CreateTextureFromSurface(pGame->pRenderer, tempSurface5);
+  SDL_FreeSurface(tempSurface5);
+  if (!pGame->pMap2Planet) {
+    printf("Texture Creation Error: %s\n", SDL_GetError());
+    return 0;
+  }
+  SDL_Surface *tempSurface6 = IMG_Load("resources/redBall.png");
+  if (!tempSurface6) {
+    printf("Image Load Error: %s\n", IMG_GetError());
+    return 0;
+  }
+  pGame->MAP2PLANET2 =
+      SDL_CreateTextureFromSurface(pGame->pRenderer, tempSurface6);
+  SDL_FreeSurface(tempSurface6);
+  if (!pGame->MAP2PLANET2) {
+    printf("Texture Creation Error: %s\n", SDL_GetError());
+    return 0;
+  }
+  SDL_Surface *tempSurface7 = IMG_Load("resources/shattered_planet.png");
+  if (!tempSurface7) {
+    printf("Image Load Error: %s\n", IMG_GetError());
+    return 0;
+  }
+  pGame->MAP2PLANET3 =
+      SDL_CreateTextureFromSurface(pGame->pRenderer, tempSurface7);
+  SDL_FreeSurface(tempSurface7);
+  if (!pGame->MAP2PLANET3) {
     printf("Texture Creation Error: %s\n", SDL_GetError());
     return 0;
   }
@@ -298,6 +355,18 @@ void run(Game *pGame) {
           pGame->startTime = SDL_GetTicks64();
           mapPicked = 1;
           pGame->gameTime = -1;
+        } else if (SDL_PointInRect(&mousePoint, mapName2Rect)) {
+          resetShip(pGame->pShip);
+          resetEnemy(pGame);
+          nrOfEnemiesToSpawn = 20;
+          spawnEnemies(pGame, nrOfEnemiesToSpawn);
+          pGame->state = ONGOING;
+          pGame->networkMenu = false;
+          pGame->mapMenu = false;
+          pGame->pausedTime = 0;
+          pGame->startTime = SDL_GetTicks64();
+          mapPicked = 2;
+          pGame->gameTime = -1;
         }
       } else if (pGame->state == START && event.type == SDL_KEYDOWN &&
                  event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
@@ -409,11 +478,24 @@ void run(Game *pGame) {
       SDL_RenderClear(pGame->pRenderer);
       if (mapPicked == 1) {
 
+        SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255,
+                               255); // Set color to white
         drawStars(pGame->pStars, pGame->pRenderer);
         SDL_Rect dstRect = {WINDOW_WIDTH / 2.5, WINDOW_HEIGHT / 3, 200,
                             200}; // adjust position and size
         SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage, NULL, &dstRect);
       } else if (mapPicked == 2) {
+        SDL_SetRenderDrawColor(pGame->pRenderer, 255, 0, 0,
+                               0); // Set color to white
+        SDL_Rect dstRect = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+        SDL_RenderCopy(pGame->pRenderer, pGame->pMapBackground2, NULL,
+                       &dstRect);
+        drawStars(pGame->pStars, pGame->pRenderer);
+        SDL_Rect dstRect2 = {WINDOW_WIDTH / 3, WINDOW_HEIGHT / 3.5, 128 * 3,
+                             97 * 3};
+        SDL_RenderCopy(pGame->pRenderer, pGame->pMap2Planet, NULL, &dstRect2);
+        SDL_Rect dstRect3 = {100, 65, 48, 48};
+        SDL_RenderCopy(pGame->pRenderer, pGame->MAP2PLANET2, NULL, &dstRect3);
       }
       drawShip(pGame->pShip);
       drawCannon(pGame->pCannon);
@@ -424,7 +506,6 @@ void run(Game *pGame) {
       for (int i = 0; i < pGame->nrOfEnemies; i++) {
         if (isEnemyActive(pGame->pEnemies[i]) == true) {
           drawEnemy(pGame->pEnemies[i]);
-          drawEnemy2(pGame->pEnemies2[i]);
         }
       }
       for (int i = 0; i < pGame->nrOfEnemies2; i++) {
@@ -496,6 +577,8 @@ void run(Game *pGame) {
           pGame->pSingleplayerText); // Clear the first frame when the game
                                      // starts, otherwise issues on mac/linux
       drawText(pGame->pMultiplayerText);
+      SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255,
+                             255); // Set color to white
       drawStars(pGame->pStars, pGame->pRenderer);
       drawText(pGame->pExitText);
       drawText(pGame->pGameName);
@@ -512,6 +595,9 @@ void run(Game *pGame) {
         drawText(pGame->pMapName2);
         SDL_Rect dstRect3 = {220, 275, 300, 180}; // adjust position and size
         SDL_RenderCopy(pGame->pRenderer, pGame->pMapImage1, NULL, &dstRect3);
+        SDL_Rect dstRect315 = {WINDOW_WIDTH - 550, 275, 300,
+                               180}; // adjust position and size
+        SDL_RenderCopy(pGame->pRenderer, pGame->pMapImage2, NULL, &dstRect315);
       }
       SDL_RenderPresent(pGame->pRenderer); // Draw the start text
     } else if (pGame->state == PAUSED) {

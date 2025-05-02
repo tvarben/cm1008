@@ -68,7 +68,7 @@ static void getStartValues2(Enemy2 *pEnemy2) {
   pEnemy2->rectHitbox.y = pEnemy2->rect.y + 10;
   pEnemy2->rectHitbox.w = pEnemy2->rect.w - 50;
   pEnemy2->rectHitbox.h = pEnemy2->rect.h - 50;
-  pEnemy2->damage = 1;
+  pEnemy2->damage = 4;
   pEnemy2->health = 4;                  // changed health
   float speed = rand() % (50 - 15 + 1); // velocity
   if (startSpawnOnTheLeft == 1) {
@@ -96,11 +96,11 @@ SDL_Rect getRectEnemy2(Enemy2 *pEnemy2) {
 void updateEnemy2(Enemy2 *pEnemy2) {
   int amplitude = 2;
   float frequency = 0.2;
-  double doubleX = pEnemy2->x;
+  /*double doubleX = pEnemy2->x;*/
   float sinx = sin(pEnemy2->x * frequency) * amplitude;
   if (pEnemy2->active == true) {
     pEnemy2->x += pEnemy2->vx * 0.1; // test values
-    pEnemy2->y += sinx;
+    pEnemy2->y += sin(pEnemy2->x * frequency) * amplitude;
     if (pEnemy2->x > pEnemy2->window_width ||
         pEnemy2->x + pEnemy2->rect.w < 0 ||
         pEnemy2->y > pEnemy2->window_height ||
