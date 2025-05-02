@@ -16,6 +16,7 @@ struct Ship {
   float rotationAngle;
   bool facingLeft;
   SDL_Rect hitbox;
+  int health;
 };
 Ship *createShip(int x, int y, SDL_Renderer *renderer, int windowWidth,
                  int windowHeight) {
@@ -25,6 +26,7 @@ Ship *createShip(int x, int y, SDL_Renderer *renderer, int windowWidth,
 
   s->vx = 0;
   s->vy = 0;
+  s->health = 2;
   s->windowWidth = windowWidth;
   s->windowHeight = windowHeight;
   s->renderer = renderer;
@@ -178,4 +180,20 @@ bool isLeft(Ship *pShip) {
   if (pShip->facingLeft == false) {
     return false;
   }
+}
+void damageShip(Ship *pShip) {
+  pShip->health -= 1;
+  printf("Ship health %d\n", pShip->health);
+}
+
+bool isPlayerDead(Ship *pShip) {
+  if (pShip->health <= 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+void resetHealth(Ship *pShip) {
+  pShip->health = 2;
+  return;
 }
