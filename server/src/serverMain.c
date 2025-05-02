@@ -68,7 +68,6 @@ int initiate(Game *pGame) {
     }
     if (SDLNet_Init()) {
         printf("SDLNet_Init: %s\n", SDLNet_GetError());
-        TTF_Quit();
         return 0;
     }
     pGame->pWindow = SDL_CreateWindow("Server", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -113,7 +112,6 @@ int initiate(Game *pGame) {
     for(int i = 0; i < MAX_PLAYERS; i++){
         if (!pGame->pShips[i]) {
             printf("Error: %s\n", SDL_GetError());
-            closeGame(pGame);
             return 0;
         }
     }

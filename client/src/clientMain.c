@@ -36,6 +36,7 @@ int initiate(Game *pGame);
 void startState(Game *pGame);
 void ongoingState(Game *pGame);
 void multiplayerState(Game *pGame);
+void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress, bool textFieldFocused);
 void gameOverState(Game *pGame);
 void closeGame(Game *pGame);
 void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame);
@@ -316,77 +317,80 @@ void multiplayerState(Game *pGame) {
                     }
                 }
             }
-            // Render the text box
-            SDL_SetRenderDrawColor(pGame->pRenderer, 20, 20, 20, 255); // Dark background
-            SDL_RenderClear(pGame->pRenderer);
-
-            // Draw the input box
-            SDL_Rect box = {300, 300, 600, 100};
-            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255); // Black box
-            SDL_RenderFillRect(pGame->pRenderer, &box);
-            SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255); // White border
-            SDL_RenderDrawRect(pGame->pRenderer, &box);
-
-            // Render the entered text
-            SDL_Color color = {255, 255, 255};
-            SDL_Rect textRect = { box.x + 5, box.y +10, 0, 0 };
-            SDL_Surface* textSurface = TTF_RenderText_Solid(pGame->pSmallFont, enteredIPAddress, color);
-
-            if (textSurface) {
-                textRect.w = textSurface->w;
-                textRect.h = textSurface->h;
-
-                SDL_Texture* textTexture = SDL_CreateTextureFromSurface(pGame->pRenderer, textSurface);
-                SDL_RenderCopy(pGame->pRenderer, textTexture, NULL, &textRect);
-                SDL_FreeSurface(textSurface);
-                SDL_DestroyTexture(textTexture);
-            } else {
-                textRect.h = TTF_FontHeight(pGame->pSmallFont);
-            }
-
-            // Render the prompt text
-            SDL_Surface* promptSurface1 = TTF_RenderText_Solid(pGame->pSmallFont, "Type in server IP ADDRESS and press ENTER", color);
-            if (promptSurface1) {
-                SDL_Texture* promptTexture1 = SDL_CreateTextureFromSurface(pGame->pRenderer, promptSurface1);
-                SDL_Rect promptRect1 = {box.x - 150, box.y - 150, promptSurface1->w, promptSurface1->h}; // Position above the input box
-                SDL_RenderCopy(pGame->pRenderer, promptTexture1, NULL, &promptRect1);
-                SDL_FreeSurface(promptSurface1);
-                SDL_DestroyTexture(promptTexture1);
-            }
-
-            SDL_Surface* promptSurface2 = TTF_RenderText_Solid(pGame->pSmallFont, "Press ESCAPE to go to the MAIN MENU", color);
-            if (promptSurface2) {
-                SDL_Texture* promptTexture2 = SDL_CreateTextureFromSurface(pGame->pRenderer, promptSurface2);
-                SDL_Rect promptRect2 = {box.x -150, box.y + 150, promptSurface2->w, promptSurface2->h}; // Position below the first line
-                SDL_RenderCopy(pGame->pRenderer, promptTexture2, NULL, &promptRect2);
-                SDL_FreeSurface(promptSurface2);
-                SDL_DestroyTexture(promptTexture2);
-            }
-
-            static Uint32 lastToggleTime = 0;
-            static bool showCaret = true;
-
-            Uint32 currentTime = SDL_GetTicks();
-            if (currentTime > lastToggleTime + 500) {
-                showCaret = !showCaret;
-                lastToggleTime = currentTime;
-            }
-
-            if (textFieldFocused && showCaret) {
-                int caretX = textRect.x + textRect.w + 2;
-                int caretHeight = 60;
-                int caretY = box.y + (box.h - caretHeight) / 2;
-
-                SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
-                SDL_Rect caretRect = { caretX, caretY, 3, caretHeight };
-                SDL_RenderFillRect(pGame->pRenderer, &caretRect);
-            }
-
-            SDL_RenderPresent(pGame->pRenderer);
-            SDL_Delay(16);
+            printMultiplayerMenu(pGame, enteredIPAddress, textFieldFocused);
         }
+        SDL_Delay(16);
         SDL_StopTextInput();
     }
+}
+
+void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress, bool textFieldFocused) {
+    // Render the text box
+    SDL_SetRenderDrawColor(pGame->pRenderer, 20, 20, 20, 255); // Dark background
+    SDL_RenderClear(pGame->pRenderer);
+
+    // Draw the input box
+    SDL_Rect box = {300, 300, 600, 100};
+    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255); // Black box
+    SDL_RenderFillRect(pGame->pRenderer, &box);
+    SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255); // White border
+    SDL_RenderDrawRect(pGame->pRenderer, &box);
+
+    // Render the entered text
+    SDL_Color color = {255, 255, 255};
+    SDL_Rect textRect = { box.x + 5, box.y +10, 0, 0 };
+    SDL_Surface* textSurface = TTF_RenderText_Solid(pGame->pSmallFont, pEnteredIPAddress, color);
+
+    if (textSurface) {
+        textRect.w = textSurface->w;
+        textRect.h = textSurface->h;
+
+        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(pGame->pRenderer, textSurface);
+        SDL_RenderCopy(pGame->pRenderer, textTexture, NULL, &textRect);
+        SDL_FreeSurface(textSurface);
+        SDL_DestroyTexture(textTexture);
+    } else {
+        textRect.h = TTF_FontHeight(pGame->pSmallFont);
+    }
+
+    // Render the prompt text
+    SDL_Surface* promptSurface1 = TTF_RenderText_Solid(pGame->pSmallFont, "Type in server IP ADDRESS and press ENTER", color);
+    if (promptSurface1) {
+        SDL_Texture* promptTexture1 = SDL_CreateTextureFromSurface(pGame->pRenderer, promptSurface1);
+        SDL_Rect promptRect1 = {box.x - 150, box.y - 150, promptSurface1->w, promptSurface1->h}; // Position above the input box
+        SDL_RenderCopy(pGame->pRenderer, promptTexture1, NULL, &promptRect1);
+        SDL_FreeSurface(promptSurface1);
+        SDL_DestroyTexture(promptTexture1);
+    }
+
+    SDL_Surface* promptSurface2 = TTF_RenderText_Solid(pGame->pSmallFont, "Press ESCAPE to go to the MAIN MENU", color);
+    if (promptSurface2) {
+        SDL_Texture* promptTexture2 = SDL_CreateTextureFromSurface(pGame->pRenderer, promptSurface2);
+        SDL_Rect promptRect2 = {box.x -150, box.y + 150, promptSurface2->w, promptSurface2->h}; // Position below the first line
+        SDL_RenderCopy(pGame->pRenderer, promptTexture2, NULL, &promptRect2);
+        SDL_FreeSurface(promptSurface2);
+        SDL_DestroyTexture(promptTexture2);
+    }
+
+    static Uint32 lastToggleTime = 0;
+    static bool showCaret = true;
+
+    Uint32 currentTime = SDL_GetTicks();
+    if (currentTime > lastToggleTime + 500) {
+        showCaret = !showCaret;
+        lastToggleTime = currentTime;
+    }
+
+    if (textFieldFocused && showCaret) {
+        int caretX = textRect.x + textRect.w + 2;
+        int caretHeight = 60;
+        int caretY = box.y + (box.h - caretHeight) / 2;
+
+        SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
+        SDL_Rect caretRect = { caretX, caretY, 3, caretHeight };
+        SDL_RenderFillRect(pGame->pRenderer, &caretRect);
+    }
+    SDL_RenderPresent(pGame->pRenderer);
 }
 
 void gameOverState(Game *pGame) {
