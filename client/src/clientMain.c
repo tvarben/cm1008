@@ -253,7 +253,7 @@ void ongoingState(Game *pGame) {
 
 void multiplayerState(Game *pGame) {
     SDL_Event event;
-    bool socketOpened, textFieldFocused = false;
+    bool socketOpened = false, textFieldFocused = false;
 
     while (pGame->isRunning && pGame->state == MULTIPLAYER) {
         SDL_StartTextInput(); // Enable text input
@@ -306,7 +306,7 @@ void multiplayerState(Game *pGame) {
                             return;
                         }
                         return;
-                    } else if (event.key.keysym.sym == SDLK_ESCAPE || event.key.keysym.sym == SDLK_SPACE) {
+                    } else if (event.key.keysym.sym == SDLK_ESCAPE) {
                         pGame->state = START;
                         return;
                     }
@@ -345,7 +345,7 @@ void multiplayerState(Game *pGame) {
             }
 
             // Render the prompt text
-            SDL_Surface* promptSurface1 = TTF_RenderText_Solid(pGame->pSmallFont, "Type in server IP ADDRESS and press ENTER . or press SPACE to go to the MAIN MENU", color);
+            SDL_Surface* promptSurface1 = TTF_RenderText_Solid(pGame->pSmallFont, "Type in server IP ADDRESS and press ENTER", color);
             if (promptSurface1) {
                 SDL_Texture* promptTexture1 = SDL_CreateTextureFromSurface(pGame->pRenderer, promptSurface1);
                 SDL_Rect promptRect1 = {box.x - 150, box.y - 150, promptSurface1->w, promptSurface1->h}; // Position above the input box
@@ -354,7 +354,7 @@ void multiplayerState(Game *pGame) {
                 SDL_DestroyTexture(promptTexture1);
             }
 
-            SDL_Surface* promptSurface2 = TTF_RenderText_Solid(pGame->pSmallFont, "or press SPACE to go to the MAIN MENU", color);
+            SDL_Surface* promptSurface2 = TTF_RenderText_Solid(pGame->pSmallFont, "Press ESCAPE to go to the MAIN MENU", color);
             if (promptSurface2) {
                 SDL_Texture* promptTexture2 = SDL_CreateTextureFromSurface(pGame->pRenderer, promptSurface2);
                 SDL_Rect promptRect2 = {box.x -150, box.y + 150, promptSurface2->w, promptSurface2->h}; // Position below the first line
