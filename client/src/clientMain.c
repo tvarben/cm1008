@@ -37,8 +37,6 @@ void startState(Game *pGame);
 void ongoingState(Game *pGame);
 void multiplayerState(Game *pGame);
 void gameOverState(Game *pGame);
-
-//void run(Game *pGame);
 void closeGame(Game *pGame);
 void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame);
 bool connectToServer(Game *pGame);
@@ -47,10 +45,12 @@ void updateWithServerData(Game *pGame);
 
 int main(int argc, char** argv) {
     Game game = {0};
-    if (!initiate(&game)) return 1;
+    if (!initiate(&game)) {
+        closeGame(&game);
+        return 1;
+    }
     
     while (game.isRunning) {
-        game.state == START;
         switch (game.state) {
             case START:
                 startState(&game);
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
                 break;
         }
     }
-    
+
     closeGame(&game);
     return 0;
 }
@@ -83,18 +83,14 @@ int initiate(Game *pGame) {
     }
     if (IMG_Init(IMG_INIT_PNG) == 0) {
         printf("SDL_image Init Error: %s\n", IMG_GetError());
-        SDL_Quit();
         return 0;
     }
 	if(TTF_Init()!=0) {
         printf("Error: %s\n",TTF_GetError());
-        SDL_Quit();
         return 0;
     }
     if (SDLNet_Init()) {
         printf("SDLNet_Init: %s\n", SDLNet_GetError());
-        TTF_Quit();
-        SDL_Quit();
         return 0;
     }
 
@@ -141,12 +137,6 @@ int initiate(Game *pGame) {
         return 0;
     }
 
-    /*pGame->pPacket->address.host = pGame->serverAddress.host;
-    pGame->pPacket->address.port = pGame->serverAddress.port;*/
-
-
-    //pGame->pShip = createShip(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
-
     for(int i = 0; i < MAX_PLAYERS; i++){
         pGame->pShips[i] = createShip(i, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
@@ -155,7 +145,6 @@ int initiate(Game *pGame) {
     for(int i = 0; i < MAX_PLAYERS; i++){
         if (!pGame->pShips[i]) {
             printf("Error: %s\n", SDL_GetError());
-            closeGame(pGame);
             return 0;
         }
     }
@@ -179,7 +168,7 @@ void startState(Game *pGame) {
         const SDL_Rect *singleRect = getTextRect(pGame->pSinglePlayerText);
         const SDL_Rect *exitRect = getTextRect(pGame->pExitText);       //Hämta position för rect för Exit-texten
         const SDL_Rect *multiRect = getTextRect(pGame->pMultiPlayerText);
-        const SDL_Rect *gameRect = getTextRect(pGame->pGameName);  
+        //const SDL_Rect *gameRect = getTextRect(pGame->pGameName);  
         
         if (SDL_PointInRect(&mousePoint, singleRect)) {
             setTextColor(pGame->pSinglePlayerText, 255, 255, 255, pGame->pSmallFont, "Singleplayer");
@@ -198,7 +187,7 @@ void startState(Game *pGame) {
         }
         
         if (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT || event.type == SDL_MOUSEBUTTONDOWN && SDL_PointInRect(&mousePoint, exitRect)) {
+            if (event.type == SDL_QUIT || (event.type == SDL_MOUSEBUTTONDOWN && SDL_PointInRect(&mousePoint, exitRect))) {
                 pGame->isRunning = false;
                 return;
             }else if (event.type == SDL_MOUSEBUTTONDOWN) {
@@ -295,19 +284,21 @@ void multiplayerState(Game *pGame) {
                             // Attempt to connect to the server
                             if (connectToServer(pGame)) {
                                 printf("Connected to server.\n");
-                                pGame->state = ONGOING; // Transition to ONGOING state
-                                return; // Exit the loop
+                                pGame->state = ONGOING;
+                                return;
                             } else {
                                 printf("Failed to connect to server.\n");
-                                pGame->state = START; // Return to START state
+                                pGame->state = START;
+                                return;
                             }
                         } else {
                             printf("Failed to resolve IP: %s\n", enteredIPAddress);
-                            pGame->state = START; // Return to START state
+                            pGame->state = START;
+                            return;
                         }
-                        return; // Exit the loop
+                        return;
                     } else if (event.key.keysym.sym == SDLK_ESCAPE || event.key.keysym.sym == SDLK_SPACE) {
-                        pGame->state = START; // Go back to START state
+                        pGame->state = START;
                         return;
                     }
                 } else if (event.type == SDL_TEXTINPUT) {
@@ -328,7 +319,7 @@ void multiplayerState(Game *pGame) {
             SDL_RenderDrawRect(pGame->pRenderer, &box);
 
             // Render the entered text
-            SDL_Color color = {255, 255, 255}; // White text
+            SDL_Color color = {255, 255, 255};
             SDL_Surface* textSurface = TTF_RenderText_Solid(pGame->pSmallFont, enteredIPAddress, color);
             if (textSurface) {
                 SDL_Texture* textTexture = SDL_CreateTextureFromSurface(pGame->pRenderer, textSurface);
@@ -357,10 +348,10 @@ void multiplayerState(Game *pGame) {
                 SDL_DestroyTexture(promptTexture2);
             }
 
-            SDL_RenderPresent(pGame->pRenderer); // Update the screen
-            SDL_Delay(16); // Delay to limit CPU usage
+            SDL_RenderPresent(pGame->pRenderer);
+            SDL_Delay(16);
         }
-        SDL_StopTextInput(); // Disable text input
+        SDL_StopTextInput();
     }
 }
 
@@ -389,13 +380,11 @@ bool connectToServer(Game *pGame) {
     pGame->pPacket->address = pGame->serverAddress;
     SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
 
-
     if (SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket) == 0) {
         printf("Failed to send response: %s\n", SDLNet_GetError());
     } else {
         printf("Sent response to client.\n");
     }
-
 
     bool connected = false;
     Uint32 startTime = SDL_GetTicks(); // Get the current time in milliseconds
