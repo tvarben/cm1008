@@ -40,7 +40,10 @@ void sendServerData(Game* pGame);
 int main(int argc, char** argv) {
     Game game = {0};
     printf("doing intiate\n");
-    if (!initiate(&game)) return 1;
+    if (!initiate(&game)){ 
+        closeGame(&game); 
+        return 1;
+    }
     printf("entering run\n");
     run(&game);
     printf("entering close game from main\n");
@@ -57,18 +60,15 @@ int initiate(Game *pGame) {
     }
     if (IMG_Init(IMG_INIT_PNG) == 0) {
         printf("SDL_image Init Error: %s\n", IMG_GetError());
-        SDL_Quit();
         return 0;
     }
 	if(TTF_Init()!=0) {
         printf("Error: %s\n",TTF_GetError());
-        SDL_Quit();
         return 0;
     }
     if (SDLNet_Init()) {
         printf("SDLNet_Init: %s\n", SDLNet_GetError());
         TTF_Quit();
-        SDL_Quit();
         return 0;
     }
     pGame->pWindow = SDL_CreateWindow("Server", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -134,7 +134,25 @@ void run(Game *pGame) {
     while (isRunning) { 
         switch(pGame->state) {
             case START:
-                pGame->state = ONGOING;
+                SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
+                SDL_RenderClear(pGame->pRenderer);
+                drawText(pGame->pGameName);
+                drawText(pGame->pStartText);
+                drawText(pGame->pExitText);
+                SDL_RenderPresent(pGame->pRenderer);
+
+                if (SDL_PollEvent(&event)) {
+                    if (event.type == SDL_QUIT) {
+                        isRunning = false;
+                    } else if (event.type == SDL_KEYDOWN) {
+                        if (event.key.keysym.sym == SDLK_1) {
+                            pGame->state = ONGOING;
+                        } else if (event.key.keysym.sym == SDLK_2) {
+                            isRunning = false;
+                        }
+                    }
+                }
+                SDL_Delay(16); // prevent high CPU usage
                 break;
             case ONGOING: //Lägg till getTicks()
                 sendServerData(pGame);
@@ -195,6 +213,7 @@ void run(Game *pGame) {
 }
 
 void sendServerData(Game* pGame) {
+    if (pGame->nrOfClients == 0) return; // No clients connected
     pGame->serverData.gState = pGame->state;
 
     for(int i=0 ; i<MAX_PLAYERS ; i++){
