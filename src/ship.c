@@ -171,17 +171,24 @@ bool isLeft(Ship *pShip)
     }
 }
 
-bool damageShip(Ship *pShip)
+void damageShip(Ship *pShip)
 {
     pShip->health -=1;
     printf("Ship health %d\n",pShip->health);
-    if(pShip->health <=0)
+}
+
+bool isPlayerDead(Ship *pShip)
+{
+    if (pShip->health <= 0)
     {
         return true;
     }
-    return false;
+    else
+    {
+        return false;
+    }
+    
 }
-
 void resetHealth(Ship *pShip)
 {
     pShip->health=2;
