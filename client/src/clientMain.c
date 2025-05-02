@@ -253,16 +253,25 @@ void ongoingState(Game *pGame) {
 
 void multiplayerState(Game *pGame) {
     SDL_Event event;
+    bool socketOpened, textFieldFocused = false;
+
     while (pGame->isRunning && pGame->state == MULTIPLAYER) {
         SDL_StartTextInput(); // Enable text input
         static char enteredIPAddress[32] = ""; // Buffer to store the entered string
-        bool socketOpened = false;
 
         while (pGame->isRunning && pGame->state == MULTIPLAYER) {
             while (SDL_PollEvent(&event)) {
                 if (event.type == SDL_QUIT) {
                     pGame->isRunning = false;
                     return;
+                } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+                    SDL_Point click = { event.button.x, event.button.y };
+                    SDL_Rect inputBox = { 300, 300, 600, 100 };
+                    if (SDL_PointInRect(&click, &inputBox)) {
+                        textFieldFocused = true;
+                    } else {
+                        textFieldFocused = false;
+                    }
                 } else if (event.type == SDL_KEYDOWN) {
                     if (event.key.keysym.sym == SDLK_BACKSPACE && strlen(enteredIPAddress) > 0) {
                         enteredIPAddress[strlen(enteredIPAddress) - 1] = '\0'; // Remove the last character
@@ -320,13 +329,19 @@ void multiplayerState(Game *pGame) {
 
             // Render the entered text
             SDL_Color color = {255, 255, 255};
+            SDL_Rect textRect = { box.x + 5, box.y +10, 0, 0 };
             SDL_Surface* textSurface = TTF_RenderText_Solid(pGame->pSmallFont, enteredIPAddress, color);
+
             if (textSurface) {
+                textRect.w = textSurface->w;
+                textRect.h = textSurface->h;
+
                 SDL_Texture* textTexture = SDL_CreateTextureFromSurface(pGame->pRenderer, textSurface);
-                SDL_Rect textRect = {box.x + 5, box.y + 10, textSurface->w, textSurface->h};
                 SDL_RenderCopy(pGame->pRenderer, textTexture, NULL, &textRect);
                 SDL_FreeSurface(textSurface);
                 SDL_DestroyTexture(textTexture);
+            } else {
+                textRect.h = TTF_FontHeight(pGame->pSmallFont);
             }
 
             // Render the prompt text
@@ -346,6 +361,25 @@ void multiplayerState(Game *pGame) {
                 SDL_RenderCopy(pGame->pRenderer, promptTexture2, NULL, &promptRect2);
                 SDL_FreeSurface(promptSurface2);
                 SDL_DestroyTexture(promptTexture2);
+            }
+
+            static Uint32 lastToggleTime = 0;
+            static bool showCaret = true;
+
+            Uint32 currentTime = SDL_GetTicks();
+            if (currentTime > lastToggleTime + 500) {
+                showCaret = !showCaret;
+                lastToggleTime = currentTime;
+            }
+
+            if (textFieldFocused && showCaret) {
+                int caretX = textRect.x + textRect.w + 2;
+                int caretHeight = 60;
+                int caretY = box.y + (box.h - caretHeight) / 2;
+
+                SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
+                SDL_Rect caretRect = { caretX, caretY, 3, caretHeight };
+                SDL_RenderFillRect(pGame->pRenderer, &caretRect);
             }
 
             SDL_RenderPresent(pGame->pRenderer);
