@@ -29,7 +29,7 @@ Cannon *createCannon(SDL_Renderer *renderer, int windowWidth,
   c->windowHeight = windowHeight;
   c->renderer = renderer;
   c->dy = 0; // direction cannon shoots when press space at start of the game
-  c->dx = 100;
+  c->dx = 400;
   c->lastFacedLeft = false;
   SDL_Surface *surface = IMG_Load("resources/ship_cannon.png");
   if (!surface) {
@@ -91,10 +91,10 @@ void updateCannon(Cannon *pCannon, Ship *pShip) {
     //printf("FIRING AWAY SIR! ('_')/ \n");
     if (event->type == SDL_KEYDOWN && event->key.keysym.scancode == SDL_SCANCODE_SPACE) {
       if (c->lastFacedLeft) {
-        spawn_projectile(c->rect.x - 8, c->rect.y + 15, -100, 0);
+        spawn_projectile(c->rect.x - 8, c->rect.y + 15, -400, 0);
         //printf("left\n");
       } else {
-        spawn_projectile(c->rect.x + 20, c->rect.y + 15, 100, 0);
+        spawn_projectile(c->rect.x + 20, c->rect.y + 15, 400, 0);
         //printf("right\n");
       }
     }

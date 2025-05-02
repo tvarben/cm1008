@@ -13,7 +13,7 @@
 #include "bullet.h"
 #include "cannon.h"
 #include "menu.h"
-#define MAX_BULLETS 100
+#define MAX_BULLETS 1000
 #define MAX_ENEMIES 100
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
@@ -32,7 +32,8 @@ typedef struct
     Mix_Chunk *pSFX;
     Mix_Music *pMusic;
 	TTF_Font *pFont, *pSmallFont;
-	Text *pSingleplayerText, *pGameName, *pExitText, *pPauseText, *pScoreText, *pMultiplayerText, *pMenuText, *pGameOverText;
+	Text *pSingleplayerText, *pGameName, *pExitText, *pPauseText, *pScoreText, *pMultiplayerText, *pMenuText, *pGameOverText,
+    *pMapName1, *pMapName2;
     Stars *pStars;
     EnemyImage *pEnemyImage;
     Enemy *pEnemies[MAX_ENEMIES];
@@ -44,8 +45,9 @@ typedef struct
     Uint64 pausedTime;
     Cannon *pCannon;
     Bullet *pProjectiles[MAX_BULLETS];
-    SDL_Texture *pStartImage, *pStartImage2;
+    SDL_Texture *pStartImage, *pStartImage2, *pMapImage1, *pMapImage2;
     bool networkMenu;
+    bool mapMenu;
     Uint32 attackDelay;
     Uint32 lastAttackTime;
 
@@ -55,7 +57,7 @@ int getTime(Game *pGame);
 void updateGameTime(Game *pGame);
 void resetEnemy(Game *pGame);
 void spawnEnemies(Game *pGame, int ammount);
-void updateEnemies(Game *pGame, int ammount);
+void updateEnemies(Game *pGame, int *ammount);
 bool areTheyAllDead(Game *pGame);
 
 int initiate(Game *pGame) 
@@ -73,6 +75,7 @@ int initiate(Game *pGame)
         SDL_Quit();
         return 0;
     }
+
 	if(TTF_Init()!=0)
     {
         printf("Error: %s\n",TTF_GetError());
@@ -126,6 +129,17 @@ int initiate(Game *pGame)
         return 0;
     }
 
+    SDL_Surface *tempSurface3 = IMG_Load("resources/MAP1.png");
+    if (!tempSurface2) {
+        printf("Image Load Error: %s\n", IMG_GetError());
+        return 0;
+    }
+    pGame->pMapImage1 = SDL_CreateTextureFromSurface(pGame->pRenderer, tempSurface3);
+    SDL_FreeSurface(tempSurface3);
+    if (!pGame->pMapImage1) {
+        printf("Texture Creation Error: %s\n", SDL_GetError());
+        return 0;
+    }
 
     pGame->pStars = createStars(WINDOW_WIDTH*WINDOW_HEIGHT/10000,WINDOW_WIDTH,WINDOW_HEIGHT);
     pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/8);
@@ -135,6 +149,9 @@ int initiate(Game *pGame)
     pGame->pPauseText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"PAUSED",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
     pGame->pMenuText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"MENU",WINDOW_WIDTH/2,450);
     pGame->pGameOverText = createText(pGame->pRenderer,238,168,65,pGame->pFont,"GAME OVER",WINDOW_WIDTH/2,WINDOW_HEIGHT/5);
+    pGame->pMapName1 = createText(pGame->pRenderer,238,168,65,pGame->pSmallFont,"MAP1",WINDOW_WIDTH/3,500);
+    pGame->pMapName2 = createText(pGame->pRenderer,238,168,65,pGame->pSmallFont,"MAP2",WINDOW_WIDTH-400,500);
+
     pGame->pEnemyImage = initiateEnemy(pGame->pRenderer);
     pGame->pCannon = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     pGame->attackDelay = 250;
@@ -157,12 +174,14 @@ int initiate(Game *pGame)
     resetEnemy(pGame);
     pGame->timeForNextEnemy = 2;
     pGame->networkMenu = false;
+    pGame->mapMenu = false;
     pGame->state = START;
     return 1;
 }
 
 void run(Game *pGame)
 {
+    int mapPicked = 0;
     int killedEnemies = 0;
     int nrOfEnemiesToSpawn = 4;
     bool isRunning = true;
@@ -190,11 +209,13 @@ void run(Game *pGame)
         const SDL_Rect *exitRect = getTextRect(pGame->pExitText);       //Hämta position för rect för Exit-texten
         const SDL_Rect *multiRect = getTextRect(pGame->pMultiplayerText);
         const SDL_Rect *MenuRect = getTextRect(pGame->pMenuText);
+        const SDL_Rect *mapName1Rect = getTextRect(pGame->pMapName1);
+        const SDL_Rect *mapName2Rect = getTextRect(pGame->pMapName2);
 
 
         if (SDL_PointInRect(&mousePoint, startRect))
         {
-            setTextColor(pGame->pSingleplayerText, 255, 255, 100, pGame->pSmallFont, "Singleplayer");
+            setTextColor(pGame->pSingleplayerText, 255, 100, 100, pGame->pSmallFont, "Singleplayer");
         }
         else
         {
@@ -217,6 +238,23 @@ void run(Game *pGame)
             setTextColor(pGame->pMultiplayerText, 238, 168, 65, pGame->pSmallFont, "Multiplayer");
         }
 
+        if (SDL_PointInRect(&mousePoint, mapName1Rect))
+        {
+            setTextColor(pGame->pMapName1, 255, 100, 100, pGame->pSmallFont, "MAP1");
+        }
+        else
+        {
+            setTextColor(pGame->pMapName1, 238, 168, 65, pGame->pSmallFont, "MAP1");
+        }
+        if (SDL_PointInRect(&mousePoint, mapName2Rect))
+        {
+            setTextColor(pGame->pMapName2, 255, 100, 100, pGame->pSmallFont, "MAP2");
+        }
+        else
+        {
+            setTextColor(pGame->pMapName2, 238, 168, 65, pGame->pSmallFont, "MAP2");
+        }
+
         while (SDL_PollEvent(&event))
         {
             if (event.type == SDL_QUIT)
@@ -227,14 +265,7 @@ void run(Game *pGame)
             {
                 if (SDL_PointInRect(&mousePoint, startRect))
                 {
-                    resetShip(pGame->pShip);
-                    resetEnemy(pGame);
-                    spawnEnemies(pGame, nrOfEnemiesToSpawn);
-                    pGame->state = ONGOING;
-                    pGame->networkMenu = false;
-                    pGame->pausedTime = 0;
-                    pGame->startTime = SDL_GetTicks64();
-                    pGame->gameTime = -1;       
+                    pGame->mapMenu = true;   
                 } 
                 else if (SDL_PointInRect(&mousePoint, exitRect))
                 {
@@ -244,11 +275,40 @@ void run(Game *pGame)
                 {
                     pGame->networkMenu = true;
                 }
+                else if (SDL_PointInRect(&mousePoint, mapName1Rect))
+                {
+                    resetShip(pGame->pShip);
+                    resetEnemy(pGame);
+                    spawnEnemies(pGame, nrOfEnemiesToSpawn);
+                    pGame->state = ONGOING;
+                    pGame->networkMenu = false;
+                    pGame->mapMenu = false;
+                    pGame->pausedTime = 0;
+                    pGame->startTime = SDL_GetTicks64();
+                    mapPicked = 1;
+                    pGame->gameTime = -1;    
+                }
             }
             else if (pGame->state == START && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
             {
                 pGame->networkMenu = false;
+                pGame->mapMenu= false;
             }
+            else if (pGame->state == START && pGame->networkMenu == true && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE && stringIndex > 0)
+            {
+                ipAdress[stringIndex-1] = '\0';
+                stringIndex--;
+            }
+            else if (pGame->state == START && pGame->networkMenu == true && event.type == SDL_KEYDOWN)
+            {
+                SDL_Keycode keycode = event.key.keysym.sym;
+                if (((keycode >= '0' && keycode <= '9') || keycode == '.') && stringIndex < 15)
+                {
+                    ipAdress[stringIndex] = (char)keycode;
+                    stringIndex++;
+                }
+            }
+            
             else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_V)
             {
                 printf("CURRENT NUMBER OF ENEMIES: %d \n", pGame->nrOfEnemies);
@@ -264,20 +324,6 @@ void run(Game *pGame)
                     }
                 }
             }      
-            else if (pGame->state == START && pGame->networkMenu == true && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE && stringIndex > 0)
-            {
-                ipAdress[stringIndex-1] = '\0';
-                stringIndex--;
-            }
-            else if (pGame->state == START && pGame->networkMenu == true && event.type == SDL_KEYDOWN)
-            {
-                SDL_Keycode keycode = event.key.keysym.sym;
-                if ((char)keycode <= '9' && (char)keycode >= '0' && stringIndex < 15 || (char)keycode =='.' )
-                {
-                    ipAdress[stringIndex] = (char)keycode;
-                    stringIndex++;
-                }
-            }
             else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
             {
                 pGame->state = PAUSED;
@@ -309,6 +355,8 @@ void run(Game *pGame)
                     resetShip(pGame->pShip);
                     resetEnemy(pGame);
                     resetAllBullets();
+                    resetHealth(pGame->pShip);
+                    nrOfEnemiesToSpawn = 4;
                     for(int i=0;i<MAX_PROJECTILES;i++)
                     {
                       rectArray[i]=emptyRect;
@@ -325,7 +373,7 @@ void run(Game *pGame)
             
             update_projectiles(delta_time); // update based on time since last frame passed
             updateGameTime(pGame);
-            updateEnemies(pGame, nrOfEnemiesToSpawn);
+            updateEnemies(pGame, &nrOfEnemiesToSpawn);
             updateShipVelocity(pGame->pShip);           // resolve velocity based on key states
             updateShip(pGame->pShip);
             updateCannon(pGame->pCannon, pGame->pShip);
@@ -334,12 +382,25 @@ void run(Game *pGame)
             }
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);
             SDL_RenderClear(pGame->pRenderer);
-            drawStars(pGame->pStars,pGame->pRenderer);
-            SDL_Rect dstRect = { WINDOW_WIDTH/2.5, WINDOW_HEIGHT/3, 200, 200 };  // adjust position and size
-            SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage, NULL, &dstRect);
+            if (mapPicked == 1)
+            {
+
+                drawStars(pGame->pStars,pGame->pRenderer);
+                SDL_Rect dstRect = { WINDOW_WIDTH/2.5, WINDOW_HEIGHT/3, 200, 200 };  // adjust position and size
+                SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage, NULL, &dstRect);
+           }
+           else if(mapPicked == 2)
+           {
+        
+           }
             drawShip(pGame->pShip);
             drawCannon(pGame->pCannon);
             render_projectiles(pGame->pRenderer); // test      
+            
+            if (isPlayerDead(pGame->pShip) == true)
+            {
+                pGame->state = GAME_OVER;
+            }
             for(int i=0;i<pGame->nrOfEnemies;i++)
             {
                 if (isEnemyActive(pGame->pEnemies[i]) == true)
@@ -349,10 +410,16 @@ void run(Game *pGame)
             }
              for(int i=0;i<pGame->nrOfEnemies;i++){
                 if(shipCollision(pGame->pShip, getRectEnemy(pGame->pEnemies[i]))){
-                    pGame->state = GAME_OVER;
+                    damageEnemy(pGame->pEnemies[i], 2 , i);
+                    killedEnemies++;
+                    damageShip(pGame->pShip);
                 }
             }
             if(pGame->pScoreText) drawText(pGame->pScoreText);
+            if (pGame->gameTime >= 300)
+            {
+                pGame->state = GAME_OVER;
+            }
             getProjectileRects(rectArray);
             for (int i = 0; i < MAX_PROJECTILES; i++)
             {
@@ -395,6 +462,14 @@ void run(Game *pGame)
             {
                 showNetworkMenu(pGame->pRenderer, pGame->pSmallFont, ipAdress);
             }
+            if (pGame->mapMenu == true)
+            {
+                showMapMenu(pGame->pRenderer, pGame->pSmallFont);
+                drawText(pGame->pMapName1);
+                drawText(pGame->pMapName2);
+                SDL_Rect dstRect3 = { 220, 275, 300, 180 };  // adjust position and size
+                SDL_RenderCopy(pGame->pRenderer, pGame->pMapImage1, NULL, &dstRect3);
+            }
             SDL_RenderPresent(pGame->pRenderer);    //Draw the start text
         }
         else if (pGame->state == PAUSED)
@@ -412,7 +487,6 @@ void run(Game *pGame)
             destroyText(pKillCountText);
             drawText(pGame->pGameOverText);
             drawText(pGame->pMenuText);
-            printf("YOU KILLED %d ALIENS! \n", killedEnemies);
             SDL_RenderPresent(pGame->pRenderer);
             if (SDL_PointInRect(&mousePoint, MenuRect)) {
                 setTextColor(pGame->pMenuText, 255, 255, 100, pGame->pFont, "MENU");
@@ -456,7 +530,7 @@ void updateGameTime(Game *pGame)
         if(pGame->pScoreText) destroyText(pGame->pScoreText);
         static char scoreString[30];
         sprintf(scoreString,"%d",getTime(pGame));
-        if(pGame->pFont) pGame->pScoreText = createText(pGame->pRenderer,238,168,65,pGame->pFont,scoreString,WINDOW_WIDTH-50,50);    
+        if(pGame->pFont) pGame->pScoreText = createText(pGame->pRenderer,238,168,65,pGame->pSmallFont,scoreString,WINDOW_WIDTH/2,50);    
     }
 }
 
@@ -469,32 +543,13 @@ void spawnEnemies(Game *pGame, int ammount)
     }
 }
 
-void updateEnemies(Game *pGame, int ammount)
+void updateEnemies(Game *pGame, int *ammount)
 {
-    if (areTheyAllDead(pGame)) //yes this looks like shit 
+    if (areTheyAllDead(pGame) == true)
     {
+        (*ammount)+=2;
         pGame->nrOfEnemies = 0;
-        spawnEnemies(pGame, ammount);
-        if (pGame->gameTime >= 20)
-        {
-            spawnEnemies(pGame, ammount);
-            if (pGame->gameTime >= 40)
-            {
-                spawnEnemies(pGame, ammount);
-                if (pGame->gameTime >= 60)
-                {
-                    spawnEnemies(pGame, ammount);
-                    if (pGame->gameTime >= 80)
-                    {
-                        spawnEnemies(pGame, ammount);
-                        if (pGame->gameTime >= 100)
-                        {
-                            spawnEnemies(pGame, ammount);
-                        }
-                    }
-                }
-            }
-        }
+        spawnEnemies(pGame, *ammount);
     }
 }
 void resetEnemy(Game *pGame)
