@@ -33,7 +33,9 @@ typedef struct {
 } Game;
 
 int initiate(Game *pGame);
+void run(Game *pGame);
 void startState(Game *pGame);
+void renderStartWindow(Game *pGame);
 void ongoingState(Game *pGame);
 void multiplayerState(Game *pGame);
 void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress, bool textFieldFocused);
@@ -50,27 +52,7 @@ int main(int argc, char** argv) {
         closeGame(&game);
         return 1;
     }
-    
-    while (game.isRunning) {
-        switch (game.state) {
-            case START:
-                startState(&game);
-                break;
-            case ONGOING:
-                ongoingState(&game);
-                break;
-            case MULTIPLAYER:
-                multiplayerState(&game);
-                break;
-            case GAME_OVER:
-                gameOverState(&game);
-                break;
-            default:
-                startState(&game);
-                break;
-        }
-    }
-
+    run(&game);
     closeGame(&game);
     return 0;
 }
@@ -160,6 +142,28 @@ int initiate(Game *pGame) {
     return 1;
 }
 
+void run(Game *pGame) {
+    while (pGame->isRunning) {
+        switch (pGame->state) {
+            case START:
+                startState(pGame);
+                break;
+            case ONGOING:
+                ongoingState(pGame);
+                break;
+            case MULTIPLAYER:
+                multiplayerState(pGame);
+                break;
+            case GAME_OVER:
+                gameOverState(pGame);
+                break;
+            default:
+                pGame->state = START;
+                break;
+        }
+    }
+}
+
 void startState(Game *pGame) {
     SDL_Event event;
     while (pGame->isRunning && pGame->state == START) {
@@ -205,18 +209,20 @@ void startState(Game *pGame) {
                 }
             }
         }
-
-        SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);
-        SDL_RenderClear(pGame->pRenderer);
-        SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
-        drawText(pGame->pSinglePlayerText);
-        drawText(pGame->pMultiPlayerText);
-        drawText(pGame->pExitText);
-        //drawStars(pGame->pStars,pGame->pRenderer);
-        drawText(pGame->pGameName);
-        SDL_RenderPresent(pGame->pRenderer);
+        renderStartWindow(pGame);
         SDL_Delay(8);
     }
+}
+
+void renderStartWindow(Game *pGame) {
+    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
+    SDL_RenderClear(pGame->pRenderer);
+    drawText(pGame->pSinglePlayerText);
+    drawText(pGame->pMultiPlayerText);
+    drawText(pGame->pExitText);
+    //drawStars(pGame->pStars,pGame->pRenderer);
+    drawText(pGame->pGameName);
+    SDL_RenderPresent(pGame->pRenderer);
 }
 
 void ongoingState(Game *pGame) {
