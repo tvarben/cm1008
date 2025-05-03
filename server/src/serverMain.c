@@ -138,7 +138,7 @@ void run(Game *pGame) {
             case ONGOING: //Lägg till getTicks()
                 handleOngoingState(pGame);
                 break;
-            case MULTIPLAYER:
+            case LOBBY:
                 pGame->state = START;
                 break;
             case GAME_OVER:
@@ -175,7 +175,7 @@ void handleStartState(Game *pGame) {
                 }
             }
         }
-        SDL_Delay(16);
+        SDL_Delay(8);
     }
 }
 

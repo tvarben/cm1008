@@ -34,12 +34,12 @@ typedef struct {
 
 int initiate(Game *pGame);
 void run(Game *pGame);
-void startState(Game *pGame);
+void handleStartState(Game *pGame);
 void renderStartWindow(Game *pGame);
-void ongoingState(Game *pGame);
-void multiplayerState(Game *pGame);
+void handleOngoingState(Game *pGame);
+void handleLobbyState(Game *pGame);
 void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress, bool textFieldFocused);
-void gameOverState(Game *pGame);
+void handleGameOverState(Game *pGame);
 void closeGame(Game *pGame);
 void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame);
 bool connectToServer(Game *pGame);
@@ -146,16 +146,16 @@ void run(Game *pGame) {
     while (pGame->isRunning) {
         switch (pGame->state) {
             case START:
-                startState(pGame);
+                handleStartState(pGame);
                 break;
             case ONGOING:
-                ongoingState(pGame);
+                handleOngoingState(pGame);
                 break;
-            case MULTIPLAYER:
-                multiplayerState(pGame);
+            case LOBBY:
+                handleLobbyState(pGame);
                 break;
             case GAME_OVER:
-                gameOverState(pGame);
+                handleGameOverState(pGame);
                 break;
             default:
                 pGame->state = START;
@@ -164,7 +164,7 @@ void run(Game *pGame) {
     }
 }
 
-void startState(Game *pGame) {
+void handleStartState(Game *pGame) {
     SDL_Event event;
     while (pGame->isRunning && pGame->state == START) {
         int x, y;
@@ -204,7 +204,7 @@ void startState(Game *pGame) {
                             //printf("Connected to server");
                             pGame->state = ONGOING;
                         }*/
-                    pGame->state = MULTIPLAYER;
+                    pGame->state = LOBBY;
                     return;
                 }
             }
@@ -225,11 +225,15 @@ void renderStartWindow(Game *pGame) {
     SDL_RenderPresent(pGame->pRenderer);
 }
 
-void ongoingState(Game *pGame) {
+void handleOngoingState(Game *pGame) {
     SDL_Event event;
     ClientData cData;
-    
+    Uint32 now=0, delta=0, lastUpdate=SDL_GetTicks();
+    const Uint32 tickInterval=16;
+
     while (pGame->isRunning && pGame->state == ONGOING) {
+        now = SDL_GetTicks();
+        delta = now - lastUpdate;
         while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
             updateWithServerData(pGame);
             //printf("Update with server data.\n");
@@ -242,31 +246,36 @@ void ongoingState(Game *pGame) {
                 handleInput(&event, cData.command, pGame);
             }
         }
-        for (int i = 0; i < MAX_PLAYERS; i++) {
-            if (pGame->pShips[i]) {
-                updateShipVelocity(pGame->pShips[i]);
-                updateShipOnClients(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
+        if (delta>=tickInterval) {
+            lastUpdate=now;
+            
+            for (int i = 0; i < MAX_PLAYERS; i++) {
+                if (pGame->pShips[i]) {
+                    updateShipVelocity(pGame->pShips[i]);
+                    updateShipOnClients(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
+                }
             }
-        }
         
-        SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
-        SDL_RenderClear(pGame->pRenderer);
-        for (int i = 0; i < MAX_PLAYERS; i++) {
-            drawShip(pGame->pShips[i]);   
+            SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
+            SDL_RenderClear(pGame->pRenderer);
+            for (int i = 0; i < MAX_PLAYERS; i++) {
+                drawShip(pGame->pShips[i]);   
+            }
+            SDL_RenderPresent(pGame->pRenderer);
         }
-        SDL_RenderPresent(pGame->pRenderer);
+        SDL_Delay(4);
     }
 }
 
-void multiplayerState(Game *pGame) {
+void handleLobbyState(Game *pGame) {
     SDL_Event event;
     bool socketOpened = false, textFieldFocused = false;
 
-    while (pGame->isRunning && pGame->state == MULTIPLAYER) {
+    while (pGame->isRunning && pGame->state == LOBBY) {
         SDL_StartTextInput(); // Enable text input
         static char enteredIPAddress[32] = ""; // Buffer to store the entered string
 
-        while (pGame->isRunning && pGame->state == MULTIPLAYER) {
+        while (pGame->isRunning && pGame->state == LOBBY) {
             while (SDL_PollEvent(&event)) {
                 if (event.type == SDL_QUIT) {
                     pGame->isRunning = false;
@@ -324,8 +333,8 @@ void multiplayerState(Game *pGame) {
                 }
             }
             printMultiplayerMenu(pGame, enteredIPAddress, textFieldFocused);
+            SDL_Delay(100);
         }
-        SDL_Delay(16);
         SDL_StopTextInput();
     }
 }
@@ -399,7 +408,7 @@ void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress, bool textFieldFo
     SDL_RenderPresent(pGame->pRenderer);
 }
 
-void gameOverState(Game *pGame) {
+void handleGameOverState(Game *pGame) {
     while (pGame->isRunning && pGame->state == GAME_OVER) {
         pGame->state = START;
     }
