@@ -182,8 +182,16 @@ void handleStartState(Game *pGame) {
 void handleOngoingState(Game *pGame) {
     SDL_Event event;
     ClientData cData;
+    Uint32 now = 0, delta = 0,lastUpdate = SDL_GetTicks();
+    const Uint32 tickInterval = 16;
+
     while (pGame->isRunning && pGame->state == ONGOING) {
-        sendServerData(pGame);
+        now = SDL_GetTicks();
+        delta = now - lastUpdate;
+        
+        //if (delta >= tickInterval) {
+        //    lastUpdate = now;
+            //sendServerData(pGame);
         if (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
@@ -219,20 +227,24 @@ void handleOngoingState(Game *pGame) {
             int clientIndex = getClientIndex(pGame, &pGame->pPacket->address); 
             if (clientIndex >= 0 && clientIndex < MAX_PLAYERS)
                 applyShipCommand(pGame->pShips[clientIndex], cData.command);
-        }
-        for(int i = 0; i < MAX_PLAYERS; i++) {
-            if (pGame->pShips[i]) {
-                updateShipVelocity(pGame->pShips[i]);
-                updateShipOnServer(pGame->pShips[i]);
             }
+            
+        if (delta >= tickInterval) {
+            lastUpdate = now;
+            for(int i = 0; i < MAX_PLAYERS; i++) {
+                if (pGame->pShips[i]) {
+                    updateShipVelocity(pGame->pShips[i]);
+                    updateShipOnServer(pGame->pShips[i]);
+                }
+            }
+            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
+            SDL_RenderClear(pGame->pRenderer);
+            for(int i=0; i<MAX_PLAYERS; i++){
+                drawShip(pGame->pShips[i]);
+            }
+            SDL_RenderPresent(pGame->pRenderer);
+            sendServerData(pGame);
         }
-        SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
-        SDL_RenderClear(pGame->pRenderer);
-        for(int i=0; i<MAX_PLAYERS; i++){
-            drawShip(pGame->pShips[i]);
-        }
-        SDL_RenderPresent(pGame->pRenderer);
-        SDL_Delay(2);
     }
 }
 /*
