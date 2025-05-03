@@ -29,10 +29,13 @@ typedef struct {
     UDPsocket pSocket;
     UDPpacket *pPacket;
     ServerData serverData;
+    bool isRunning;
 } Game;
 
 int initiate(Game *pGame);
 void run(Game *pGame);
+void handleStartState(Game *pGame);
+void handleOngoingState(Game *pGame);
 void closeGame(Game *pGame);
 int getClientIndex(Game *pGame, IPaddress *clientAddr);
 void sendServerData(Game* pGame);
@@ -119,96 +122,127 @@ int initiate(Game *pGame) {
         printf("Error: %s\n",Mix_GetError());
         return 0;
     }
+    pGame->isRunning = true;
     pGame->state = START;
     return 1;
 }
 
 void run(Game *pGame) {
-    bool isRunning = true;
     printf("Server is listening on port %hu...\n", SERVER_PORT);
-    SDL_Event event;
-    ClientData cData;
     
-    while (isRunning) { 
+    while (pGame->isRunning) { 
         switch(pGame->state) {
             case START:
-                SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
-                SDL_RenderClear(pGame->pRenderer);
-                drawText(pGame->pGameName);
-                drawText(pGame->pStartText);
-                drawText(pGame->pExitText);
-                SDL_RenderPresent(pGame->pRenderer);
-
-                if (SDL_PollEvent(&event)) {
-                    if (event.type == SDL_QUIT) {
-                        isRunning = false;
-                    } else if (event.type == SDL_KEYDOWN) {
-                        if (event.key.keysym.sym == SDLK_1) {
-                            pGame->state = ONGOING;
-                        } else if (event.key.keysym.sym == SDLK_2) {
-                            isRunning = false;
-                        }
-                    }
-                }
-                SDL_Delay(16); // prevent high CPU usage
+                handleStartState(pGame);
                 break;
             case ONGOING: //Lägg till getTicks()
-                sendServerData(pGame);
-                if (SDL_PollEvent(&event)) {
-                    if (event.type == SDL_QUIT) {
-                        isRunning = false;
-                    }
-                }
-                while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) {
-                    // Check if it's a connection request
-                    Uint32 ip = SDL_SwapBE32(pGame->pPacket->address.host);
-                    Uint16 port = SDL_SwapBE16(pGame->pPacket->address.port);
-                    printf("Received packet from %d.%d.%d.%d:%d\n",
-                        (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF, port);
-
-                    if (strncmp((char*)pGame->pPacket->data, "TRYING TO CONNECT", 17) == 0) {
-                        printf("Received connection request.\n");
-                
-                        int clientIndex = getClientIndex(pGame, &pGame->pPacket->address);
-                        if (clientIndex >= 0 && clientIndex < MAX_PLAYERS) {
-                            // Respond with a minimal ServerData packet
-                            pGame->serverData.sDPlayerId = clientIndex;
-                            memcpy(pGame->pPacket->data, &pGame->serverData, sizeof(ServerData));
-                            pGame->pPacket->len = sizeof(ServerData);
-                            pGame->pPacket->address = pGame->clients[clientIndex];
-                
-                            SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
-                            printf("Sent connection confirmation to client %d.\n", clientIndex);
-                        }
-                        continue; // Skip rest of loop for this packet
-                    }
-                
-                    // Otherwise, assume it's a ClientData struct
-                    memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
-                    int clientIndex = getClientIndex(pGame, &pGame->pPacket->address); 
-                    if (clientIndex >= 0 && clientIndex < MAX_PLAYERS)
-                        applyShipCommand(pGame->pShips[clientIndex], cData.command);
-                }
-                for(int i = 0; i < MAX_PLAYERS; i++) {
-                    if (pGame->pShips[i]) {
-                        updateShipVelocity(pGame->pShips[i]);
-                        updateShipOnServer(pGame->pShips[i]);
-                    }
-                }
-                SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
-                SDL_RenderClear(pGame->pRenderer);
-                for(int i=0; i<MAX_PLAYERS; i++){
-                    drawShip(pGame->pShips[i]);
-                }
-                SDL_RenderPresent(pGame->pRenderer);
-                SDL_Delay(2);
+                handleOngoingState(pGame);
+                break;
+            case MULTIPLAYER:
+                pGame->state = START;
                 break;
             case GAME_OVER:
+                pGame->state = START;
+                break;
+            default:
                 pGame->state = START;
                 break;
         }
     }
 }
+
+void handleStartState(Game *pGame) {
+    SDL_Event event;
+    while (pGame->isRunning && pGame->state == START) {
+        SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
+        SDL_RenderClear(pGame->pRenderer);
+        drawText(pGame->pGameName);
+        drawText(pGame->pStartText);
+        drawText(pGame->pExitText);
+        SDL_RenderPresent(pGame->pRenderer);
+
+        if (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                pGame->isRunning = false;
+                return;
+            } else if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_1) {
+                    pGame->state = ONGOING;
+                    return;
+                } else if (event.key.keysym.sym == SDLK_2) {
+                    pGame->isRunning = false;
+                    return;
+                }
+            }
+        }
+        SDL_Delay(16);
+    }
+}
+
+void handleOngoingState(Game *pGame) {
+    SDL_Event event;
+    ClientData cData;
+    while (pGame->isRunning && pGame->state == ONGOING) {
+        sendServerData(pGame);
+        if (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                pGame->isRunning = false;
+                return;
+            }
+        }
+        while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) {
+            // Check if it's a connection request
+            Uint32 ip = SDL_SwapBE32(pGame->pPacket->address.host);
+            Uint16 port = SDL_SwapBE16(pGame->pPacket->address.port);
+            printf("Received packet from %d.%d.%d.%d:%d\n", (ip >> 24) & 0xFF,
+                            (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF, port);
+
+            if (strncmp((char*)pGame->pPacket->data, "TRYING TO CONNECT", 17) == 0) {
+                printf("Received connection request.\n");
+    
+                int clientIndex = getClientIndex(pGame, &pGame->pPacket->address);
+                if (clientIndex >= 0 && clientIndex < MAX_PLAYERS) {
+                    // Respond with a minimal ServerData packet
+                    pGame->serverData.sDPlayerId = clientIndex;
+                    memcpy(pGame->pPacket->data, &pGame->serverData, sizeof(ServerData));
+                    pGame->pPacket->len = sizeof(ServerData);
+                    pGame->pPacket->address = pGame->clients[clientIndex];
+    
+                    SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+                    printf("Sent connection confirmation to client %d.\n", clientIndex);
+                }
+                continue; // Skip rest of loop for this packet
+            }
+    
+            // Otherwise, assume it's a ClientData struct
+            memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
+            int clientIndex = getClientIndex(pGame, &pGame->pPacket->address); 
+            if (clientIndex >= 0 && clientIndex < MAX_PLAYERS)
+                applyShipCommand(pGame->pShips[clientIndex], cData.command);
+        }
+        for(int i = 0; i < MAX_PLAYERS; i++) {
+            if (pGame->pShips[i]) {
+                updateShipVelocity(pGame->pShips[i]);
+                updateShipOnServer(pGame->pShips[i]);
+            }
+        }
+        SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
+        SDL_RenderClear(pGame->pRenderer);
+        for(int i=0; i<MAX_PLAYERS; i++){
+            drawShip(pGame->pShips[i]);
+        }
+        SDL_RenderPresent(pGame->pRenderer);
+        SDL_Delay(2);
+    }
+}
+/*
+void handleMultiplayerState(Game *pGame) {
+
+}
+
+void handleGameOverState(Game *pGame) {
+
+}*/
 
 void sendServerData(Game* pGame) {
     if (pGame->nrOfClients == 0) return; // No clients connected
@@ -243,12 +277,8 @@ int getClientIndex(Game *pGame, IPaddress *clientAddr) {
             Uint32 ip = SDL_SwapBE32(pGame->clients[i].host);
             Uint16 port = SDL_SwapBE16(pGame->clients[i].port);
 
-            printf("Client %d: %d.%d.%d.%d:%d\n", i,
-            (ip >> 24) & 0xFF,
-            (ip >> 16) & 0xFF,
-            (ip >> 8) & 0xFF,
-            ip & 0xFF,
-            port);
+            printf("Client %d: %d.%d.%d.%d:%d\n", i, (ip >> 24) & 0xFF, (ip >> 16) & 0xFF,
+                                        (ip >> 8) & 0xFF, ip & 0xFF, port);
         }
         return pGame->nrOfClients;
     }
