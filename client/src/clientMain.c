@@ -248,10 +248,9 @@ void handleOngoingState(Game *pGame) {
         }
         if (delta>=tickInterval) {
             lastUpdate=now;
-            
+            updateShipVelocity(pGame->pShips[pGame->shipId]);
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 if (pGame->pShips[i]) {
-                    updateShipVelocity(pGame->pShips[i]);
                     updateShipOnClients(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
                 }
             }
