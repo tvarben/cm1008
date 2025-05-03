@@ -55,26 +55,6 @@ Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int wind
     return pShip;
 }
 
-/*void handleShipEvent(Ship* pShip, SDL_Event* event) {
-    bool down = event->type == SDL_KEYDOWN;
-
-    switch (event->key.keysym.scancode) {
-        case SDL_SCANCODE_W: 
-        case SDL_SCANCODE_UP:
-            pShip->keyUp = down; break;
-        case SDL_SCANCODE_S: 
-        case SDL_SCANCODE_DOWN:
-            pShip->keyDown = down; break;
-        case SDL_SCANCODE_A: 
-        case SDL_SCANCODE_LEFT:
-            pShip->keyLeft = down; break;
-        case SDL_SCANCODE_D: 
-        case SDL_SCANCODE_RIGHT:
-            pShip->keyRight = down; break;
-        default: break;
-    }
-}*/
-
 void setShipVelocity(Ship* pShip, int vx, int vy) {
     pShip->vx = vx;
     pShip->vy = vy;
@@ -83,11 +63,11 @@ void setShipVelocity(Ship* pShip, int vx, int vy) {
 void updateShipVelocity(Ship* pShip) {
     int vx = 0, vy = 0;
 
-    if (pShip->keyLeft && !pShip->keyRight) vx = -1;
-    else if (pShip->keyRight && !pShip->keyLeft) vx = 1;
+    if (pShip->keyLeft && !pShip->keyRight) vx = -3;
+    else if (pShip->keyRight && !pShip->keyLeft) vx = 3;
 
-    if (pShip->keyUp && !pShip->keyDown) vy = -1;
-    else if (pShip->keyDown && !pShip->keyUp) vy = 1;
+    if (pShip->keyUp && !pShip->keyDown) vy = -3;
+    else if (pShip->keyDown && !pShip->keyUp) vy = 3;
 
     pShip->vx = vx;
     pShip->vy = vy;
@@ -97,21 +77,25 @@ void updateShipVelocity(Ship* pShip) {
 void updateShipOnClients(Ship* pShip, int shipId, int myShipId) {
     const float lerpFactor = 0.75f; // 75% Adjust this value to control the interpolation speed, the closer to 1 the faster
     
-    if (shipId == myShipId) {
-        pShip->xStart += pShip->vx * SPEED;
-        pShip->yStart += pShip->vy * SPEED;
+    pShip->xStart += (pShip->targetX - pShip->xStart) * lerpFactor;
+    pShip->yStart += (pShip->targetY - pShip->yStart) * lerpFactor;
+    /*if (shipId == myShipId) {
+        pShip->xStart += pShip->vx; pShip->vx * SPEED
+        pShip->yStart += pShip->vy; pShip->vy * SPEED
+        pShip->vx = 
+        pShip->vy = 
     } else {
         pShip->xStart += (pShip->targetX - pShip->xStart) * lerpFactor;
         pShip->yStart += (pShip->targetY - pShip->yStart) * lerpFactor;
-    }
+    }*/
     stayInWindow(pShip);
 }
 
 // For server (no client prediction, pure physics)
 void updateShipOnServer(Ship* pShip) {
 
-    pShip->xStart += pShip->vx * SPEED;
-    pShip->yStart += pShip->vy * SPEED;
+    pShip->xStart += pShip->vx;// * SPEED;
+    pShip->yStart += pShip->vy;// * SPEED;
 
     stayInWindow(pShip);
 }
@@ -187,3 +171,24 @@ void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int
     pShip->vx = pShipData->vx;
     pShip->vy = pShipData->vy;
 }
+
+
+/*void handleShipEvent(Ship* pShip, SDL_Event* event) {
+    bool down = event->type == SDL_KEYDOWN;
+
+    switch (event->key.keysym.scancode) {
+        case SDL_SCANCODE_W: 
+        case SDL_SCANCODE_UP:
+            pShip->keyUp = down; break;
+        case SDL_SCANCODE_S: 
+        case SDL_SCANCODE_DOWN:
+            pShip->keyDown = down; break;
+        case SDL_SCANCODE_A: 
+        case SDL_SCANCODE_LEFT:
+            pShip->keyLeft = down; break;
+        case SDL_SCANCODE_D: 
+        case SDL_SCANCODE_RIGHT:
+            pShip->keyRight = down; break;
+        default: break;
+    }
+}*/
