@@ -200,10 +200,10 @@ void handleOngoingState(Game *pGame) {
         }
         while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)==1) {
             // Check if it's a connection request
-            Uint32 ip = SDL_SwapBE32(pGame->pPacket->address.host);
+            /*Uint32 ip = SDL_SwapBE32(pGame->pPacket->address.host);
             Uint16 port = SDL_SwapBE16(pGame->pPacket->address.port);
             printf("Received packet from %d.%d.%d.%d:%d\n", (ip >> 24) & 0xFF,
-                            (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF, port);
+                            (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF, port);*/
 
             if (strncmp((char*)pGame->pPacket->data, "TRYING TO CONNECT", 17) == 0) {
                 printf("Received connection request.\n");

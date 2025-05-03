@@ -63,11 +63,11 @@ void setShipVelocity(Ship* pShip, int vx, int vy) {
 void updateShipVelocity(Ship* pShip) {
     int vx = 0, vy = 0;
 
-    if (pShip->keyLeft && !pShip->keyRight) vx = -3;
-    else if (pShip->keyRight && !pShip->keyLeft) vx = 3;
+    if (pShip->keyLeft && !pShip->keyRight) vx = -1;
+    else if (pShip->keyRight && !pShip->keyLeft) vx = 1;
 
-    if (pShip->keyUp && !pShip->keyDown) vy = -3;
-    else if (pShip->keyDown && !pShip->keyUp) vy = 3;
+    if (pShip->keyUp && !pShip->keyDown) vy = -1;
+    else if (pShip->keyDown && !pShip->keyUp) vy = 1;
 
     pShip->vx = vx;
     pShip->vy = vy;
@@ -76,26 +76,33 @@ void updateShipVelocity(Ship* pShip) {
 // For client-side prediction + interpolation
 void updateShipOnClients(Ship* pShip, int shipId, int myShipId) {
     const float lerpFactor = 0.75f; // 75% Adjust this value to control the interpolation speed, the closer to 1 the faster
-    
-    pShip->xStart += (pShip->targetX - pShip->xStart) * lerpFactor;
-    pShip->yStart += (pShip->targetY - pShip->yStart) * lerpFactor;
-    /*if (shipId == myShipId) {
-        pShip->xStart += pShip->vx; pShip->vx * SPEED
-        pShip->yStart += pShip->vy; pShip->vy * SPEED
-        pShip->vx = 
-        pShip->vy = 
+    const float correctionFactor = 0.1f;
+    float dx, dy;
+
+    if (shipId == myShipId) {
+        pShip->xStart += pShip->vx * SPEED;
+        pShip->yStart += pShip->vy * SPEED;
+
+        dx = pShip->targetX - pShip->xStart;
+        dy = pShip->targetY - pShip->yStart;
+
+        if (dx < -3 || dx > 3 || dy < -3 || dy > 3) {
+            pShip->xStart += (dx) * lerpFactor;
+            pShip->yStart += (dy) * lerpFactor;
+        }
+        
     } else {
         pShip->xStart += (pShip->targetX - pShip->xStart) * lerpFactor;
         pShip->yStart += (pShip->targetY - pShip->yStart) * lerpFactor;
-    }*/
+    }
     stayInWindow(pShip);
 }
 
 // For server (no client prediction, pure physics)
 void updateShipOnServer(Ship* pShip) {
 
-    pShip->xStart += pShip->vx;// * SPEED;
-    pShip->yStart += pShip->vy;// * SPEED;
+    pShip->xStart += pShip->vx * SPEED;
+    pShip->yStart += pShip->vy * SPEED;
 
     stayInWindow(pShip);
 }
