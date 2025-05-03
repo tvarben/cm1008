@@ -55,26 +55,6 @@ Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int wind
     return pShip;
 }
 
-/*void handleShipEvent(Ship* pShip, SDL_Event* event) {
-    bool down = event->type == SDL_KEYDOWN;
-
-    switch (event->key.keysym.scancode) {
-        case SDL_SCANCODE_W: 
-        case SDL_SCANCODE_UP:
-            pShip->keyUp = down; break;
-        case SDL_SCANCODE_S: 
-        case SDL_SCANCODE_DOWN:
-            pShip->keyDown = down; break;
-        case SDL_SCANCODE_A: 
-        case SDL_SCANCODE_LEFT:
-            pShip->keyLeft = down; break;
-        case SDL_SCANCODE_D: 
-        case SDL_SCANCODE_RIGHT:
-            pShip->keyRight = down; break;
-        default: break;
-    }
-}*/
-
 void setShipVelocity(Ship* pShip, int vx, int vy) {
     pShip->vx = vx;
     pShip->vy = vy;
@@ -96,10 +76,21 @@ void updateShipVelocity(Ship* pShip) {
 // For client-side prediction + interpolation
 void updateShipOnClients(Ship* pShip, int shipId, int myShipId) {
     const float lerpFactor = 0.75f; // 75% Adjust this value to control the interpolation speed, the closer to 1 the faster
-    
+    const float correctionFactor = 0.1f;
+    float dx, dy;
+
     if (shipId == myShipId) {
         pShip->xStart += pShip->vx * SPEED;
         pShip->yStart += pShip->vy * SPEED;
+
+        dx = pShip->targetX - pShip->xStart;
+        dy = pShip->targetY - pShip->yStart;
+
+        if (dx < -3 || dx > 3 || dy < -3 || dy > 3) {
+            pShip->xStart += (dx) * lerpFactor;
+            pShip->yStart += (dy) * lerpFactor;
+        }
+        
     } else {
         pShip->xStart += (pShip->targetX - pShip->xStart) * lerpFactor;
         pShip->yStart += (pShip->targetY - pShip->yStart) * lerpFactor;
@@ -187,3 +178,24 @@ void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int
     pShip->vx = pShipData->vx;
     pShip->vy = pShipData->vy;
 }
+
+
+/*void handleShipEvent(Ship* pShip, SDL_Event* event) {
+    bool down = event->type == SDL_KEYDOWN;
+
+    switch (event->key.keysym.scancode) {
+        case SDL_SCANCODE_W: 
+        case SDL_SCANCODE_UP:
+            pShip->keyUp = down; break;
+        case SDL_SCANCODE_S: 
+        case SDL_SCANCODE_DOWN:
+            pShip->keyDown = down; break;
+        case SDL_SCANCODE_A: 
+        case SDL_SCANCODE_LEFT:
+            pShip->keyLeft = down; break;
+        case SDL_SCANCODE_D: 
+        case SDL_SCANCODE_RIGHT:
+            pShip->keyRight = down; break;
+        default: break;
+    }
+}*/

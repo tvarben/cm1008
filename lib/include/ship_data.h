@@ -10,7 +10,7 @@ typedef enum {
     START, 
     ONGOING, 
     GAME_OVER,
-    MULTIPLAYER 
+    LOBBY, 
 }GameState;
 
 typedef enum{
