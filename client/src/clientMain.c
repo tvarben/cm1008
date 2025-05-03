@@ -210,7 +210,7 @@ void handleStartState(Game *pGame) {
             }
         }
         renderStartWindow(pGame);
-        SDL_Delay(8);
+        SDL_Delay(16);
     }
 }
 
@@ -262,7 +262,6 @@ void handleOngoingState(Game *pGame) {
             }
             SDL_RenderPresent(pGame->pRenderer);
         }
-        SDL_Delay(4);
     }
 }
 
