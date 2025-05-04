@@ -234,9 +234,10 @@ void handleLobbyState(Game *pGame) {
     SDL_Event event;
     while (pGame->isRunning && pGame->state == LOBBY) {
         if (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT)
+            if (event.type == SDL_QUIT){
                 pGame->isRunning = false;
                 return;
+            }
         }
         if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket) == 1) {
             addClient(pGame);
@@ -302,7 +303,6 @@ int getClientIndex(Game *pGame, IPaddress *clientAddr) {
     if (pGame->nrOfClients < MAX_PLAYERS) {
         // New client
         pGame->clients[pGame->nrOfClients] = *clientAddr;
-        //pGame->nrOfClients++;
         for (int i = 0; i <= pGame->nrOfClients; i++) {
             Uint32 ip = SDL_SwapBE32(pGame->clients[i].host);
             Uint16 port = SDL_SwapBE16(pGame->clients[i].port);
@@ -316,7 +316,6 @@ int getClientIndex(Game *pGame, IPaddress *clientAddr) {
 
 void closeGame(Game *pGame) {
     for (int i = 0; i < MAX_PLAYERS; i++) if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
-    //if (pGame->pShip) destroyShip(pGame->pShip);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     printf("Renderer destroyed\n");
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
