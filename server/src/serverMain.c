@@ -22,7 +22,7 @@ typedef struct {
     GameState state;
     Mix_Music *pMusic;
 	TTF_Font *pFont;
-	Text *pStartText, *pGameName, *pExitText;
+	Text *pStartText, *pGameName, *pExitText, *pLobbyText;
     ClientCommand command;
     IPaddress clients[MAX_PLAYERS];
     int nrOfClients;
@@ -36,6 +36,8 @@ int initiate(Game *pGame);
 void run(Game *pGame);
 void handleStartState(Game *pGame);
 void handleOngoingState(Game *pGame);
+void handleLobbyState(Game *pGame);
+void addClient(Game *pGame);
 void closeGame(Game *pGame);
 int getClientIndex(Game *pGame, IPaddress *clientAddr);
 void sendServerData(Game* pGame);
@@ -89,12 +91,14 @@ int initiate(Game *pGame) {
         printf("Error: %s\n",TTF_GetError());
         return 0;
     }
-	pGame->pStartText = createText(pGame->pRenderer,238,168,65,pGame->pFont,
-                                "Start [1]",WINDOW_WIDTH/3,WINDOW_HEIGHT/2+100);
-    pGame->pGameName = createText(pGame->pRenderer,238,168,65,pGame->pFont,
-                                "SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/4);
-    pGame->pExitText = createText(pGame->pRenderer,238,168,65,pGame->pFont,
-                                "Exit [2]",WINDOW_WIDTH/1.5,WINDOW_HEIGHT/2+100);
+	pGame->pStartText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
+                                "Start [1]", WINDOW_WIDTH/3, WINDOW_HEIGHT/2+100);
+    pGame->pGameName = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
+                                "SpaceShooter", WINDOW_WIDTH/2, WINDOW_HEIGHT/4);
+    pGame->pExitText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
+                                "Exit [2]", WINDOW_WIDTH/1.5, WINDOW_HEIGHT/2+100);
+    pGame->pLobbyText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
+                                "Waiting on clients...", WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
     if(!pGame->pFont){
         printf("Error: %s\n",TTF_GetError());
         return 0;
@@ -139,7 +143,7 @@ void run(Game *pGame) {
                 handleOngoingState(pGame);
                 break;
             case LOBBY:
-                pGame->state = START;
+                handleLobbyState(pGame);
                 break;
             case GAME_OVER:
                 pGame->state = START;
@@ -167,7 +171,7 @@ void handleStartState(Game *pGame) {
                 return;
             } else if (event.type == SDL_KEYDOWN) {
                 if (event.key.keysym.sym == SDLK_1) {
-                    pGame->state = ONGOING;
+                    pGame->state = LOBBY;
                     return;
                 } else if (event.key.keysym.sym == SDLK_2) {
                     pGame->isRunning = false;
@@ -188,10 +192,7 @@ void handleOngoingState(Game *pGame) {
     while (pGame->isRunning && pGame->state == ONGOING) {
         now = SDL_GetTicks();
         delta = now - lastUpdate;
-        
-        //if (delta >= tickInterval) {
-        //    lastUpdate = now;
-            //sendServerData(pGame);
+        int clientIndex;
         if (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
@@ -204,27 +205,8 @@ void handleOngoingState(Game *pGame) {
             Uint16 port = SDL_SwapBE16(pGame->pPacket->address.port);
             printf("Received packet from %d.%d.%d.%d:%d\n", (ip >> 24) & 0xFF,
                             (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF, port);*/
-
-            if (strncmp((char*)pGame->pPacket->data, "TRYING TO CONNECT", 17) == 0) {
-                printf("Received connection request.\n");
-    
-                int clientIndex = getClientIndex(pGame, &pGame->pPacket->address);
-                if (clientIndex >= 0 && clientIndex < MAX_PLAYERS) {
-                    // Respond with a minimal ServerData packet
-                    pGame->serverData.sDPlayerId = clientIndex;
-                    memcpy(pGame->pPacket->data, &pGame->serverData, sizeof(ServerData));
-                    pGame->pPacket->len = sizeof(ServerData);
-                    pGame->pPacket->address = pGame->clients[clientIndex];
-    
-                    SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
-                    printf("Sent connection confirmation to client %d.\n", clientIndex);
-                }
-                continue; // Skip rest of loop for this packet
-            }
-    
-            // Otherwise, assume it's a ClientData struct
             memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
-            int clientIndex = getClientIndex(pGame, &pGame->pPacket->address); 
+            clientIndex = getClientIndex(pGame, &pGame->pPacket->address); 
             if (clientIndex >= 0 && clientIndex < MAX_PLAYERS)
                 applyShipCommand(pGame->pShips[clientIndex], cData.command);
             }
@@ -247,11 +229,51 @@ void handleOngoingState(Game *pGame) {
         }
     }
 }
-/*
-void handleMultiplayerState(Game *pGame) {
 
+void handleLobbyState(Game *pGame) {
+    SDL_Event event;
+    while (pGame->isRunning && pGame->state == LOBBY) {
+        if (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT)
+                pGame->isRunning = false;
+                return;
+        }
+        if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket) == 1) {
+            addClient(pGame);
+            printf("After addClient()");
+            if (pGame->nrOfClients == MAX_PLAYERS) pGame->state = ONGOING;
+        }
+        SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
+        SDL_RenderClear(pGame->pRenderer);
+        drawText(pGame->pLobbyText);
+        SDL_RenderPresent(pGame->pRenderer);
+        SDL_Delay(32);
+    }
 }
 
+void addClient(Game *pGame) {
+    printf("Trying to add client to server.\n");
+    // Check if it's a connection request
+    /*Uint32 ip = SDL_SwapBE32(pGame->pPacket->address.host);
+    Uint16 port = SDL_SwapBE16(pGame->pPacket->address.port);
+    printf("Received packet from %d.%d.%d.%d:%d\n", (ip >> 24) & 0xFF,
+                        (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF, port);*/
+    if (strncmp((char*)pGame->pPacket->data, "TRYING TO CONNECT", 17) == 0) {
+        printf("Received connection request.\n");
+        int clientIndex = getClientIndex(pGame, &pGame->pPacket->address);
+        if (clientIndex >= 0 && clientIndex < MAX_PLAYERS) {
+            // Respond with a client number
+            pGame->serverData.sDPlayerId = clientIndex;
+            memcpy(pGame->pPacket->data, &pGame->serverData, sizeof(ServerData));
+            pGame->pPacket->len = sizeof(ServerData);
+            pGame->pPacket->address = pGame->clients[clientIndex];
+            SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+            printf("Sent connection confirmation to client %d.\n", clientIndex);
+        }
+    }
+}
+
+/*
 void handleGameOverState(Game *pGame) {
 
 }*/
@@ -259,14 +281,11 @@ void handleGameOverState(Game *pGame) {
 void sendServerData(Game* pGame) {
     if (pGame->nrOfClients == 0) return; // No clients connected
     pGame->serverData.gState = pGame->state;
-
-    for(int i=0 ; i<MAX_PLAYERS ; i++){
+    for(int i=0 ; i<MAX_PLAYERS ; i++)
         getShipDataPackage(pGame->pShips[i], &pGame->serverData.ships[i]);
-    }
     for(int i=0 ; i< MAX_PLAYERS ; i++){
         pGame->serverData.sDPlayerId =i;
         memcpy(pGame->pPacket->data, &(pGame->serverData), sizeof(ServerData));
-
         pGame->pPacket->len = sizeof(ServerData);
         pGame->pPacket->address = pGame->clients[i];
         SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
@@ -283,16 +302,14 @@ int getClientIndex(Game *pGame, IPaddress *clientAddr) {
     if (pGame->nrOfClients < MAX_PLAYERS) {
         // New client
         pGame->clients[pGame->nrOfClients] = *clientAddr;
-        pGame->nrOfClients++;
-        
-        for (int i = 0; i < pGame->nrOfClients; i++) {
+        //pGame->nrOfClients++;
+        for (int i = 0; i <= pGame->nrOfClients; i++) {
             Uint32 ip = SDL_SwapBE32(pGame->clients[i].host);
             Uint16 port = SDL_SwapBE16(pGame->clients[i].port);
-
             printf("Client %d: %d.%d.%d.%d:%d\n", i, (ip >> 24) & 0xFF, (ip >> 16) & 0xFF,
                                         (ip >> 8) & 0xFF, ip & 0xFF, port);
         }
-        return pGame->nrOfClients;
+        return pGame->nrOfClients++;
     }
     return -1; // Too many clients
 }
@@ -309,6 +326,7 @@ void closeGame(Game *pGame) {
     printf("starttext\n");
     if (pGame->pGameName) destroyText(pGame->pGameName);
     if (pGame->pExitText) destroyText(pGame->pExitText);
+    if (pGame->pLobbyText) destroyText(pGame->pLobbyText);
     if (pGame->pFont) TTF_CloseFont(pGame->pFont); 
 
     if (pGame->pMusic) closeMusic(pGame->pMusic);
