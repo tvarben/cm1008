@@ -11,9 +11,12 @@
 #include "sound.h"
 #include "text.h"
 #include "menu.h"
+#include "stars.h"
 #include "ship_data.h"
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
+#define ASTEROIDPATH "../lib/resources/Asteroid.png"
+#define EARTHPATH "../lib/resources/Earth.png"
 
 typedef struct {
     SDL_Window *pWindow;
@@ -23,13 +26,15 @@ typedef struct {
     GameState state;
     Mix_Music *pMusic;
 	TTF_Font *pFont, *pSmallFont;
-	Text *pStartText;
+	//Text *pStartText; ??
     Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pScoreText, *pMultiPlayerText, *pMenuText, *pGameOverText;
     ClientCommand command;
     UDPsocket pSocket;
     IPaddress serverAddress;
     UDPpacket *pPacket;
     bool isRunning;
+    Stars *pStars;
+    SDL_Texture *pStartImage_1, *pStartImage_2;
 } Game;
 
 int initiate(Game *pGame);
@@ -45,6 +50,7 @@ void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame);
 bool connectToServer(Game *pGame);
 void receiveDataFromServer();
 void updateWithServerData(Game *pGame);
+MainMenuChoice handleMainMenuOptions(Game *pGame);
 
 int main(int argc, char** argv) {
     Game game = {0};
@@ -93,7 +99,7 @@ int initiate(Game *pGame) {
 
 	pGame->pFont = TTF_OpenFont("../lib/resources/arial.ttf", 100);
     pGame->pSmallFont = TTF_OpenFont("../lib/resources/arial.ttf", 50);
-    if(!pGame->pFont && !pGame->pSmallFont) {
+    if(!pGame->pFont || !pGame->pSmallFont) {
         printf("Error: %s\n",TTF_GetError());
         return 0;
     }
@@ -103,10 +109,10 @@ int initiate(Game *pGame) {
     pGame->pGameName = createText(pGame->pRenderer,255,0,0,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/8);
     pGame->pExitText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,"Exit",WINDOW_WIDTH/2, 570);
 
-    if(!pGame->pFont){
+    /*if(!pGame->pFont){
         printf("Error: %s\n",TTF_GetError());
         return 0;
-    } 
+    }*/ 
     /*if (!(pGame->pSocket = SDLNet_UDP_Open(0))) {
         printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
         return 0;
@@ -134,6 +140,31 @@ int initiate(Game *pGame) {
 
     if (!initMusic(&pGame->pMusic, MUSIC_FILEPATH)) {
         printf("Error: %s\n",Mix_GetError());
+        return 0;
+    }
+
+    pGame->pStars = createStars(WINDOW_WIDTH*WINDOW_HEIGHT/10000,WINDOW_WIDTH,WINDOW_HEIGHT);
+    SDL_Surface *tempSurface_1 = IMG_Load(EARTHPATH);
+    if (!tempSurface_1) {
+        printf("Image Load Error: %s\n", IMG_GetError());
+        return 0;
+    }
+    pGame->pStartImage_1 = SDL_CreateTextureFromSurface(pGame->pRenderer, tempSurface_1);
+    SDL_FreeSurface(tempSurface_1);
+    if (!pGame->pStartImage_1) {
+        printf("Texture Creation Error: %s\n", SDL_GetError());
+        return 0;
+    }
+
+    SDL_Surface *tempSurface_2 = IMG_Load(ASTEROIDPATH);
+    if (!tempSurface_2) {
+        printf("Image Load Error: %s\n", IMG_GetError());
+        return 0;
+    }
+    pGame->pStartImage_2 = SDL_CreateTextureFromSurface(pGame->pRenderer, tempSurface_2);
+    SDL_FreeSurface(tempSurface_2);
+    if (!pGame->pStartImage_2) {
+        printf("Texture Creation Error: %s\n", SDL_GetError());
         return 0;
     }
 
@@ -167,62 +198,41 @@ void run(Game *pGame) {
 void handleStartState(Game *pGame) {
     SDL_Event event;
     while (pGame->isRunning && pGame->state == START) {
-        int x, y;
-        SDL_GetMouseState(&x,&y);
-        SDL_Point mousePoint = {x,y};
-        const SDL_Rect *singleRect = getTextRect(pGame->pSinglePlayerText);
-        const SDL_Rect *exitRect = getTextRect(pGame->pExitText);       //Hämta position för rect för Exit-texten
-        const SDL_Rect *multiRect = getTextRect(pGame->pMultiPlayerText);
-        //const SDL_Rect *gameRect = getTextRect(pGame->pGameName);  
-        
-        if (SDL_PointInRect(&mousePoint, singleRect)) {
-            setTextColor(pGame->pSinglePlayerText, 255, 255, 255, pGame->pSmallFont, "Singleplayer");
-        } else {
-            setTextColor(pGame->pSinglePlayerText, 255, 0, 0, pGame->pSmallFont, "Singleplayer");
-        }
-        if (SDL_PointInRect(&mousePoint, multiRect)) {
-            setTextColor(pGame->pMultiPlayerText, 255, 255, 255, pGame->pSmallFont, "Multiplayer");
-        } else {
-            setTextColor(pGame->pMultiPlayerText, 255, 0, 0, pGame->pSmallFont, "Multiplayer");
-        }
-        if (SDL_PointInRect(&mousePoint, exitRect)) {
-            setTextColor(pGame->pExitText, 255, 255, 255, pGame->pSmallFont, "Exit");
-        } else {
-            setTextColor(pGame->pExitText, 255, 0, 0, pGame->pSmallFont, "Exit");
-        }
+       MainMenuChoice userChoice = handleMainMenuOptions(pGame);
+
         
         if (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT || (event.type == SDL_MOUSEBUTTONDOWN && SDL_PointInRect(&mousePoint, exitRect))) {
+            if (event.type == SDL_QUIT || userChoice == MAINMENU_EXIT){
                 pGame->isRunning = false;
                 return;
-            }else if (event.type == SDL_MOUSEBUTTONDOWN) {
-                if(SDL_PointInRect(&mousePoint, singleRect)) {
-                    printf("Singleplayer chosen.\n");
-                }else if(SDL_PointInRect(&mousePoint, multiRect)) {
-                    printf("Multiplayer chosen.\n");
-                        /*if(connectToServer(pGame)) {
-                            //printf("Connected to server");
-                            pGame->state = ONGOING;
-                        }*/
-                    pGame->state = LOBBY;
-                    return;
-                }
+            }else if (userChoice == MAINMENU_SINGLEPLAYER){ 
+                printf("Singleplayer chosen.\n");
+            }else if(userChoice == MAINMENU_MULTIPLAYER){
+                printf("Multiplayer chosen.\n");
+                pGame->state = LOBBY;
+                return;
             }
         }
         renderStartWindow(pGame);
-        SDL_Delay(16);
+        SDL_Delay(32);
     }
 }
 
 void renderStartWindow(Game *pGame) {
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
     SDL_RenderClear(pGame->pRenderer);
+    drawStars(pGame->pStars,pGame->pRenderer);
     drawText(pGame->pSinglePlayerText);
     drawText(pGame->pMultiPlayerText);
     drawText(pGame->pExitText);
-    //drawStars(pGame->pStars,pGame->pRenderer);
     drawText(pGame->pGameName);
+    
+    SDL_Rect dstRect_1 = { 125, 500, 100, 100 };  // adjust position and size, placering av planet/måne
+    SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage_1, NULL, &dstRect_1);
+    SDL_Rect dstRect_2 = { 1000, 125, 50, 50 };  // adjust position and size, placering av planet/måne
+    SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage_2, NULL, &dstRect_2);
     SDL_RenderPresent(pGame->pRenderer);
+    
 }
 
 void handleOngoingState(Game *pGame) {
@@ -331,7 +341,7 @@ void handleLobbyState(Game *pGame) {
                 }
             }
             printMultiplayerMenu(pGame, enteredIPAddress, textFieldFocused);
-            SDL_Delay(100);
+            SDL_Delay(32);
         }
         SDL_StopTextInput();
     }
@@ -493,6 +503,42 @@ void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame) {
     SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
 }
 
+MainMenuChoice handleMainMenuOptions(Game *pGame) {
+    int x, y;
+    SDL_GetMouseState(&x, &y);
+    SDL_Point mousePoint = {x, y};
+
+    const SDL_Rect *singleRect = getTextRect(pGame->pSinglePlayerText);
+    const SDL_Rect *multiRect  = getTextRect(pGame->pMultiPlayerText);
+    const SDL_Rect *exitRect   = getTextRect(pGame->pExitText);
+
+    if (SDL_PointInRect(&mousePoint, singleRect))
+        setTextColor(pGame->pSinglePlayerText, 255, 255, 255, pGame->pSmallFont, "Singleplayer");
+    else
+        setTextColor(pGame->pSinglePlayerText, 255, 0, 0, pGame->pSmallFont, "Singleplayer");
+
+    if (SDL_PointInRect(&mousePoint, multiRect))
+        setTextColor(pGame->pMultiPlayerText, 255, 255, 255, pGame->pSmallFont, "Multiplayer");
+    else
+        setTextColor(pGame->pMultiPlayerText, 255, 0, 0, pGame->pSmallFont, "Multiplayer");
+
+    if (SDL_PointInRect(&mousePoint, exitRect))
+        setTextColor(pGame->pExitText, 255, 255, 255, pGame->pSmallFont, "Exit");
+    else
+        setTextColor(pGame->pExitText, 255, 0, 0, pGame->pSmallFont, "Exit");
+
+    Uint32 mouseState = SDL_GetMouseState(NULL, NULL);
+    if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+        if (SDL_PointInRect(&mousePoint, singleRect)) return MAINMENU_SINGLEPLAYER;
+        if (SDL_PointInRect(&mousePoint, multiRect))  return MAINMENU_MULTIPLAYER;
+        if (SDL_PointInRect(&mousePoint, exitRect))   return MAINMENU_EXIT;
+    }
+
+    return MAINMENU_NONE;
+}
+
+
+
 void closeGame(Game *pGame) {
     for (int i = 0; i < MAX_PLAYERS;i++) if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
@@ -502,11 +548,15 @@ void closeGame(Game *pGame) {
     if (pGame->pSinglePlayerText) destroyText(pGame->pSinglePlayerText);
     if (pGame->pMultiPlayerText) destroyText(pGame->pMultiPlayerText);
     if (pGame->pExitText) destroyText(pGame->pExitText);
+    if (pGame->pStars) destroyStars(pGame->pStars);
+    if (pGame->pStartImage_1) SDL_DestroyTexture(pGame->pStartImage_1);
+    if (pGame->pStartImage_2) SDL_DestroyTexture(pGame->pStartImage_2);
     
     if (pGame->pFont) TTF_CloseFont(pGame->pFont); 
     if (pGame->pSmallFont) TTF_CloseFont(pGame->pSmallFont);
 
     if (pGame->pMusic) closeMusic(pGame->pMusic);
+    
     if (pGame->pSocket) SDLNet_UDP_Close(pGame->pSocket);
     if (pGame->pPacket) SDLNet_FreePacket(pGame->pPacket);
 

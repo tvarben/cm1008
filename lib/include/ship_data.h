@@ -23,6 +23,13 @@ typedef enum{
     QUIT
 }ClientCommand;
 
+typedef enum {
+    MAINMENU_NONE,
+    MAINMENU_SINGLEPLAYER,
+    MAINMENU_MULTIPLAYER,
+    MAINMENU_EXIT
+} MainMenuChoice;
+
 typedef struct{
     int cDPlayerId;
     ClientCommand command;
