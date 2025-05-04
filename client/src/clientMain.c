@@ -58,7 +58,9 @@ int main(int argc, char** argv) {
         closeGame(&game);
         return 1;
     }
+    printf("Entering run()\n");
     run(&game);
+    printf("Left run()\n");
     closeGame(&game);
     return 0;
 }
@@ -439,21 +441,18 @@ bool connectToServer(Game *pGame) {
     memcpy(pGame->pPacket->data, msg, strlen(msg) + 1);
     pGame->pPacket->len = strlen(msg) + 1;
     pGame->pPacket->address = pGame->serverAddress;
-    SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
-
+    //SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket); //Behöver inte skicka två paket?
     if (SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket) == 0) {
-        printf("Failed to send response: %s\n", SDLNet_GetError());
+        printf("Failed to send packet: %s\n", SDLNet_GetError());
     } else {
-        printf("Sent response to client.\n");
+        printf("Packet sent to client.\n");
     }
-
     bool connected = false;
     Uint32 startTime = SDL_GetTicks(); // Get the current time in milliseconds
     const Uint32 timeout = 5000;       // Set a timeout of 5000ms (5 seconds)
     while (!connected) {
         if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
             printf("*Received from server: %s\n", (char*)pGame->pPacket->data);
-                
             ServerData serverData;/////// test
             memcpy(&serverData, pGame->pPacket->data, sizeof(ServerData));
             pGame->shipId= serverData.sDPlayerId;////// test
@@ -533,13 +532,13 @@ MainMenuChoice handleMainMenuOptions(Game *pGame) {
         if (SDL_PointInRect(&mousePoint, multiRect))  return MAINMENU_MULTIPLAYER;
         if (SDL_PointInRect(&mousePoint, exitRect))   return MAINMENU_EXIT;
     }
-
     return MAINMENU_NONE;
 }
 
 
 
 void closeGame(Game *pGame) {
+    printf("Entering closeGame()\n");
     for (int i = 0; i < MAX_PLAYERS;i++) if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
