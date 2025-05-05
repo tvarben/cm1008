@@ -242,7 +242,9 @@ void handleLobbyState(Game *pGame) {
         if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket) == 1) {
             addClient(pGame);
             printf("After addClient()");
-            if (pGame->nrOfClients == MAX_PLAYERS) pGame->state = ONGOING;
+            if (pGame->nrOfClients == MAX_PLAYERS) {
+                pGame->state = ONGOING;
+            }
         }
         SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
         SDL_RenderClear(pGame->pRenderer);

@@ -247,7 +247,7 @@ void handleOngoingState(Game *pGame) {
     SDL_Event event;
     ClientData cData;
     Uint32 now=0, delta=0, lastUpdate=SDL_GetTicks();
-    const Uint32 tickInterval=16;
+    const Uint32 tickInterval=8;
     while (pGame->isRunning && pGame->state == ONGOING) {
         now = SDL_GetTicks();
         delta = now - lastUpdate;
@@ -440,7 +440,7 @@ void handleGameOverState(Game *pGame) {
 void updateWithServerData(Game *pGame) {
     ServerData serverData;/////// test
     memcpy(&serverData, pGame->pPacket->data, sizeof(ServerData));
-    pGame->shipId= serverData.sDPlayerId;////// test
+    pGame->shipId= serverData.sDPlayerId;////// test  Kontrollera varför vi gör detta
     for(int i = 0; i < MAX_PLAYERS; i++) {
         if (pGame->pShips[i])
             updateShipsWithServerData(pGame->pShips[i], &serverData.ships[i], i, pGame->shipId);
