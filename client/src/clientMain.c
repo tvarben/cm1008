@@ -323,6 +323,7 @@ void handleLobbyState(Game *pGame) {
                             while (pGame->state != ONGOING) {
                                 if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket) == 1) {
                                     if (strncmp((char*)pGame->pPacket->data, "ONGOING", 7) == 0) {
+                                        //set a countdown
                                         pGame->state = ONGOING;
                                         return;
                                     }
