@@ -27,7 +27,7 @@ typedef struct {
     Mix_Music *pMusic;
 	TTF_Font *pFont, *pSmallFont;
 	//Text *pStartText; ??
-    Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pScoreText, *pMultiPlayerText, *pMenuText, *pGameOverText;
+    Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pScoreText, *pMultiPlayerText, *pMenuText, *pGameOverText, *pWaitingText;
     ClientCommand command;
     UDPsocket pSocket;
     IPaddress serverAddress;
@@ -106,10 +106,16 @@ int initiate(Game *pGame) {
         return 0;
     }
 
-    pGame->pSinglePlayerText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,"Singleplayer",WINDOW_WIDTH/2, 330);
-    pGame->pMultiPlayerText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,"Multiplayer",WINDOW_WIDTH/2, 450);
-    pGame->pGameName = createText(pGame->pRenderer,255,0,0,pGame->pFont,"SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/8);
-    pGame->pExitText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,"Exit",WINDOW_WIDTH/2, 570);
+    pGame->pSinglePlayerText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,
+                                        "Singleplayer",WINDOW_WIDTH/2, 330);
+    pGame->pMultiPlayerText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,
+                                        "Multiplayer",WINDOW_WIDTH/2, 450);
+    pGame->pGameName = createText(pGame->pRenderer,255,0,0,pGame->pFont,
+                                        "SpaceShooter",WINDOW_WIDTH/2,WINDOW_HEIGHT/8);
+    pGame->pExitText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,
+                                        "Exit",WINDOW_WIDTH/2, 570);
+    pGame->pWaitingText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,
+                                        "Waiting on server...",WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
 
     /*if(!pGame->pFont){
         printf("Error: %s\n",TTF_GetError());
@@ -242,13 +248,11 @@ void handleOngoingState(Game *pGame) {
     ClientData cData;
     Uint32 now=0, delta=0, lastUpdate=SDL_GetTicks();
     const Uint32 tickInterval=16;
-
     while (pGame->isRunning && pGame->state == ONGOING) {
         now = SDL_GetTicks();
         delta = now - lastUpdate;
         while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
             updateWithServerData(pGame);
-            //printf("Update with server data.\n");
         }
         if (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -266,7 +270,6 @@ void handleOngoingState(Game *pGame) {
                     updateShipOnClients(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
                 }
             }
-        
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
             SDL_RenderClear(pGame->pRenderer);
             for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -317,8 +320,21 @@ void handleLobbyState(Game *pGame) {
                         // Attempt to connect to the server
                         if (connectToServer(pGame)) {
                             printf("Connected to server.\n");
-                            pGame->state = ONGOING;
-                            return;
+                            while (pGame->state != ONGOING) {
+                                SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
+                                SDL_RenderClear(pGame->pRenderer);
+                                drawText(pGame->pWaitingText);
+                                SDL_RenderPresent(pGame->pRenderer);
+                                if (SDL_PollEvent(&event)) {
+                                    if (event.type == SDL_QUIT) {
+                                        pGame->isRunning = false;
+                                        return;
+                                    } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+                                        pGame->state = ONGOING;
+                                        return;
+                                    }
+                                }
+                            }
                         } else {
                             printf("Failed to connect to server.\n");
                             pGame->state = START;
@@ -544,10 +560,11 @@ void closeGame(Game *pGame) {
     if (pGame->pSinglePlayerText) destroyText(pGame->pSinglePlayerText);
     if (pGame->pMultiPlayerText) destroyText(pGame->pMultiPlayerText);
     if (pGame->pExitText) destroyText(pGame->pExitText);
+    if (pGame->pWaitingText) destroyText(pGame->pWaitingText);
     if (pGame->pStars) destroyStars(pGame->pStars);
     if (pGame->pStartImage_1) SDL_DestroyTexture(pGame->pStartImage_1);
     if (pGame->pStartImage_2) SDL_DestroyTexture(pGame->pStartImage_2);
-    
+
     if (pGame->pFont) TTF_CloseFont(pGame->pFont); 
     if (pGame->pSmallFont) TTF_CloseFont(pGame->pSmallFont);
 
