@@ -17,7 +17,7 @@ SDL_Rect getRectEnemy3(Enemy3 *pEnemy);
 void destroyEnemyImage3(EnemyImage3 *pEnemyImage);
 void disableEnemy3(Enemy3 *pEnemy);
 void damageEnemy3(Enemy3 *pEnemy, int damage, int i);
-bool isInWindow3(Enemy3 *pEnemy);
+//bool isInWindow3(Enemy3 *pEnemy);
 bool isEnemy3Active(Enemy3 *pEnemy);
 void printEnemy3Health(Enemy3 *pEnemy);
 

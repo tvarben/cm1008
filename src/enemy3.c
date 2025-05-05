@@ -66,31 +66,16 @@ static void getStartValues3(Enemy3 *pEnemy3) {
   pEnemy3->rectHitbox.w = pEnemy3->rect.w - 50;
   pEnemy3->rectHitbox.h = pEnemy3->rect.h - 50;
   pEnemy3->damage = 2;
-  pEnemy3->health = 100;                  // changed health
-  float speed = 50;
+  pEnemy3->health = 100;   // changed health
+  float speed = 10;
   if (startSpawnOnTheLeft == 1) {
-    pEnemy3->x = pEnemy3->window_width;
-    if(rand() % 2 == 0) // randomize y position
-      {
-          pEnemy3->y = 0; // spawn at top
-      }
-      else
-      {
-          pEnemy3->y = pEnemy3->window_height - pEnemy3->rect.h; // spawn at bottom
-      }
+    pEnemy3->x = pEnemy3->window_width - pEnemy3->rect.w; // spawn at right
+    pEnemy3->y = pEnemy3->window_height / 2; //spawn at middle
     pEnemy3->vx = -speed; // rakt åt vänster
-    pEnemy3->vy = speed;      // ingen rörelse i y-led
+    pEnemy3->vy = -speed; // move up
   } else {
       pEnemy3->x = 0; // also spawn at left
-      if(rand() % 2 == 0) // randomize y position
-      {
-          pEnemy3->y = 0; // spawn at top
-      }
-      else
-      {
-          pEnemy3->y = pEnemy3->window_height - pEnemy3->rect.h; // spawn at bottom
-      }
-      pEnemy3->y = (pEnemy3->window_height - pEnemy3->rect.h);
+      pEnemy3->y = pEnemy3->window_height / 2; //spawn at middle
       pEnemy3->vx = speed; // move right
       pEnemy3->vy = speed; // move down
   }
@@ -108,15 +93,13 @@ void updateEnemy3(Enemy3 *pEnemy3) {
   {
     pEnemy3->x+=pEnemy3->vx*0.1;
     pEnemy3->y+=pEnemy3->vy*0.1;
-    if (pEnemy3->x > pEnemy3->window_width || pEnemy3->x + pEnemy3->rect.w < 0)
+    if ((pEnemy3->x + pEnemy3->rect.w -10) > pEnemy3->window_width || pEnemy3->x + 10 < 0)
     {
         pEnemy3->vx = pEnemy3->vx * -1; // reverse direction
-        //pEnemy3->vy = pEnemy3->vy * -1; // reverse direction
         return;
     }
-    if (pEnemy3->y > pEnemy3->window_height || pEnemy3->y + pEnemy3->rect.h < 0)
+    if ((pEnemy3->y + pEnemy3->rect.h -10) > pEnemy3->window_height || pEnemy3->y + 10 < 0)
     {
-        //pEnemy3->vx = pEnemy3->vx * -1; // reverse direction
         pEnemy3->vy = pEnemy3->vy * -1; // reverse direction
         return;
     }
@@ -154,17 +137,17 @@ void damageEnemy3(Enemy3 *pEnemy3, int damage, int i) {
   if (pEnemy3->health < 0) pEnemy3->health = 0;
 }
 
-bool isInWindow3(Enemy3 *pEnemy3) {
-  if (pEnemy3->x > pEnemy3->window_width || pEnemy3->x + pEnemy3->rect.w < 0 || pEnemy3->y > pEnemy3->window_height || pEnemy3->y + pEnemy3->rect.h < 0) 
-  {
-    pEnemy3->vx = pEnemy3->vx * -1; // reverse direction
-    pEnemy3->vy = pEnemy3->vy * -1; // reverse direction
-    return false;
-  } 
-  else {
-    return true;
-  }
-}
+// bool isInWindow3(Enemy3 *pEnemy3) {
+//   if (pEnemy3->x > pEnemy3->window_width || pEnemy3->x + pEnemy3->rect.w < 0 || pEnemy3->y > pEnemy3->window_height || pEnemy3->y + pEnemy3->rect.h < 0) 
+//   {
+//     pEnemy3->vx = pEnemy3->vx * -1; // reverse direction
+//     pEnemy3->vy = pEnemy3->vy * -1; // reverse direction
+//     return false;
+//   } 
+//   else {
+//     return true;
+//   }
+// }
 
 bool isEnemy3Active(Enemy3 *pEnemy3) {
   if (pEnemy3->active == false) {

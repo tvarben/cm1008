@@ -66,6 +66,7 @@ typedef struct
 int getTime(Game *pGame);
 void updateGameTime(Game *pGame);
 void resetEnemy(Game *pGame);
+void resetBoss(Game *pGame);
 void spawnEnemies(Game *pGame, int ammount);
 void spawnBoss(Game *pGame);
 void updateEnemies(Game *pGame, int *ammount);
@@ -452,6 +453,7 @@ void run(Game *pGame)
                 {
                     resetShip(pGame->pShip);
                     resetEnemy(pGame);
+                    resetBoss(pGame);
                     resetAllBullets();
                     resetHealth(pGame->pShip);
                     nrOfEnemiesToSpawn = 4;
@@ -528,20 +530,26 @@ void run(Game *pGame)
                 if(shipCollision(pGame->pShip, getRectEnemy(pGame->pEnemies[i]))){
                     damageEnemy(pGame->pEnemies[i], 2 , i);
                     killedEnemies++;
-                    damageShip(pGame->pShip);
+                    damageShip(pGame->pShip, 1);
                 }
             }
             for (int j = 0; j < pGame->nrOfEnemies2; j++) {
                 if (shipCollision(pGame->pShip, getRectEnemy2(pGame->pEnemies2[j]))) {
-                  damageEnemy2(pGame->pEnemies2[j], 2, j);
-                  killedEnemies++;
-                  damageShip(pGame->pShip);
+                  damageEnemy2(pGame->pEnemies2[j], 1, j);
+                  damageShip(pGame->pShip, 2);
+                  if(isEnemy2Active(pGame->pEnemies2[j]) == false)
+                  {
+                    killedEnemies++;
+                  }
                 }
             }
             if (shipCollision(pGame->pShip, getRectEnemy3(pGame->pEnemies3[0]))) {
-                damageEnemy3(pGame->pEnemies3[0], 2, 0);
-                killedEnemies++;
-                damageShip(pGame->pShip);
+                damageEnemy3(pGame->pEnemies3[0], 1, 0);
+                damageShip(pGame->pShip, 2);
+                if(isEnemy3Active(pGame->pEnemies3[0]) == false)
+                {
+                    killedEnemies++;
+                }
             }
             if (pGame->gameTime >= 300)
             {
@@ -733,6 +741,11 @@ void resetEnemy(Game *pGame) {
     pGame->nrOfEnemies2 = 0;
     // add for new enemy here
   }
+void resetBoss(Game *pGame)
+{
+    destroyEnemy3(pGame->pEnemies3[0]);
+    pGame->nrOfEnemies3 = 0;
+}
 
 bool areTheyAllDead(Game *pGame) {
     for (int i = 0; i < pGame->nrOfEnemies; i++) {
