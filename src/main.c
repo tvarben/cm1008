@@ -517,11 +517,13 @@ void run(Game *pGame) {
           damageEnemy(pGame->pEnemies[i], 2, i);
           killedEnemies++;
           damageShip(pGame->pShip, 1);
+          playSound(&pGame->pSFX,"resources/Hurt.wav",-1);
         }
       }
       for (int j = 0; j < pGame->nrOfEnemies2; j++) {
         if (shipCollision(pGame->pShip, getRectEnemy2(pGame->pEnemies2[j]))) {
           damageEnemy2(pGame->pEnemies2[j], 4, j);
+          playSound(&pGame->pSFX,"resources/Hurt.wav",-1);
           damageShip(pGame->pShip, 2);
           if (isEnemy2Active(pGame->pEnemies2[j]) == false) {
             killedEnemies++;
@@ -559,6 +561,7 @@ void run(Game *pGame) {
             }
             removeProjectile(i);
             rectArray[i] = emptyRect;
+            playSound(&pGame->pSFX,"resources/Explosion.wav",1);
           }
         }
         for (int j = 0; j < pGame->nrOfEnemies2; j++) {
@@ -572,6 +575,7 @@ void run(Game *pGame) {
             }
             removeProjectile(i);
             rectArray[j] = emptyRect;
+            playSound(&pGame->pSFX,"resources/Explosion.wav",2);
           }
         }
       }

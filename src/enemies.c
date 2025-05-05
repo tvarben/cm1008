@@ -94,31 +94,7 @@ SDL_Rect getRectEnemy(Enemy *pEnemy) {
   SDL_Rect empty = {0, 0, 0, 0};
   return empty;
 }
-void updateEnemy(Enemy *pEnemy) {
-  if (pEnemy->active == true) {
-    pEnemy->x += pEnemy->vx * 0.1;
-    pEnemy->y += pEnemy->vy * 0.1;
-    if (pEnemy->x > pEnemy->window_width || pEnemy->x + pEnemy->rect.w < 0 ||
-        pEnemy->y > pEnemy->window_height || pEnemy->y + pEnemy->rect.h < 0) {
-      getStartValues(pEnemy); // immediatly respawns enemy once it leaves
-      // windows
-      pEnemy->active = false;
-      return;
-    }
-    pEnemy->rect.x = pEnemy->x;
-    pEnemy->rect.y = pEnemy->y;
-    pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
-    pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
-  }
-}
 
-SDL_Rect getRectEnemy(Enemy *pEnemy) {
-  if (pEnemy->active == true) {
-    return pEnemy->rectHitbox;
-  }
-  SDL_Rect empty = {0, 0, 0, 0};
-  return empty;
-}
 void updateEnemy(Enemy *pEnemy, float delta_time){
     if(pEnemy->active == true)
     {
