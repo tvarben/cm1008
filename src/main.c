@@ -522,10 +522,22 @@ void run(Game *pGame) {
       }
       for (int j = 0; j < pGame->nrOfEnemies2; j++) {
         if (shipCollision(pGame->pShip, getRectEnemy2(pGame->pEnemies2[j]))) {
-          damageEnemy2(pGame->pEnemies2[j], 1, j);
+          damageEnemy2(pGame->pEnemies2[j], 4, j);
           damageShip(pGame->pShip, 2);
-          if (!isEnemy2Active(pGame->pEnemies2[j])) {
+          if (isEnemy2Active(pGame->pEnemies2[j]) == false) {
             killedEnemies++;
+            continue;
+          }
+        }
+      }
+      for (int j = 0; j < pGame->nrOfEnemies2; j++) {
+        if (isEnemy2Active(pGame->pEnemies2[j])) { // Check if enemy2 is active
+          if (shipCollision(pGame->pShip, getRectEnemy2(pGame->pEnemies2[j]))) {
+            damageEnemy2(pGame->pEnemies2[j], 1, j);
+            damageShip(pGame->pShip, 2);
+            if (isEnemy2Active(pGame->pEnemies2[j]) == false) {
+              killedEnemies++;
+            }
           }
         }
       }
@@ -616,7 +628,7 @@ void run(Game *pGame) {
       destroyText(pKillCountText);
       drawText(pGame->pGameOverText);
       drawText(pGame->pMenuText);
-      printf("YOU KILLED %d ALIENS! \n", killedEnemies);
+      /*printf("YOU KILLED %d ALIENS! \n", killedEnemies);*/
       SDL_RenderPresent(pGame->pRenderer);
       if (SDL_PointInRect(&mousePoint, MenuRect)) {
         setTextColor(pGame->pMenuText, 255, 255, 100, pGame->pFont, "MENU");
