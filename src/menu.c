@@ -42,9 +42,15 @@ void showNetworkMenu(SDL_Renderer *renderer, TTF_Font *font, const char *ipAdres
 
     // Draw title text
     SDL_Color textColor = {238,168,65};
-    SDL_Surface *surface = TTF_RenderText_Solid(font, "             Enter IP Adress: ", textColor);
+    SDL_Surface *surface = TTF_RenderText_Solid(font, "Enter IP Adress: ", textColor);
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_Rect textRect = {x + 25, y + 10, surface->w, surface->h};
+    SDL_Rect textRect = {
+        x + (menuWidth - surface->w) / 2,
+        y + 30,
+        surface->w,
+        surface->h
+    };
+    
     SDL_FreeSurface(surface);
     SDL_RenderCopy(renderer, texture, NULL, &textRect);
     SDL_DestroyTexture(texture);
@@ -64,4 +70,66 @@ void showNetworkMenu(SDL_Renderer *renderer, TTF_Font *font, const char *ipAdres
             }
         }
     }
+}
+
+void showMapMenu(SDL_Renderer *renderer, TTF_Font *font)
+{
+    int menuWidth = 900;
+    int menuHeight = 475;
+    int x = (WINDOW_WIDTH - menuWidth) / 2;
+    int y = (WINDOW_HEIGHT - menuHeight) / 2 + 50;
+    TTF_Font *evenSmaller = TTF_OpenFont("arial.ttf", 25);
+
+    SDL_Rect box = {x, y, menuWidth, menuHeight};
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderFillRect(renderer, &box);
+
+    SDL_SetRenderDrawColor(renderer, 238, 168, 65, 255);
+    for (int i = 0; i < 8; i++) {
+        SDL_Rect border = {x - i, y - i, menuWidth + 2 * i, menuHeight + 2 * i};
+        SDL_RenderDrawRect(renderer, &border);
+    }
+    SDL_Color textColor = {238, 168, 65};
+    SDL_Color RED = {255,0,0};
+    SDL_Color GREEN = {0, 255, 0};
+
+
+    // Title: Pick A Map
+    SDL_Surface *surface = TTF_RenderText_Solid(font, "Pick A Map", textColor);
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_Rect textRect = {
+        x + (menuWidth - surface->w) / 2,
+        y + 20,
+        surface->w,
+        surface->h
+    };
+    SDL_RenderCopy(renderer, texture, NULL, &textRect);
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
+
+    // EASY label (left)
+    surface = TTF_RenderText_Solid(evenSmaller, "EASY", GREEN);
+    texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_Rect easyRect = {
+        x + 210,                    // far left
+        y + menuHeight - 100,       // near bottom
+        surface->w,
+        surface->h
+    };
+    SDL_RenderCopy(renderer, texture, NULL, &easyRect);
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
+
+    // HARD label (right)
+    surface = TTF_RenderText_Solid(evenSmaller, "HARD", RED);
+    texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_Rect hardRect = {
+        x + menuWidth - surface->w - 225,  // far right
+        y + menuHeight - 100,
+        surface->w,
+        surface->h
+    };
+    SDL_RenderCopy(renderer, texture, NULL, &hardRect);
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
 }

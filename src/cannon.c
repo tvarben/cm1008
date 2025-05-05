@@ -30,7 +30,7 @@ Cannon *createCannon(SDL_Renderer *renderer, int windowWidth,
   c->windowHeight = windowHeight;
   c->renderer = renderer;
   c->dy = 0; // direction cannon shoots when press space at start of the game
-  c->dx = 100;
+  c->dx = 400;
   c->lastFacedLeft = false;
   SDL_Surface *surface = IMG_Load("resources/ship_cannon.png");
   if (!surface) {
