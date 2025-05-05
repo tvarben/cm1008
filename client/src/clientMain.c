@@ -280,73 +280,70 @@ void handleOngoingState(Game *pGame) {
 void handleLobbyState(Game *pGame) {
     SDL_Event event;
     bool socketOpened = false, textFieldFocused = false;
+    SDL_StartTextInput(); // Enable text input
+    static char enteredIPAddress[32] = ""; // Buffer to store the entered string
 
     while (pGame->isRunning && pGame->state == LOBBY) {
-        SDL_StartTextInput(); // Enable text input
-        static char enteredIPAddress[32] = ""; // Buffer to store the entered string
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                pGame->isRunning = false;
+                return;
+            } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+                SDL_Point click = { event.button.x, event.button.y };
+                SDL_Rect inputBox = { 300, 300, 600, 100 };
+                if (SDL_PointInRect(&click, &inputBox)) {
+                    textFieldFocused = true;
+                } else {
+                    textFieldFocused = false;
+                }
+            } else if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_BACKSPACE && strlen(enteredIPAddress) > 0) {
+                    enteredIPAddress[strlen(enteredIPAddress) - 1] = '\0'; // Remove the last character
+                } else if (event.key.keysym.sym == SDLK_RETURN) {
+                    printf("Entered IP: %s\n", enteredIPAddress);
 
-        while (pGame->isRunning && pGame->state == LOBBY) {
-            while (SDL_PollEvent(&event)) {
-                if (event.type == SDL_QUIT) {
-                    pGame->isRunning = false;
-                    return;
-                } else if (event.type == SDL_MOUSEBUTTONDOWN) {
-                    SDL_Point click = { event.button.x, event.button.y };
-                    SDL_Rect inputBox = { 300, 300, 600, 100 };
-                    if (SDL_PointInRect(&click, &inputBox)) {
-                        textFieldFocused = true;
-                    } else {
-                        textFieldFocused = false;
-                    }
-                } else if (event.type == SDL_KEYDOWN) {
-                    if (event.key.keysym.sym == SDLK_BACKSPACE && strlen(enteredIPAddress) > 0) {
-                        enteredIPAddress[strlen(enteredIPAddress) - 1] = '\0'; // Remove the last character
-                    } else if (event.key.keysym.sym == SDLK_RETURN) {
-                        printf("Entered IP: %s\n", enteredIPAddress);
-
-                        // Attempt to resolve the entered IP address
-                        if (SDLNet_ResolveHost(&(pGame->serverAddress), enteredIPAddress, SERVER_PORT) == 0) {
-                            printf("Resolved IP: %s\n", enteredIPAddress);
-                            if (!socketOpened) {
-                                if (!(pGame->pSocket = SDLNet_UDP_Open(0))) {
-                                    printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
-                                    return;
-                                }
-                                socketOpened = true;
-                            }
-                            pGame->pPacket->address.host = pGame->serverAddress.host;
-                            pGame->pPacket->address.port = pGame->serverAddress.port;
-                            // Attempt to connect to the server
-                            if (connectToServer(pGame)) {
-                                printf("Connected to server.\n");
-                                pGame->state = ONGOING;
-                                return;
-                            } else {
-                                printf("Failed to connect to server.\n");
-                                pGame->state = START;
+                    // Attempt to resolve the entered IP address
+                    if (SDLNet_ResolveHost(&(pGame->serverAddress), enteredIPAddress, SERVER_PORT) == 0) {
+                        printf("Resolved IP: %s\n", enteredIPAddress);
+                        if (!socketOpened) {
+                            if (!(pGame->pSocket = SDLNet_UDP_Open(0))) {
+                                printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
                                 return;
                             }
+                            socketOpened = true;
+                        }
+                        pGame->pPacket->address.host = pGame->serverAddress.host;
+                        pGame->pPacket->address.port = pGame->serverAddress.port;
+                        // Attempt to connect to the server
+                        if (connectToServer(pGame)) {
+                            printf("Connected to server.\n");
+                            pGame->state = ONGOING;
+                            return;
                         } else {
-                            printf("Failed to resolve IP: %s\n", enteredIPAddress);
+                            printf("Failed to connect to server.\n");
                             pGame->state = START;
                             return;
                         }
-                        return;
-                    } else if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    } else {
+                        printf("Failed to resolve IP: %s\n", enteredIPAddress);
                         pGame->state = START;
                         return;
                     }
-                } else if (event.type == SDL_TEXTINPUT) {
-                    if (strlen(enteredIPAddress) < 31) {
-                        strncat(enteredIPAddress, event.text.text, sizeof(enteredIPAddress) - strlen(enteredIPAddress) - 1); // Append the entered character
-                    }
+                    return;
+                } else if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    pGame->state = START;
+                    return;
+                }
+            } else if (event.type == SDL_TEXTINPUT) {
+                if (strlen(enteredIPAddress) < 31) {
+                    strncat(enteredIPAddress, event.text.text, sizeof(enteredIPAddress) - strlen(enteredIPAddress) - 1); // Append the entered character
                 }
             }
-            printMultiplayerMenu(pGame, enteredIPAddress, textFieldFocused);
-            SDL_Delay(32);
         }
-        SDL_StopTextInput();
-    }
+        printMultiplayerMenu(pGame, enteredIPAddress, textFieldFocused);
+        SDL_Delay(32);
+        }
+    SDL_StopTextInput();
 }
 
 void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress, bool textFieldFocused) {
