@@ -490,6 +490,7 @@ void run(Game *pGame)
                     damageEnemy(pGame->pEnemies[i], 2 , i);
                     killedEnemies++;
                     damageShip(pGame->pShip);
+                    playSound(&pGame->pSFX,"resources/Hurt.wav",-1);
                 }
             }
             if (pGame->gameTime >= 300)
