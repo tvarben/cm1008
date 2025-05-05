@@ -77,6 +77,7 @@ Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int wind
 
     s->shieldRect.x = (int)s->x;
     s->shieldRect.y = (int)s->y;
+    SDL_SetTextureAlphaMod(s->shield,150);
 
     return s;
 }
@@ -118,11 +119,11 @@ void updateShipVelocity(Ship* s) {
     s->vy = vy;
 }
 
-void updateShip(Ship* s) {
+void updateShip(Ship* s, float delta_time) {
     //const int speed = 2; // Laptop speed
-    const int speed = 5.5; // Stationär speed
-    s->x += s->vx * speed;
-    s->y += s->vy * speed;
+    const int speed = 300; // Stationär speed
+    s->x += s->vx * speed * delta_time;
+    s->y += s->vy * speed * delta_time;
 
     // Stay within bounds
     if (s->x < 0) s->x = 0;
@@ -139,7 +140,7 @@ void updateShip(Ship* s) {
 
     s->rect.x = (int)s->x;
     s->rect.y = (int)s->y;
-    
+
     s->hitbox.w = s->rect.w * 0.7;
     s->hitbox.h = s->rect.h * 0.2;
     s->hitbox.x = s->x + (s->rect.w - s->hitbox.w) / 2;
@@ -154,7 +155,6 @@ void drawShip(Ship* s) {
     SDL_RendererFlip flip = s->facingLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
     SDL_RenderCopyEx(s->renderer, s->texture, NULL, &s->rect, 0, NULL, flip);
     if (s->health >= 2) {
-        SDL_SetTextureAlphaMod(s->shield,150);
         SDL_RenderCopy(s->renderer, s->shield, NULL, &s->shieldRect);
     }
 }

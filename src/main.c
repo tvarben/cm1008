@@ -326,10 +326,10 @@ void run(Game *pGame)
             updateGameTime(pGame);
             updateEnemies(pGame, nrOfEnemiesToSpawn);
             updateShipVelocity(pGame->pShip);           // resolve velocity based on key states
-            updateShip(pGame->pShip);
+            updateShip(pGame->pShip, delta_time);
             updateCannon(pGame->pCannon, pGame->pShip);
             for(int i=0;i<pGame->nrOfEnemies;i++){
-                 updateEnemy(pGame->pEnemies[i]);
+                 updateEnemy(pGame->pEnemies[i], delta_time);
             }
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);
             SDL_RenderClear(pGame->pRenderer);

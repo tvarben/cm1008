@@ -103,11 +103,11 @@ SDL_Rect getRectEnemy(Enemy *pEnemy)
     SDL_Rect empty = {0,0,0,0};
     return empty;
 }
-void updateEnemy(Enemy *pEnemy){
+void updateEnemy(Enemy *pEnemy, float delta_time){
     if(pEnemy->active == true)
     {
-        pEnemy->x+=pEnemy->vx*0.1;
-        pEnemy->y+=pEnemy->vy*0.1;
+        pEnemy->x+=pEnemy->vx*delta_time*10;
+        pEnemy->y+=pEnemy->vy*delta_time*10;
         if (pEnemy->x > pEnemy->window_width || pEnemy->x + pEnemy->rect.w < 0 ||
             pEnemy->y > pEnemy->window_height || pEnemy->y + pEnemy->rect.h < 0)
         {
