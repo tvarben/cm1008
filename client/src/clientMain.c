@@ -115,7 +115,7 @@ int initiate(Game *pGame) {
     pGame->pExitText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,
                                         "Exit",WINDOW_WIDTH/2, 570);
     pGame->pWaitingText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,
-                                        "Waiting on server...",WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
+                                        "Waiting for other players to joing...",WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
 
     /*if(!pGame->pFont){
         printf("Error: %s\n",TTF_GetError());
@@ -321,6 +321,12 @@ void handleLobbyState(Game *pGame) {
                         if (connectToServer(pGame)) {
                             printf("Connected to server.\n");
                             while (pGame->state != ONGOING) {
+                                if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket) == 1) {
+                                    if (strncmp((char*)pGame->pPacket->data, "ONGOING", 7) == 0) {
+                                        pGame->state = ONGOING;
+                                        return;
+                                    }
+                                }
                                 SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
                                 SDL_RenderClear(pGame->pRenderer);
                                 drawText(pGame->pWaitingText);
@@ -334,6 +340,7 @@ void handleLobbyState(Game *pGame) {
                                         return;
                                     }
                                 }
+                                SDL_Delay(16);
                             }
                         } else {
                             printf("Failed to connect to server.\n");
@@ -448,17 +455,14 @@ void updateWithServerData(Game *pGame) {
 }
 
 bool connectToServer(Game *pGame) {
-    //memcpy(pGame->pPacket->data, "TRYING TO CONNECT", sizeof("TRYING TO CONNECT"));
-    //pGame->pPacket->len = sizeof("TRYING TO CONNECT");
     const char *msg = "TRYING TO CONNECT";
     memcpy(pGame->pPacket->data, msg, strlen(msg) + 1);
     pGame->pPacket->len = strlen(msg) + 1;
     pGame->pPacket->address = pGame->serverAddress;
-    //SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket); //Behöver inte skicka två paket?
     if (SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket) == 0) {
         printf("Failed to send packet: %s\n", SDLNet_GetError());
     } else {
-        printf("Packet sent to client.\n");
+        printf("Packet sent to server.\n");
     }
     bool connected = false;
     Uint32 startTime = SDL_GetTicks(); // Get the current time in milliseconds
@@ -547,8 +551,6 @@ MainMenuChoice handleMainMenuOptions(Game *pGame) {
     }
     return MAINMENU_NONE;
 }
-
-
 
 void closeGame(Game *pGame) {
     printf("Entering closeGame()\n");
