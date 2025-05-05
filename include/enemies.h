@@ -3,7 +3,6 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
-
 typedef struct enemyImage EnemyImage;
 typedef struct enemy Enemy;
 
@@ -20,6 +19,5 @@ void damageEnemy(Enemy *pEnemy, int damage, int i);
 bool isInWindow(Enemy *pEnemy);
 bool isEnemyActive(Enemy *pEnemy);
 void printEnemyHealth(Enemy *pEnemy);
-
 
 #endif

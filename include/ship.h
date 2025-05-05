@@ -18,9 +18,8 @@ int getShipX(Ship *s);
 int getShipY(Ship *s);
 int shipCollision(Ship *pShip, SDL_Rect rect);
 bool isLeft(Ship *pShip);
-void damageShip(Ship *pShip);
+void damageShip(Ship *pShip, int damage);
 void resetHealth(Ship *pShip);
 bool isPlayerDead(Ship *pShip);
-
 
 #endif

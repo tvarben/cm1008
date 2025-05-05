@@ -58,7 +58,8 @@ Cannon *createCannon(SDL_Renderer *renderer, int windowWidth,
 }
 
 void drawCannon(Cannon *c) {
-  SDL_RendererFlip flip = c->lastFacedLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+  SDL_RendererFlip flip =
+      c->lastFacedLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
   SDL_RenderCopyEx(c->renderer, c->texture, NULL, &c->rect, 0, NULL, flip);
 }
 
