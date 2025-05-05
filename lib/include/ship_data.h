@@ -5,6 +5,7 @@
 #define WINDOW_WIDTH 1280 //1160
 #define WINDOW_HEIGHT 720 //700
 #define SERVER_PORT 60000
+#define COUNTDOWN 7
 
 typedef enum {
     START, 
