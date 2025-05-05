@@ -244,6 +244,12 @@ void handleLobbyState(Game *pGame) {
             printf("After addClient()");
             if (pGame->nrOfClients == MAX_PLAYERS) {
                 pGame->state = ONGOING;
+                for (int i = 0; i < MAX_PLAYERS; i++) {
+                    const char *msg = "ONGOING";
+                    memcpy(pGame->pPacket->data, msg, strlen(msg)+1);
+                    pGame->pPacket->address= pGame->clients[i];
+                    SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+                }
             }
         }
         SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
