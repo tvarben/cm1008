@@ -35,6 +35,7 @@ typedef struct {
     bool isRunning;
     Stars *pStars;
     SDL_Texture *pStartImage_1, *pStartImage_2;
+    Text *pCountdownText;
 } Game;
 
 int initiate(Game *pGame);
@@ -51,6 +52,7 @@ bool connectToServer(Game *pGame);
 void receiveDataFromServer();
 void updateWithServerData(Game *pGame);
 MainMenuChoice handleMainMenuOptions(Game *pGame);
+void showCountdown(Game *pGame);
 
 int main(int argc, char** argv) {
     Game game = {0};
@@ -272,6 +274,7 @@ void handleOngoingState(Game *pGame) {
             }
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
             SDL_RenderClear(pGame->pRenderer);
+            drawStars(pGame->pStars,pGame->pRenderer);
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 drawShip(pGame->pShips[i]);   
             }
@@ -324,6 +327,7 @@ void handleLobbyState(Game *pGame) {
                                 if (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket) == 1) {
                                     if (strncmp((char*)pGame->pPacket->data, "ONGOING", 7) == 0) {
                                         //set a countdown
+                                        showCountdown(pGame);
                                         pGame->state = ONGOING;
                                         return;
                                     }
@@ -551,6 +555,54 @@ MainMenuChoice handleMainMenuOptions(Game *pGame) {
         if (SDL_PointInRect(&mousePoint, exitRect))   return MAINMENU_EXIT;
     }
     return MAINMENU_NONE;
+}
+
+void showCountdown(Game *pGame) {
+    int countdown = COUNTDOWN;
+    char buffer[16];
+    char joinMsg[64];
+
+    
+    snprintf(joinMsg, sizeof(joinMsg), "%d players have joined. Starting game in...", MAX_PLAYERS);
+    Text *pJoinText = createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont, joinMsg, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 - 100);
+    Uint32 lastTick = SDL_GetTicks();
+
+    while (countdown > 0 && pGame->isRunning) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                pGame->isRunning = false;
+                break;
+            }
+        }
+
+        Uint32 now = SDL_GetTicks();
+        if (now - lastTick >= 1000) {
+            lastTick = now;
+
+            snprintf(buffer, sizeof(buffer), "%d", countdown);
+            if (pGame->pCountdownText) destroyText(pGame->pCountdownText);
+            pGame->pCountdownText = createText(pGame->pRenderer, 255, 255, 255, pGame->pFont, buffer, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+
+            SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
+            SDL_RenderClear(pGame->pRenderer);
+            drawText(pJoinText);
+            drawText(pGame->pCountdownText);
+            SDL_RenderPresent(pGame->pRenderer);
+
+            countdown--;
+        }
+
+        SDL_Delay(16);
+    }
+
+    if (pGame->pCountdownText) {
+        destroyText(pGame->pCountdownText);
+        pGame->pCountdownText = NULL;
+    }
+    if (pJoinText) {
+        destroyText(pJoinText);
+    }
 }
 
 void closeGame(Game *pGame) {

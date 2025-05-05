@@ -11,6 +11,7 @@ struct stars {
 static void drawStar(SDL_Point *pPoint, SDL_Renderer *pRenderer);
 
 Stars *createStars(int nr_of_stars, int width, int height) {
+  srand(1);
   Stars *s = malloc(sizeof(struct stars));
   s->pStarList = malloc(nr_of_stars * sizeof(SDL_Point));
   s->nr_of_stars = nr_of_stars;
