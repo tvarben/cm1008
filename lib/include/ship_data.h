@@ -1,7 +1,7 @@
 #ifndef SHIP_DATA_H
 #define SHIP_DATA_H
 
-#define MAX_PLAYERS 2
+#define MAX_PLAYERS 1
 #define WINDOW_WIDTH 1280 //1160
 #define WINDOW_HEIGHT 720 //700
 #define SERVER_PORT 60000

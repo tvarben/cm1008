@@ -11,6 +11,8 @@
 #include "sound.h"
 #include "text.h"
 #include "ship_data.h"
+#include "bullet.h"
+#include "cannon.h"
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
@@ -18,18 +20,19 @@ typedef struct {
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
     Ship *pShips[MAX_PLAYERS];
-    int nrOfShips;
+    Cannon *pCannons[MAX_PLAYERS];
+    int nrOfShips, nrOfClients;
     GameState state;
     Mix_Music *pMusic;
 	TTF_Font *pFont;
 	Text *pStartText, *pGameName, *pExitText, *pLobbyText;
     ClientCommand command;
     IPaddress clients[MAX_PLAYERS];
-    int nrOfClients;
     UDPsocket pSocket;
     UDPpacket *pPacket;
     ServerData serverData;
     bool isRunning;
+    Cannon *pCannon;
 } Game;
 
 int initiate(Game *pGame);
@@ -114,10 +117,11 @@ int initiate(Game *pGame) {
     
     for(int i = 0; i < MAX_PLAYERS; i++){
         pGame->pShips[i] = createShip(i, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+        pGame->pCannons[i] = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
     pGame->nrOfShips = MAX_PLAYERS;
     for(int i = 0; i < MAX_PLAYERS; i++){
-        if (!pGame->pShips[i]) {
+        if (!pGame->pShips[i] || !pGame->pCannons[i]) {
             printf("Error: %s\n", SDL_GetError());
             return 0;
         }
@@ -223,6 +227,8 @@ void handleOngoingState(Game *pGame) {
             SDL_RenderClear(pGame->pRenderer);
             for(int i=0; i<MAX_PLAYERS; i++){
                 drawShip(pGame->pShips[i]);
+                drawCannon(pGame->pCannons[i]);
+                //draw cannon
             }
             SDL_RenderPresent(pGame->pRenderer);
             sendServerData(pGame);

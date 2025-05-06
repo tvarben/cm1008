@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include "ship_data.h"
+#include <stdbool.h>
 
 typedef struct ship Ship;
 
@@ -19,4 +20,7 @@ void applyShipCommand(Ship* s, ClientCommand c);
 void getShipDataPackage(Ship* pShip, ShipData* pShipData);
 void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int myShipId);
 //void updateShipsWithServerData(Ship *pShips[MAX_PLAYERS], ShipData pShipData[MAX_PLAYERS]);
+int getShipX(Ship *pShip);
+int getShipY(Ship *pShip);
+bool isLeft(Ship *pShip);
 #endif
