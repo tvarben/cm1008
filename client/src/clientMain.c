@@ -13,6 +13,8 @@
 #include "menu.h"
 #include "stars.h"
 #include "ship_data.h"
+#include "bullet.h"
+#include "cannon.h"
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 #define ASTEROIDPATH "../lib/resources/Asteroid.png"
@@ -22,11 +24,11 @@ typedef struct {
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
     Ship *pShips[MAX_PLAYERS];
+    Cannon *pCannons[MAX_PLAYERS];
     int nrOfShips, shipId;
     GameState state;
     Mix_Music *pMusic;
 	TTF_Font *pFont, *pSmallFont;
-	//Text *pStartText; ??
     Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pScoreText, *pMultiPlayerText, *pMenuText, *pGameOverText, *pWaitingText;
     ClientCommand command;
     UDPsocket pSocket;
@@ -86,7 +88,6 @@ int initiate(Game *pGame) {
         printf("SDLNet_Init: %s\n", SDLNet_GetError());
         return 0;
     }
-
     pGame->pWindow = SDL_CreateWindow("Client",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH, WINDOW_HEIGHT, 0);
@@ -94,20 +95,17 @@ int initiate(Game *pGame) {
         printf("Window Error: %s\n", SDL_GetError());
         return 0;
     }
-
     pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!pGame->pRenderer) {
         printf("Renderer Error: %s\n", SDL_GetError());
         return 0;
     }
-
 	pGame->pFont = TTF_OpenFont("../lib/resources/arial.ttf", 100);
     pGame->pSmallFont = TTF_OpenFont("../lib/resources/arial.ttf", 50);
     if(!pGame->pFont || !pGame->pSmallFont) {
         printf("Error: %s\n",TTF_GetError());
         return 0;
     }
-
     pGame->pSinglePlayerText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,
                                         "Singleplayer",WINDOW_WIDTH/2, 330);
     pGame->pMultiPlayerText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,
@@ -118,41 +116,25 @@ int initiate(Game *pGame) {
                                         "Exit",WINDOW_WIDTH/2, 570);
     pGame->pWaitingText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,
                                         "Waiting for other players to joing...",WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
-
-    /*if(!pGame->pFont){
-        printf("Error: %s\n",TTF_GetError());
-        return 0;
-    }*/ 
-    /*if (!(pGame->pSocket = SDLNet_UDP_Open(0))) {
-        printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
-        return 0;
-    }*/
-    /*if (SDLNet_ResolveHost(&(pGame->serverAddress), "127.0.0.1", SERVER_PORT)) {
-        printf("SDLNet_ResolveHost(127.0.0.1 2000): %s\n", SDLNet_GetError());
-        return 0;
-    }*/
     if (!(pGame->pPacket = SDLNet_AllocPacket(512))) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 0;
     }
-
     for(int i = 0; i < MAX_PLAYERS; i++){
         pGame->pShips[i] = createShip(i, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+        pGame->pCannons[i] = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
     pGame->nrOfShips = MAX_PLAYERS;
-
     for(int i = 0; i < MAX_PLAYERS; i++){
-        if (!pGame->pShips[i]) {
+        if (!pGame->pShips[i] || !pGame->pCannons[i]) {
             printf("Error: %s\n", SDL_GetError());
             return 0;
         }
     }
-
     if (!initMusic(&pGame->pMusic, MUSIC_FILEPATH)) {
         printf("Error: %s\n",Mix_GetError());
         return 0;
     }
-
     pGame->pStars = createStars(WINDOW_WIDTH*WINDOW_HEIGHT/10000,WINDOW_WIDTH,WINDOW_HEIGHT);
     SDL_Surface *tempSurface_1 = IMG_Load(EARTHPATH);
     if (!tempSurface_1) {
@@ -165,7 +147,6 @@ int initiate(Game *pGame) {
         printf("Texture Creation Error: %s\n", SDL_GetError());
         return 0;
     }
-
     SDL_Surface *tempSurface_2 = IMG_Load(ASTEROIDPATH);
     if (!tempSurface_2) {
         printf("Image Load Error: %s\n", IMG_GetError());
@@ -177,7 +158,6 @@ int initiate(Game *pGame) {
         printf("Texture Creation Error: %s\n", SDL_GetError());
         return 0;
     }
-
     pGame->isRunning = true;
     pGame->state = START;
     return 1;
@@ -242,7 +222,6 @@ void renderStartWindow(Game *pGame) {
     SDL_Rect dstRect_2 = { 1000, 125, 50, 50 };  // adjust position and size, placering av planet/måne
     SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage_2, NULL, &dstRect_2);
     SDL_RenderPresent(pGame->pRenderer);
-    
 }
 
 void handleOngoingState(Game *pGame) {
@@ -267,9 +246,11 @@ void handleOngoingState(Game *pGame) {
         if (delta>=tickInterval) {
             lastUpdate=now;
             updateShipVelocity(pGame->pShips[pGame->shipId]);
+            //updateCannon(pGame->pCannons[0], pGame->pShips[0]);
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 if (pGame->pShips[i]) {
                     updateShipOnClients(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
+                    updateCannon(pGame->pCannons[i], pGame->pShips[i]); // Test
                 }
             }
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
@@ -277,6 +258,7 @@ void handleOngoingState(Game *pGame) {
             drawStars(pGame->pStars,pGame->pRenderer);
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 drawShip(pGame->pShips[i]);   
+                drawCannon(pGame->pCannons[i]);
             }
             SDL_RenderPresent(pGame->pRenderer);
         }

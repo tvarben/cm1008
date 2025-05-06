@@ -14,7 +14,7 @@ struct ship {
     SDL_Renderer* renderer;
     SDL_Texture* texture;
     SDL_Rect shipRect;
-    bool keyLeft, keyRight, keyUp, keyDown;
+    bool keyLeft, keyRight, keyUp, keyDown, facingLeft;
 };
 
 Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int windowHeight) {
@@ -63,8 +63,13 @@ void setShipVelocity(Ship* pShip, int vx, int vy) {
 void updateShipVelocity(Ship* pShip) {
     int vx = 0, vy = 0;
 
-    if (pShip->keyLeft && !pShip->keyRight) vx = -1;
-    else if (pShip->keyRight && !pShip->keyLeft) vx = 1;
+    if (pShip->keyLeft && !pShip->keyRight) {
+        vx = -1;
+        pShip->facingLeft = true;
+    } else if (pShip->keyRight && !pShip->keyLeft) {
+        vx = 1;
+        pShip->facingLeft = false;
+    }
 
     if (pShip->keyUp && !pShip->keyDown) vy = -1;
     else if (pShip->keyDown && !pShip->keyUp) vy = 1;
@@ -97,6 +102,18 @@ void updateShipOnClients(Ship* pShip, int shipId, int myShipId) {
     stayInWindow(pShip);
 }
 
+bool isLeft(Ship *pShip) {
+    if (pShip->facingLeft == true ) {
+        return true;
+    }
+    if (pShip->facingLeft == false ) {
+        return false;
+    }
+}
+
+int getShipX(Ship *pShip) { return pShip->xStart; }
+int getShipY(Ship *pShip) { return pShip->yStart; }
+
 // For server (no client prediction, pure physics)
 void updateShipOnServer(Ship* pShip) {
 
@@ -120,7 +137,12 @@ void stayInWindow(Ship* pShip) {
 }
 
 void drawShip(Ship* pShip) {
-    SDL_RenderCopy(pShip->renderer, pShip->texture, NULL, &pShip->shipRect);
+    SDL_RendererFlip flip = pShip->facingLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE; //
+    SDL_RenderCopyEx(pShip->renderer, pShip->texture, NULL, &pShip->shipRect, 0, NULL, flip);
+    /*if (s->health >= 2) {
+        SDL_RenderCopy(pShip->renderer, pShip->texture, NULL, &pShip->shipRect);
+    }*/
+    //SDL_RenderCopy(pShip->renderer, pShip->texture, NULL, &pShip->shipRect);
 }
 
 void resetShip(Ship* pShip) {
