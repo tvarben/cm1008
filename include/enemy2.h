@@ -10,7 +10,7 @@ EnemyImage2 *initiateEnemy2(SDL_Renderer *pRenderer);
 
 Enemy2 *createEnemy2(EnemyImage2 *pEnemyImage, int window_width,
                      int window_height);
-void updateEnemy2(Enemy2 *pEnemy);
+void updateEnemy2(Enemy2 *pEnemy, float delta_time);
 void drawEnemy2(Enemy2 *pEnemy);
 void destroyEnemy2(Enemy2 *pEnemy);
 SDL_Rect getRectEnemy2(Enemy2 *pEnemy);
