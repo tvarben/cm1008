@@ -13,10 +13,12 @@
 #include "menu.h"
 #include "stars.h"
 #include "ship_data.h"
+#include "enemy_1.h"
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 #define ASTEROIDPATH "../lib/resources/Asteroid.png"
 #define EARTHPATH "../lib/resources/Earth.png"
+#define enemy1PATH "../lib/resources/ufo.png"
 
 typedef struct {
     SDL_Window *pWindow;
@@ -36,6 +38,10 @@ typedef struct {
     Stars *pStars;
     SDL_Texture *pStartImage_1, *pStartImage_2;
     Text *pCountdownText;
+    EnemyImage *pEnemyImage;
+    Enemy *pEnemies[MAX_ENEMIES];
+    int nrOfEnemies;
+
 } Game;
 
 int initiate(Game *pGame);
@@ -53,6 +59,10 @@ void receiveDataFromServer();
 void updateWithServerData(Game *pGame);
 MainMenuChoice handleMainMenuOptions(Game *pGame);
 void showCountdown(Game *pGame);
+void resetEnemy(Game *pGame);
+void spawnEnemies(Game *pGame, int ammount);
+void updateEnemies(Game *pGame, int *ammount);
+bool areTheyAllDead(Game *pGame);
 
 int main(int argc, char** argv) {
     Game game = {0};
@@ -178,12 +188,19 @@ int initiate(Game *pGame) {
         return 0;
     }
 
+    pGame->pEnemyImage = initiateEnemy(pGame->pRenderer);
+    pGame->nrOfEnemies = 0;
+
+
     pGame->isRunning = true;
     pGame->state = START;
     return 1;
 }
 
 void run(Game *pGame) {
+    int mapPicked = 0;
+    int killedEnemies = 0;
+    int nrOfEnemiesToSpawn = 4;
     while (pGame->isRunning) {
         switch (pGame->state) {
             case START:
@@ -206,19 +223,20 @@ void run(Game *pGame) {
 }
 
 void handleStartState(Game *pGame) {
+    resetEnemy(pGame);
     SDL_Event event;
     while (pGame->isRunning && pGame->state == START) {
        MainMenuChoice userChoice = handleMainMenuOptions(pGame);
-
-        
         if (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT || userChoice == MAINMENU_EXIT){
                 pGame->isRunning = false;
                 return;
             }else if (userChoice == MAINMENU_SINGLEPLAYER){ 
                 printf("Singleplayer chosen.\n");
+        
             }else if(userChoice == MAINMENU_MULTIPLAYER){
                 printf("Multiplayer chosen.\n");
+                
                 pGame->state = LOBBY;
                 return;
             }
@@ -265,7 +283,16 @@ void handleOngoingState(Game *pGame) {
             }
         }
         if (delta>=tickInterval) {
+            Uint32 current_time = SDL_GetTicks(); // needed for shooting
             lastUpdate=now;
+            for (int i = 0; i < pGame->nrOfEnemies; i++) {
+                updateEnemy(pGame->pEnemies[i], delta);
+            }
+            for (int i = 0; i < pGame->nrOfEnemies; i++) {
+                if (isEnemyActive(pGame->pEnemies[i]) == true) {
+                    drawEnemy(pGame->pEnemies[i]);
+                }
+            }
             updateShipVelocity(pGame->pShips[pGame->shipId]);
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 if (pGame->pShips[i]) {
@@ -575,7 +602,6 @@ void showCountdown(Game *pGame) {
                 break;
             }
         }
-
         Uint32 now = SDL_GetTicks();
         if (now - lastTick >= 1000) {
             lastTick = now;
@@ -589,13 +615,10 @@ void showCountdown(Game *pGame) {
             drawText(pJoinText);
             drawText(pGame->pCountdownText);
             SDL_RenderPresent(pGame->pRenderer);
-
             countdown--;
         }
-
         SDL_Delay(16);
     }
-
     if (pGame->pCountdownText) {
         destroyText(pGame->pCountdownText);
         pGame->pCountdownText = NULL;
@@ -633,3 +656,37 @@ void closeGame(Game *pGame) {
     IMG_Quit();
     SDL_Quit();
 }
+
+void resetEnemy(Game *pGame) {
+    for (int i = 0; i < pGame->nrOfEnemies; i++) {
+      destroyEnemy(pGame->pEnemies[i]);
+    }
+    pGame->nrOfEnemies = 0;
+    // add for new enemy here
+  }
+
+  void spawnEnemies(Game *pGame, int ammount) {
+    for (int i = 0; i < ammount; i++) {
+      pGame->pEnemies[pGame->nrOfEnemies] =
+          createEnemy(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT);
+          pGame->nrOfEnemies++;
+    }
+  }
+
+  void updateEnemies(Game *pGame, int *ammount) {
+    if (areTheyAllDead(pGame) == true) // yes this looks like shit
+    {
+      (*ammount) += 2;
+      pGame->nrOfEnemies = 0;
+      spawnEnemies(pGame, *ammount);
+    }
+  }
+
+  bool areTheyAllDead(Game *pGame) {
+    for (int i = 0; i < pGame->nrOfEnemies; i++) {
+      if (isEnemyActive(pGame->pEnemies[i]) == true) {
+        return false;
+      }
+    }
+    return true;
+  }

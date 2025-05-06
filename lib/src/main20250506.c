@@ -1,4 +1,7 @@
-
+#include "../include/bullet.h"
+#include "../include/cannon.h"
+#include "../include/enemies.h"
+#include "../include/enemy2.h"
 #include "../include/menu.h"
 #include "../include/ship.h"
 #include "../include/sound.h"
@@ -17,7 +20,6 @@
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
 #define MUSIC_FILEPATH "./resources/music.wav"
-#define SHOOT_SFX_FILEPATH "./resources/pew.wav"
 
 // BUGS
 // enemy2 hitbox is off
@@ -252,7 +254,6 @@ int initiate(Game *pGame) {
   pGame->nrOfEnemies = 0;
   pGame->nrOfEnemies2 = 0;
   resetEnemy(pGame);
-  pGame->timeForNextEnemy = 2;
   pGame->networkMenu = false;
   pGame->mapMenu = false;
   pGame->state = START;
@@ -425,7 +426,7 @@ void run(Game *pGame) {
                  event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
         if (now - pGame->lastAttackTime >= pGame->attackDelay) {
           handleCannonEvent(pGame->pCannon, &event);
-          playSound(&pGame->pSFX, SHOOT_SFX_FILEPATH, 1);
+          playSound(&pGame->pSFX, "resources/pew.wav", 1);
           pGame->lastAttackTime = now;
         }
       } else if (pGame->state == ONGOING &&
@@ -462,10 +463,10 @@ void run(Game *pGame) {
       updateGameTime(pGame);
       updateEnemies(pGame, &nrOfEnemiesToSpawn);
       updateShipVelocity(pGame->pShip); // resolve velocity based on key states
-      updateShip(pGame->pShip);
+      updateShip(pGame->pShip, delta_time);
       updateCannon(pGame->pCannon, pGame->pShip);
       for (int i = 0; i < pGame->nrOfEnemies; i++) {
-        updateEnemy(pGame->pEnemies[i]);
+        updateEnemy(pGame->pEnemies[i], delta_time);
       }
       for (int i = 0; i < pGame->nrOfEnemies2; i++) {
         updateEnemy2(pGame->pEnemies2[i]);
@@ -515,14 +516,28 @@ void run(Game *pGame) {
           damageEnemy(pGame->pEnemies[i], 2, i);
           killedEnemies++;
           damageShip(pGame->pShip, 1);
+          playSound(&pGame->pSFX,"resources/Hurt.wav",-1);
         }
       }
       for (int j = 0; j < pGame->nrOfEnemies2; j++) {
         if (shipCollision(pGame->pShip, getRectEnemy2(pGame->pEnemies2[j]))) {
-          damageEnemy2(pGame->pEnemies2[j], 1, j);
+          damageEnemy2(pGame->pEnemies2[j], 4, j);
+          playSound(&pGame->pSFX,"resources/Hurt.wav",-1);
           damageShip(pGame->pShip, 2);
-          if (!isEnemy2Active(pGame->pEnemies2[j])) {
+          if (isEnemy2Active(pGame->pEnemies2[j]) == false) {
             killedEnemies++;
+            continue;
+          }
+        }
+      }
+      for (int j = 0; j < pGame->nrOfEnemies2; j++) {
+        if (isEnemy2Active(pGame->pEnemies2[j])) { // Check if enemy2 is active
+          if (shipCollision(pGame->pShip, getRectEnemy2(pGame->pEnemies2[j]))) {
+            damageEnemy2(pGame->pEnemies2[j], 1, j);
+            damageShip(pGame->pShip, 2);
+            if (isEnemy2Active(pGame->pEnemies2[j]) == false) {
+              killedEnemies++;
+            }
           }
         }
       }
@@ -545,6 +560,7 @@ void run(Game *pGame) {
             }
             removeProjectile(i);
             rectArray[i] = emptyRect;
+            playSound(&pGame->pSFX,"resources/Explosion.wav",1);
           }
         }
         for (int j = 0; j < pGame->nrOfEnemies2; j++) {
@@ -558,6 +574,7 @@ void run(Game *pGame) {
             }
             removeProjectile(i);
             rectArray[j] = emptyRect;
+            playSound(&pGame->pSFX,"resources/Explosion.wav",2);
           }
         }
       }
@@ -613,7 +630,7 @@ void run(Game *pGame) {
       destroyText(pKillCountText);
       drawText(pGame->pGameOverText);
       drawText(pGame->pMenuText);
-      printf("YOU KILLED %d ALIENS! \n", killedEnemies);
+      /*printf("YOU KILLED %d ALIENS! \n", killedEnemies);*/
       SDL_RenderPresent(pGame->pRenderer);
       if (SDL_PointInRect(&mousePoint, MenuRect)) {
         setTextColor(pGame->pMenuText, 255, 255, 100, pGame->pFont, "MENU");

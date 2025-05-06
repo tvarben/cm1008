@@ -6,6 +6,7 @@
 #define WINDOW_HEIGHT 720 //700
 #define SERVER_PORT 60000
 #define COUNTDOWN 7
+#define MAX_ENEMIES 100
 
 typedef enum {
     START, 
