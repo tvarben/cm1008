@@ -47,7 +47,6 @@ typedef struct
     Enemy3 *pEnemies3[1];
     int nrOfEnemies2; 
     int nrOfEnemies3; 
-    int timeForNextEnemy;
     int startTime;//in ms
     int gameTime;//in s
     Uint64 pauseStartTime;
@@ -228,7 +227,6 @@ int initiate(Game *pGame)
     pGame->pCannon = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     pGame->attackDelay = 250;
     pGame->lastAttackTime = 0;
-
     pGame->pShip = createShip(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     if (!pGame->pShip)
     {
@@ -246,7 +244,6 @@ int initiate(Game *pGame)
     pGame->nrOfEnemies2 = 0;
     pGame->nrOfEnemies3 = 0;
     resetEnemy(pGame);
-    pGame->timeForNextEnemy = 2;
     pGame->networkMenu = false;
     pGame->mapMenu = false;
     pGame->state = START;
@@ -264,9 +261,15 @@ void run(Game *pGame)
     int stringIndex = 0;
     SDL_Event event;
     playMusic(pGame->pMusic, -1);
-
     Uint32 last_time = SDL_GetTicks(); // timer for rendering bullets
     render_projectiles(pGame->pRenderer);
+    
+    const SDL_Rect *startRect = getTextRect(pGame->pSingleplayerText);     //Hämta position för rect för Start-texten
+    const SDL_Rect *exitRect = getTextRect(pGame->pExitText);       //Hämta position för rect för Exit-texten
+    const SDL_Rect *multiRect = getTextRect(pGame->pMultiplayerText);
+    const SDL_Rect *MenuRect = getTextRect(pGame->pMenuText);
+    const SDL_Rect *mapName1Rect = getTextRect(pGame->pMapName1);
+    const SDL_Rect *mapName2Rect = getTextRect(pGame->pMapName2);
 
     while (isRunning)
     {
@@ -278,14 +281,6 @@ void run(Game *pGame)
         Uint32 now = SDL_GetTicks();
         SDL_GetMouseState(&x,&y);
         SDL_Point mousePoint = {x,y};       //Kolla position för musen
-
-        const SDL_Rect *startRect = getTextRect(pGame->pSingleplayerText);     //Hämta position för rect för Start-texten
-        const SDL_Rect *exitRect = getTextRect(pGame->pExitText);       //Hämta position för rect för Exit-texten
-        const SDL_Rect *multiRect = getTextRect(pGame->pMultiplayerText);
-        const SDL_Rect *MenuRect = getTextRect(pGame->pMenuText);
-        const SDL_Rect *mapName1Rect = getTextRect(pGame->pMapName1);
-        const SDL_Rect *mapName2Rect = getTextRect(pGame->pMapName2);
-
 
         if (SDL_PointInRect(&mousePoint, startRect))
         {
@@ -337,7 +332,7 @@ void run(Game *pGame)
             }
             else if (pGame->state == START && event.type == SDL_MOUSEBUTTONDOWN)
             {
-                if (SDL_PointInRect(&mousePoint, startRect))
+                if (SDL_PointInRect(&mousePoint, startRect) && pGame->networkMenu ==false)
                 {
                     pGame->mapMenu = true;   
                 } 
@@ -345,7 +340,7 @@ void run(Game *pGame)
                 {
                     isRunning = false;
                 }
-                else if (SDL_PointInRect(&mousePoint, multiRect))
+                else if (SDL_PointInRect(&mousePoint, multiRect)  && pGame->mapMenu ==false)
                 {
                     pGame->networkMenu = true;
                 }
@@ -531,12 +526,14 @@ void run(Game *pGame)
                     damageEnemy(pGame->pEnemies[i], 2 , i);
                     killedEnemies++;
                     damageShip(pGame->pShip, 1);
+                    playSound(&pGame->pSFX,"resources/Hurt.wav",-1);
                 }
             }
             for (int j = 0; j < pGame->nrOfEnemies2; j++) {
                 if (shipCollision(pGame->pShip, getRectEnemy2(pGame->pEnemies2[j]))) {
                   damageEnemy2(pGame->pEnemies2[j], 1, j);
                   damageShip(pGame->pShip, 2);
+                  playSound(&pGame->pSFX,"resources/Hurt.wav",-1);
                   if(isEnemy2Active(pGame->pEnemies2[j]) == false)
                   {
                     killedEnemies++;
@@ -546,6 +543,7 @@ void run(Game *pGame)
             if (shipCollision(pGame->pShip, getRectEnemy3(pGame->pEnemies3[0]))) {
                 damageEnemy3(pGame->pEnemies3[0], 1, 0);
                 damageShip(pGame->pShip, 2);
+                playSound(&pGame->pSFX,"resources/Hurt.wav",-1);
                 if(isEnemy3Active(pGame->pEnemies3[0]) == false)
                 {
                     killedEnemies++;
@@ -573,6 +571,7 @@ void run(Game *pGame)
                         }
                         removeProjectile(i);
                         rectArray[i]=emptyRect;
+                        playSound(&pGame->pSFX,"resources/Explosion.wav",1);
                     }
                 }
                 for (int j = 0; j < pGame->nrOfEnemies2; j++) {
@@ -586,6 +585,7 @@ void run(Game *pGame)
                       }
                       removeProjectile(i);
                       rectArray[j] = emptyRect;
+                      playSound(&pGame->pSFX,"resources/Explosion.wav",1);
                     }
                   }
                 SDL_Rect enemyRect3 = getRectEnemy3(pGame->pEnemies3[0]);
@@ -598,6 +598,7 @@ void run(Game *pGame)
                     }
                     removeProjectile(i);
                     rectArray[i]=emptyRect;
+                    playSound(&pGame->pSFX,"resources/Explosion.wav",1);
                 }
             }
             if (pGame->pScoreText) drawText(pGame->pScoreText);
