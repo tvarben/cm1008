@@ -28,7 +28,7 @@ EnemyImage3 *initiateEnemy3(SDL_Renderer *pRenderer) {
   static EnemyImage3 *pEnemyImage3 = NULL;
   if (pEnemyImage3 == NULL) {
     pEnemyImage3 = malloc(sizeof(struct enemyImage3));
-    SDL_Surface *surface = IMG_Load("resources/redBall.png");
+    SDL_Surface *surface = IMG_Load("resources/boss.png");
 
     if (!surface) {
       printf("Error: %s\n", SDL_GetError());
