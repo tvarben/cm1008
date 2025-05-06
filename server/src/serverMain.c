@@ -221,6 +221,7 @@ void handleOngoingState(Game *pGame) {
                 if (pGame->pShips[i]) {
                     updateShipVelocity(pGame->pShips[i]);
                     updateShipOnServer(pGame->pShips[i]);
+                    updateCannon(pGame->pCannons[i], pGame->pShips[i]);
                 }
             }
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);

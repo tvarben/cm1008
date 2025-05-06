@@ -191,6 +191,7 @@ void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
     pShipData->y = pShip->yStart;
     pShipData->vx = pShip->vx;
     pShipData->vy = pShip->vy;
+    pShipData->facingLeft = pShip->facingLeft;
 }
 
 void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int myShipId) {
@@ -198,6 +199,7 @@ void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int
     pShip->targetY = pShipData->y;
     pShip->vx = pShipData->vx;
     pShip->vy = pShipData->vy;
+    pShip->facingLeft = pShipData->facingLeft;
 }
 
 
