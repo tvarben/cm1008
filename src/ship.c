@@ -10,8 +10,8 @@ struct Ship {
     int vx, vy;
     int windowWidth, windowHeight;
     SDL_Renderer* renderer;
-    SDL_Texture* texture;
-    SDL_Rect rect;
+    SDL_Texture* texture, *shield;
+    SDL_Rect rect, shieldRect;
     bool keyLeft, keyRight, keyUp, keyDown;
     float rotationAngle;
     bool facingLeft;
@@ -54,7 +54,29 @@ Ship* createShip(int x, int y, SDL_Renderer* renderer, int windowWidth, int wind
     s->y = y - s->rect.h / 2;
     s->rect.x = (int)s->x;
     s->rect.y = (int)s->y;
-
+        // create shield graphic
+        SDL_Surface* surface2 = IMG_Load("resources/shield.png");
+        if (!surface) {
+            printf("Error loading player.png: %s\n", IMG_GetError());
+            free(s);
+            return NULL;
+        }
+    
+        s->shield = SDL_CreateTextureFromSurface(renderer, surface2);
+        SDL_FreeSurface(surface2);
+    
+        if (!s->shield) {
+            printf("Error creating texture: %s\n", SDL_GetError());
+            free(s);
+            return NULL;
+        }
+        SDL_QueryTexture(s->shield, NULL, NULL, &s->shieldRect.w, &s->shieldRect.h);
+        s->shieldRect.w = s->rect.w;
+    
+        s->shieldRect.x = (int)s->x;
+        s->shieldRect.y = (int)s->y;
+        SDL_SetTextureAlphaMod(s->shield,150);
+    
     return s;
 }
 
@@ -93,6 +115,7 @@ void updateShipVelocity(Ship* s) {
 
     s->vx = vx;
     s->vy = vy;
+
 }
 
 void updateShip(Ship* s) {
@@ -120,12 +143,19 @@ void updateShip(Ship* s) {
     s->hitbox.h = s->rect.h * 0.2;
     s->hitbox.x = s->x + (s->rect.w - s->hitbox.w) / 2;
     s->hitbox.y = s->y + (s->rect.h - s->hitbox.h) / 2;
+
+    s->shieldRect.x = (int)s->x;
+    s->shieldRect.y = (int)s->y-15;
+
 }
 
 
 void drawShip(Ship* s) {
     SDL_RendererFlip flip = s->facingLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
     SDL_RenderCopyEx(s->renderer, s->texture, NULL, &s->rect, 0, NULL, flip);
+    if (s->health >= 2) {
+        SDL_RenderCopy(s->renderer, s->shield, NULL, &s->shieldRect);
+    }
 }
 void resetShip(Ship* s) {
     s->x = s->windowWidth / 2.0f;
