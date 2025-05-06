@@ -278,6 +278,17 @@ void handleOngoingState(Game *pGame) {
             if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
                 return;
+            } else if (event.type == SDL_KEYDOWN ||event.key.keysym.scancode == SDL_SCANCODE_V) {
+                printf("CURRENT NUMBER OF ENEMIES: %d \n", pGame->nrOfEnemies);
+                spawnEnemies(pGame,4);
+                for (int i = 0; i < pGame->nrOfEnemies; i++) {
+                    if (isEnemyActive(pGame->pEnemies[i]) == false) {
+                      printf("Enemy %d is inactive \n", i);
+                    } else {
+                      printf("Enemy %d is active \n", i);
+                    }
+                  }
+
             } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
                 handleInput(&event, cData.command, pGame);
             }

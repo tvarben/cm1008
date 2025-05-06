@@ -20,6 +20,7 @@ struct enemy{
     SDL_Rect rect;
     SDL_Rect rectHitbox;
 };
+static void getStartValues(Enemy *pEnemy);
 
 EnemyImage *initiateEnemy(SDL_Renderer *pRenderer)  
 {
