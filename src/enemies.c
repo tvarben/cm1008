@@ -69,7 +69,7 @@ static void getStartValues(Enemy *pEnemy) {
   pEnemy->rectHitbox.h = pEnemy->rect.h - 10;
   pEnemy->damage = 1;
   pEnemy->health = 2;
-  float speed = rand() % (50 - 15 + 1) + 15;
+  float speed = rand() % (300 - 150 + 1) + 150;
 
   if (startSpawnOnTheLeft == 1) {
     pEnemy->x = pEnemy->window_width;
@@ -98,8 +98,8 @@ SDL_Rect getRectEnemy(Enemy *pEnemy) {
 void updateEnemy(Enemy *pEnemy, float delta_time){
     if(pEnemy->active == true)
     {
-        pEnemy->x+=pEnemy->vx*delta_time*10;
-        pEnemy->y+=pEnemy->vy*delta_time*10;
+        pEnemy->x+=pEnemy->vx*delta_time;
+        pEnemy->y+=pEnemy->vy*delta_time;
         if (pEnemy->x > pEnemy->window_width || pEnemy->x + pEnemy->rect.w < 0 ||
             pEnemy->y > pEnemy->window_height || pEnemy->y + pEnemy->rect.h < 0)
         {

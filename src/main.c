@@ -470,7 +470,7 @@ void run(Game *pGame) {
         updateEnemy(pGame->pEnemies[i], delta_time);
       }
       for (int i = 0; i < pGame->nrOfEnemies2; i++) {
-        updateEnemy2(pGame->pEnemies2[i]);
+        updateEnemy2(pGame->pEnemies2[i], delta_time);
       }
       // for loop for updating enemy2
       SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 0);
