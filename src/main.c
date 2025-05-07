@@ -423,14 +423,8 @@ void run(Game *pGame) {
                  event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
         pGame->state = PAUSED;
         pGame->pauseStartTime = SDL_GetTicks64();
-      } else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN &&
-                 event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-        if (now - pGame->lastAttackTime >= pGame->attackDelay) {
-          handleCannonEvent(pGame->pCannon, &event);
-          playSound(&pGame->pSFX, "resources/pew.wav", 1);
-          pGame->lastAttackTime = now;
-        }
-      } else if (pGame->state == ONGOING &&
+      }
+      else if (pGame->state == ONGOING &&
                  (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)) {
         handleShipEvent(pGame->pShip, &event); // track which keys are pressed
       } else if (pGame->state == PAUSED && event.type == SDL_KEYDOWN &&
@@ -453,6 +447,7 @@ void run(Game *pGame) {
           killedEnemies = 0;
         }
       }
+      if (pGame->state == ONGOING) handleCannonEvent(pGame->pCannon,&event);
     }
 
     if (pGame->state == ONGOING) {

@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 struct Cannon {
   int dy, dx;
@@ -16,8 +17,8 @@ struct Cannon {
   SDL_Texture *texture;
   SDL_Rect rect;
   bool lastFacedLeft;
-  bool spacebar, moveLeftQ, moveRightE,
-      moveDownN; // keys decide direction of bullet
+  bool spacebar, up, down, left, right, ableToShoot;
+  CannonDirection direction;
 };
 
 Cannon *createCannon(SDL_Renderer *renderer, int windowWidth,
@@ -71,39 +72,108 @@ void destroyCannon(Cannon *c) {
   }
 }
 
-void updateCannon(Cannon *pCannon, Ship *pShip) {
-  double cannonLocationX = 28;
-  double cannonLocationY = 15;
+void updateCannon(Cannon *c, Ship *s) {
+  // double cannonLocationX = 28;
+  // double cannonLocationY = 15;
+  int speed = 1000;
+  SDL_Rect shipRect = getShipRect(s);
+  Mix_Chunk *pBulletSFX;
 
-  pCannon->rect.y = getShipY(pShip) + cannonLocationY;
-  pCannon->rect.x = getShipX(pShip) + cannonLocationX;
+  c->rect.y = getShipY(s) + (shipRect.h / 2); // + cannonLocationY;
+  c->rect.x = getShipX(s) + (shipRect.w / 2); // + cannonLocationX;
 
-  if (isLeft(pShip)) {
-    pCannon->lastFacedLeft = true;
-    pCannon->dx = -100;
-    pCannon->dy = 0;
-  } else {
-    pCannon->lastFacedLeft = false;
-    pCannon->dx = 100;
-    pCannon->dy = 0;
+  if (!c->spacebar || !c->ableToShoot) return;
+  switch(c->direction) {
+    case UP:
+      spawn_projectile(c->rect.x, c->rect.y, 0, -speed);
+      break;
+    case UP_L:
+      spawn_projectile(c->rect.x, c->rect.y, -speed/sqrt(2), -speed/sqrt(2));
+      break;
+    case UP_R:
+      spawn_projectile(c->rect.x, c->rect.y, speed/sqrt(2), -speed/sqrt(2));
+      break;
+    
+    case DOWN:
+      spawn_projectile(c->rect.x, c->rect.y, 0, speed);
+      break;
+    case DOWN_L:
+      spawn_projectile(c->rect.x, c->rect.y, -speed/sqrt(2), speed/sqrt(2));
+      break;
+    case DOWN_R:
+      spawn_projectile(c->rect.x, c->rect.y, speed/sqrt(2), speed/sqrt(2));
+      break;
+    case LEFT:
+      spawn_projectile(c->rect.x, c->rect.y, -speed, 0);
+      break;
+    case RIGHT:
+      spawn_projectile(c->rect.x, c->rect.y, speed, 0);
+      break;
   }
+  playSound(&pBulletSFX, "resources/pew.wav",-1);
+  c->ableToShoot = false;
+
+  // if (isLeft(pShip)) {
+  //   pCannon->lastFacedLeft = true;
+  //   pCannon->dx = -100;
+  //   pCannon->dy = 0;
+  // } else {
+  //   pCannon->lastFacedLeft = false;
+  //   pCannon->dx = 100;
+  //   pCannon->dy = 0;
+  // }
 }
 
-  void handleCannonEvent(Cannon *c, SDL_Event *event) {
-    if (event->type == SDL_KEYDOWN && event->key.keysym.scancode == SDL_SCANCODE_SPACE) {
-      if (c->lastFacedLeft) {
-        spawn_projectile(c->rect.x - 8, c->rect.y, -1000, 0);
-      } else {
-        spawn_projectile(c->rect.x + 20, c->rect.y, 1000, 0);
+void handleCannonEvent(Cannon *c, SDL_Event *event) {
+  switch(event->type) {
+    case SDL_KEYDOWN:
+      switch(event->key.keysym.scancode) {
+        case SDL_SCANCODE_UP: c->up = true; break;
+        case SDL_SCANCODE_LEFT: c->left = true; break;
+        case SDL_SCANCODE_DOWN: c->down = true; break;
+        case SDL_SCANCODE_RIGHT: c->right = true; break;
+        case SDL_SCANCODE_SPACE: c->spacebar = true; break;
       }
-      Mix_Chunk *pBulletSFX;
-      playSound(&pBulletSFX,"resources/pew.wav",-1);
+    break;
+    case SDL_KEYUP:
+    switch(event->key.keysym.scancode) {
+      case SDL_SCANCODE_UP: c->up = false; printf("-UP\n"); break;
+      case SDL_SCANCODE_LEFT: c->left = false; printf("-Left\n"); break;
+      case SDL_SCANCODE_DOWN: c->down = false; printf("-down\n"); break;
+      case SDL_SCANCODE_RIGHT: c->right = false; printf("-right\n"); break;
+      case SDL_SCANCODE_SPACE: 
+        c->spacebar = false;
+        c->ableToShoot = true; 
+        break;
     }
+    break;
   }
+
+  if (c->up && !c->down && !c->right && !c->left) c->direction = UP;
+  else if (c->down && !c->up && !c->right && !c->left) c->direction = DOWN;
+  else if (c->left && !c->right && !c->up && !c->down) c->direction = LEFT;
+  else if (c->right && !c->left && !c->up && !c->down) c->direction = RIGHT;
+  else if (c->up && c->right && !c->left && !c->down) c->direction = UP_R;
+  else if (c->up && c->left && !c->right && !c->down) c->direction = UP_L;
+  else if (c->down && c->right && !c->left && !c->up) c->direction = DOWN_R;
+  else if (c->down && c->left && !c->right && !c->up) c->direction = DOWN_L;
+
+  // if (event->type == SDL_KEYDOWN && event->key.keysym.scancode == SDL_SCANCODE_SPACE) 
+  //   if (c->lastFacedLeft) {
+  //     spawn_projectile(c->rect.x - 8, c->rect.y, -1000, 0);
+  //   } else {
+  //     spawn_projectile(c->rect.x + 20, c->rect.y, 1000, 0);
+  //   }
+  //   Mix_Chunk *pBulletSFX;
+  //    playSound(&pBulletSFX,"resources/pew.wav",-1);
+  
+ }
 
 void resetCannon(Cannon *c) {
   c->spacebar = false;
-  c->moveDownN = false;
-  c->moveLeftQ = false;
-  c->moveRightE = false;
+  c->up = false;
+  c->down = false;
+  c->left = false;
+  c->right = false;
+  c->ableToShoot = true;
 }

@@ -16,6 +16,7 @@ void updateShipVelocity(Ship* s);
 void destroyShip(Ship* s);
 int getShipX(Ship *s);
 int getShipY(Ship *s);
+SDL_Rect getShipRect(Ship *s);
 int shipCollision(Ship *pShip, SDL_Rect rect);
 bool isLeft(Ship *pShip);
 void damageShip(Ship *pShip, int damage);

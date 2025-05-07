@@ -87,19 +87,19 @@ void handleShipEvent(Ship *s, SDL_Event *event) {
 
   switch (event->key.keysym.scancode) {
   case SDL_SCANCODE_W:
-  case SDL_SCANCODE_UP:
+  //case SDL_SCANCODE_UP:
     s->keyUp = down;
     break;
   case SDL_SCANCODE_S:
-  case SDL_SCANCODE_DOWN:
+  //case SDL_SCANCODE_DOWN:
     s->keyDown = down;
     break;
   case SDL_SCANCODE_A:
-  case SDL_SCANCODE_LEFT:
+  //case SDL_SCANCODE_LEFT:
     s->keyLeft = down;
     break;
   case SDL_SCANCODE_D:
-  case SDL_SCANCODE_RIGHT:
+  //case SDL_SCANCODE_RIGHT:
     s->keyRight = down;
     break;
   default:
@@ -194,6 +194,7 @@ void destroyShip(Ship *s) {
 
 int getShipX(Ship *s) { return s->x; }
 int getShipY(Ship *s) { return s->y; }
+SDL_Rect getShipRect(Ship *s) {return s->rect;}
 
 int shipCollision(Ship *pShip, SDL_Rect rect) {
   return SDL_HasIntersection(&pShip->rect, &rect);

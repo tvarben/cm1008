@@ -3,7 +3,7 @@
 
 #include "ship.h"
 #include <SDL2/SDL.h>
-
+typedef enum CannonDirection {UP, DOWN, LEFT, RIGHT, UP_R, UP_L, DOWN_R, DOWN_L } CannonDirection;
 typedef struct Cannon Cannon;
 
 Cannon *createCannon(SDL_Renderer *renderer, int windowWidth, int windowHeight);
