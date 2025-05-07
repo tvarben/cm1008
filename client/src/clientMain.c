@@ -38,6 +38,8 @@ typedef struct {
     Stars *pStars;
     SDL_Texture *pStartImage_1, *pStartImage_2;
     Text *pCountdownText;
+
+    int nrOfEnemiesToSpawn;
     EnemyImage *pEnemyImage;
     Enemy *pEnemies[MAX_ENEMIES];
     int nrOfEnemies;
@@ -78,9 +80,7 @@ int main(int argc, char** argv) {
 }
 
 int initiate(Game *pGame) {
-    srand(time(NULL));
-    Mix_Init(MIX_INIT_WAVPACK);
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0) {
+    srand(time(NULL)); Mix_Init(MIX_INIT_WAVPACK); if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0) {
         printf("SDL Init Error: %s\n", SDL_GetError());
         return 0;
     }
@@ -190,7 +190,7 @@ int initiate(Game *pGame) {
 
     pGame->pEnemyImage = initiateEnemy(pGame->pRenderer);
     pGame->nrOfEnemies = 0;
-
+    printf("Enemy image created\n");
 
     pGame->isRunning = true;
     pGame->state = START;
@@ -198,9 +198,7 @@ int initiate(Game *pGame) {
 }
 
 void run(Game *pGame) {
-    int mapPicked = 0;
-    int killedEnemies = 0;
-    int nrOfEnemiesToSpawn = 4;
+    pGame->nrOfEnemiesToSpawn= WAVE_1_EASY_MAP; //Change it in ship_data.h. Initial number of enemies, they get incremented by 2 in enemy_1.c.
     while (pGame->isRunning) {
         switch (pGame->state) {
             case START:
@@ -223,7 +221,6 @@ void run(Game *pGame) {
 }
 
 void handleStartState(Game *pGame) {
-    resetEnemy(pGame);
     SDL_Event event;
     while (pGame->isRunning && pGame->state == START) {
        MainMenuChoice userChoice = handleMainMenuOptions(pGame);
@@ -260,7 +257,6 @@ void renderStartWindow(Game *pGame) {
     SDL_Rect dstRect_2 = { 1000, 125, 50, 50 };  // adjust position and size, placering av planet/måne
     SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage_2, NULL, &dstRect_2);
     SDL_RenderPresent(pGame->pRenderer);
-    
 }
 
 void handleOngoingState(Game *pGame) {
@@ -268,6 +264,8 @@ void handleOngoingState(Game *pGame) {
     ClientData cData;
     Uint32 now=0, delta=0, lastUpdate=SDL_GetTicks();
     const Uint32 tickInterval=8;
+
+    spawnEnemies(pGame, pGame->nrOfEnemiesToSpawn);// spawn enemies
     while (pGame->isRunning && pGame->state == ONGOING) {
         now = SDL_GetTicks();
         delta = now - lastUpdate;
@@ -278,43 +276,32 @@ void handleOngoingState(Game *pGame) {
             if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
                 return;
-            } else if (event.type == SDL_KEYDOWN ||event.key.keysym.scancode == SDL_SCANCODE_V) {
-                printf("CURRENT NUMBER OF ENEMIES: %d \n", pGame->nrOfEnemies);
-                spawnEnemies(pGame,4);
-                for (int i = 0; i < pGame->nrOfEnemies; i++) {
-                    if (isEnemyActive(pGame->pEnemies[i]) == false) {
-                      printf("Enemy %d is inactive \n", i);
-                    } else {
-                      printf("Enemy %d is active \n", i);
-                    }
-                  }
-
-            } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
-                handleInput(&event, cData.command, pGame);
-            }
+            }else if(event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) { 
+                handleInput(&event, cData.command, pGame); 
+            } 
         }
         if (delta>=tickInterval) {
-            Uint32 current_time = SDL_GetTicks(); // needed for shooting
             lastUpdate=now;
-            for (int i = 0; i < pGame->nrOfEnemies; i++) {
-                updateEnemy(pGame->pEnemies[i], delta);
-            }
-            for (int i = 0; i < pGame->nrOfEnemies; i++) {
-                if (isEnemyActive(pGame->pEnemies[i]) == true) {
-                    drawEnemy(pGame->pEnemies[i]);
-                }
-            }
             updateShipVelocity(pGame->pShips[pGame->shipId]);
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 if (pGame->pShips[i]) {
                     updateShipOnClients(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
                 }
             }
+            for (int i = 0; i < pGame->nrOfEnemies; i++) {
+                updateEnemy(pGame->pEnemies[i]);
+            }
+            updateEnemies(pGame, &pGame->nrOfEnemiesToSpawn); 
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
             SDL_RenderClear(pGame->pRenderer);
             drawStars(pGame->pStars,pGame->pRenderer);
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 drawShip(pGame->pShips[i]);   
+            }
+            for (int i = 0; i < pGame->nrOfEnemies; i++) {
+                if (isEnemyActive(pGame->pEnemies[i]) == true) {
+                    drawEnemy(pGame->pEnemies[i]);
+                }
             }
             SDL_RenderPresent(pGame->pRenderer);
         }
@@ -673,13 +660,13 @@ void resetEnemy(Game *pGame) {
       destroyEnemy(pGame->pEnemies[i]);
     }
     pGame->nrOfEnemies = 0;
+    printf("Enemies destroyed\n");
     // add for new enemy here
   }
 
   void spawnEnemies(Game *pGame, int ammount) {
     for (int i = 0; i < ammount; i++) {
-      pGame->pEnemies[pGame->nrOfEnemies] =
-          createEnemy(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT);
+        pGame->pEnemies[pGame->nrOfEnemies] =createEnemy(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT);
           pGame->nrOfEnemies++;
     }
   }

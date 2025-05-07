@@ -15,3 +15,6 @@ myGame
 
 # Editor configs
 .vscode/
+
+gemeClient
+gameServer

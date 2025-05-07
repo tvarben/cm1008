@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
+
+#define ENEMY_1_PATH "../lib/resources/ufo.png"
+#define INITIALSPEED 3;
 struct enemyImage{
     SDL_Renderer *pRenderer;
     SDL_Texture *pTexture;    
@@ -28,7 +31,7 @@ EnemyImage *initiateEnemy(SDL_Renderer *pRenderer)
     if(pEnemyImage==NULL)
     {
         pEnemyImage = malloc(sizeof(struct enemyImage));
-        SDL_Surface *surface = IMG_Load("resources/ufo.png");
+        SDL_Surface *surface = IMG_Load(ENEMY_1_PATH);
         
         if(!surface)
         {
@@ -70,7 +73,7 @@ static void getStartValues(Enemy *pEnemy){
     pEnemy->damage = 1;
     pEnemy->health = 2;
     //float speed = rand() % (50 - 15 + 1) + 15;
-    float speed = rand() % (300 - 150 + 1) + 150;
+    float speed = INITIALSPEED;
     if (startSpawnOnTheLeft == 1)
     {
     pEnemy->x = pEnemy->window_width;
@@ -98,16 +101,18 @@ SDL_Rect getRectEnemy(Enemy *pEnemy)
     SDL_Rect empty = {0,0,0,0};
     return empty;
 }
-void updateEnemy(Enemy *pEnemy, Uint32 deltaTime){
+//void updateEnemy(Enemy *pEnemy, Uint32 deltaTime){ //why deltaTime? if needed create it inside enemy_1.c beacause deltaTime we use in clientMain.c is messing up the enemy speed!
+void updateEnemy(Enemy *pEnemy){
     if(pEnemy->active == true)
     {
-        pEnemy->x+=pEnemy->vx*deltaTime;
-        pEnemy->y+=pEnemy->vy*deltaTime;
+        pEnemy->x+=pEnemy->vx;
+        pEnemy->y+=pEnemy->vy;
         if (pEnemy->x > pEnemy->window_width || pEnemy->x + pEnemy->rect.w < 0 ||
             pEnemy->y > pEnemy->window_height || pEnemy->y + pEnemy->rect.h < 0)
         {
             //getStartValues(pEnemy); //immediatly respawns enemy once it leaves windows
             pEnemy->active = false;
+            printf("Enemy has fled \n");
             return;
         }
         pEnemy->rect.x=pEnemy->x;
