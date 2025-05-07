@@ -13,6 +13,7 @@
 #include "ship_data.h"
 #include "bullet.h"
 #include "cannon.h"
+#include "tick.h"
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
@@ -215,8 +216,9 @@ void handleOngoingState(Game *pGame) {
                 applyShipCommand(pGame->pShips[clientIndex], cData.command);
             }
             
-        if (delta >= tickInterval) {
-            lastUpdate = now;
+        /*if (delta >= tickInterval) {
+            lastUpdate = now;*/
+        if (timeToUpdate(&lastUpdate, tickInterval)) {
             for(int i = 0; i < MAX_PLAYERS; i++) {
                 if (pGame->pShips[i]) {
                     updateShipVelocity(pGame->pShips[i]);

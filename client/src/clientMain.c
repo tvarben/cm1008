@@ -15,6 +15,8 @@
 #include "ship_data.h"
 #include "bullet.h"
 #include "cannon.h"
+#include "tick.h"
+
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 #define ASTEROIDPATH "../lib/resources/Asteroid.png"
@@ -30,7 +32,7 @@ typedef struct {
     Mix_Music *pMusic;
 	TTF_Font *pFont, *pSmallFont;
     Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pScoreText, *pMultiPlayerText, *pMenuText, *pGameOverText, *pWaitingText;
-    ClientCommand command;
+    ClientCommand command, lastCommand;
     UDPsocket pSocket;
     IPaddress serverAddress;
     UDPpacket *pPacket;
@@ -115,7 +117,7 @@ int initiate(Game *pGame) {
     pGame->pExitText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,
                                         "Exit",WINDOW_WIDTH/2, 570);
     pGame->pWaitingText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,
-                                        "Waiting for other players to joing...",WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
+                                        "Waiting for other players to join...",WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
     if (!(pGame->pPacket = SDLNet_AllocPacket(512))) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 0;
@@ -189,8 +191,6 @@ void handleStartState(Game *pGame) {
     SDL_Event event;
     while (pGame->isRunning && pGame->state == START) {
        MainMenuChoice userChoice = handleMainMenuOptions(pGame);
-
-        
         if (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT || userChoice == MAINMENU_EXIT){
                 pGame->isRunning = false;
@@ -227,11 +227,13 @@ void renderStartWindow(Game *pGame) {
 void handleOngoingState(Game *pGame) {
     SDL_Event event;
     ClientData cData;
+    pGame->lastCommand = STOP_SHIP;
     Uint32 now=0, delta=0, lastUpdate=SDL_GetTicks();
     const Uint32 tickInterval=8;
+    pGame->command = STOP_SHIP;
     while (pGame->isRunning && pGame->state == ONGOING) {
-        now = SDL_GetTicks();
-        delta = now - lastUpdate;
+        now = SDL_GetTicks();               // används bara på rad 253, men delta används inte i update_projectiles
+        delta = now - lastUpdate;           //används bara på rad 253, men delta används inte i update_projectiles
         while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
             updateWithServerData(pGame);
         }
@@ -243,8 +245,18 @@ void handleOngoingState(Game *pGame) {
                 handleInput(&event, cData.command, pGame);
             }
         }
-        if (delta>=tickInterval) {
-            lastUpdate=now;
+        /*if (delta>=tickInterval) {
+            lastUpdate=now;*/
+        if (timeToUpdate(&lastUpdate, tickInterval)) {
+            applyShipCommand(pGame->pShips[pGame->shipId], pGame->command);
+            if (pGame->command != pGame->lastCommand) {
+                ClientData ccData = { .command = pGame->command };
+                memcpy(pGame->pPacket->data, &ccData, sizeof(ClientData));
+                pGame->pPacket->len = sizeof(ClientData);
+                SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+                pGame->lastCommand = pGame->command;
+            }
+
             updateShipVelocity(pGame->pShips[pGame->shipId]);
             //updateCannon(pGame->pCannons[0], pGame->pShips[0]);
             for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -478,39 +490,45 @@ void receiveDataFromServer() {
 
 void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame) {
     ClientData cData;
-    cData.cDPlayerId = pGame->shipId;
+    cData.cDPlayerId = pGame->shipId;  //cDPlayerId not really needed. Server finds out which klient it is based on IP-address
     SDL_Scancode key = pEvent->key.keysym.scancode;
     if (pEvent->type == SDL_KEYDOWN || pEvent->type == SDL_KEYUP) {
         switch(key) {
             case SDL_SCANCODE_UP:
-                cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
-                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
+                pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
+                /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
+                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
                 break;
             case SDL_SCANCODE_DOWN:
-                cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
-                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
+                pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
+               /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
+                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
                 break;
             case SDL_SCANCODE_LEFT:
-                cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
-                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
+                pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
+                /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
+                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
                 break;
             case SDL_SCANCODE_RIGHT:
-                cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
-                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
+                pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
+                /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
+                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
                 break;
             case SDL_SCANCODE_SPACE:
-            printf("In applyShipCommand\n");
-                cData.command = SHOOT;
+                printf("In applyShipCommand\n");
+                pGame->command = SHOOT;
+                //cData.command = SHOOT;
                 handleCannonEvent(pGame->pCannons[pGame->shipId], cData.command);
                 break;
             default:
-                cData.command = STOP_SHIP;
+                pGame->command = STOP_SHIP;
+                //cData.command = STOP_SHIP;
                 break;
         }
     }
-    memcpy(pGame->pPacket->data, &cData, sizeof(ClientData));
+    /*memcpy(pGame->pPacket->data, &cData, sizeof(ClientData));
     pGame->pPacket->len = sizeof(ClientData);
-    SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+    SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);*/
 }
 
 MainMenuChoice handleMainMenuOptions(Game *pGame) {
@@ -550,7 +568,6 @@ void showCountdown(Game *pGame) {
     int countdown = COUNTDOWN;
     char buffer[16];
     char joinMsg[64];
-
     
     snprintf(joinMsg, sizeof(joinMsg), "%d players have joined. Starting game in...", MAX_PLAYERS);
     Text *pJoinText = createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont, joinMsg, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 - 100);
@@ -581,7 +598,6 @@ void showCountdown(Game *pGame) {
 
             countdown--;
         }
-
         SDL_Delay(16);
     }
 
@@ -597,6 +613,7 @@ void showCountdown(Game *pGame) {
 void closeGame(Game *pGame) {
     printf("Entering closeGame()\n");
     for (int i = 0; i < MAX_PLAYERS;i++) if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
+    for (int i = 0; i < MAX_PLAYERS;i++) if (pGame->pCannons[i]) destroyCannon(pGame->pCannons[i]);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
 

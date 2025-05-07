@@ -7,7 +7,7 @@
 #define WINDOW_WIDTH 1280 //1160
 #define WINDOW_HEIGHT 720 //700
 #define SERVER_PORT 60000
-#define COUNTDOWN 3
+#define COUNTDOWN 1
 
 typedef enum {
     START, 
@@ -35,7 +35,7 @@ typedef enum {
 } MainMenuChoice;
 
 typedef struct{
-    int cDPlayerId;
+    int cDPlayerId; //cDPlayerId not really needed. Server finds out which klient it is based on IP-address
     ClientCommand command;
 }ClientData;
 
