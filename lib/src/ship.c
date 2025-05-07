@@ -158,8 +158,8 @@ void destroyShip(Ship* pShip) {
     }
 }
 
-void applyShipCommand(Ship* pShip, ClientCommand c) {
-    switch (c) {
+void applyShipCommand(Ship* pShip, ClientCommand command) {
+    switch (command) {
         case STOP_SHIP:
             pShip->keyDown = pShip->keyUp = pShip->keyLeft = pShip->keyRight = false;
             break;
