@@ -10,6 +10,7 @@
 #include "ship.h"
 #include "sound.h"
 #include "text.h"
+#include "enemy_1.h"
 #include "ship_data.h"
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
@@ -30,6 +31,11 @@ typedef struct {
     UDPpacket *pPacket;
     ServerData serverData;
     bool isRunning;
+
+    int nrOfEnemiesToSpawn;
+    EnemyImage *pEnemyImage;
+    Enemy *pEnemies[MAX_ENEMIES];
+    int nrOfEnemies;
 } Game;
 
 int initiate(Game *pGame);
@@ -41,6 +47,10 @@ void addClient(Game *pGame);
 void closeGame(Game *pGame);
 int getClientIndex(Game *pGame, IPaddress *clientAddr);
 void sendServerData(Game* pGame);
+void resetEnemy(Game *pGame);
+void spawnEnemies(Game *pGame, int ammount);
+void updateEnemies(Game *pGame, int *ammount);
+bool areTheyAllDead(Game *pGame);
 
 int main(int argc, char** argv) {
     Game game = {0};
@@ -126,14 +136,18 @@ int initiate(Game *pGame) {
         printf("Error: %s\n",Mix_GetError());
         return 0;
     }
+
+    pGame->pEnemyImage = initiateEnemy(pGame->pRenderer);
+    pGame->nrOfEnemies = 0;
+    printf("Enemy image created\n");
+
     pGame->isRunning = true;
     pGame->state = START;
     return 1;
 }
 
 void run(Game *pGame) {
-    printf("Server is listening on port %hu...\n", SERVER_PORT);
-    
+    pGame->nrOfEnemiesToSpawn= WAVE_1_EASY_MAP; //Change it in ship_data.h. Initial number of enemies, they get incremented by 2 down below in updateEnemies()
     while (pGame->isRunning) { 
         switch(pGame->state) {
             case START:
@@ -171,6 +185,7 @@ void handleStartState(Game *pGame) {
                 return;
             } else if (event.type == SDL_KEYDOWN) {
                 if (event.key.keysym.sym == SDLK_1) {
+                    printf("Server is listening on port %hu...\n", SERVER_PORT);
                     pGame->state = LOBBY;
                     return;
                 } else if (event.key.keysym.sym == SDLK_2) {
@@ -189,6 +204,7 @@ void handleOngoingState(Game *pGame) {
     Uint32 now = 0, delta = 0,lastUpdate = SDL_GetTicks();
     const Uint32 tickInterval = 16;
 
+    spawnEnemies(pGame, pGame->nrOfEnemiesToSpawn);// spawn enemies locally
     while (pGame->isRunning && pGame->state == ONGOING) {
         now = SDL_GetTicks();
         delta = now - lastUpdate;
@@ -219,10 +235,19 @@ void handleOngoingState(Game *pGame) {
                     updateShipOnServer(pGame->pShips[i]);
                 }
             }
+            for (int i = 0; i < pGame->nrOfEnemies; i++) {
+                updateEnemy(pGame->pEnemies[i]);                // locally
+            }
+            updateEnemies(pGame, &pGame->nrOfEnemiesToSpawn); // Calls spawnEnemy() down at the bottom of the code
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
             SDL_RenderClear(pGame->pRenderer);
             for(int i=0; i<MAX_PLAYERS; i++){
                 drawShip(pGame->pShips[i]);
+            }
+            for (int i = 0; i < pGame->nrOfEnemies; i++) {
+                if (isEnemyActive(pGame->pEnemies[i]) == true) {    //locally
+                    drawEnemy(pGame->pEnemies[i]);
+                }
             }
             SDL_RenderPresent(pGame->pRenderer);
             sendServerData(pGame);
@@ -349,3 +374,37 @@ void closeGame(Game *pGame) {
     SDL_Quit();
     printf("SDL_Quit");
 }
+
+void resetEnemy(Game *pGame) {
+    for (int i = 0; i < pGame->nrOfEnemies; i++) {
+      destroyEnemy(pGame->pEnemies[i]);
+    }
+    pGame->nrOfEnemies = 0;
+    printf("Enemies destroyed\n");
+    // add for new enemy here
+  }
+
+  void spawnEnemies(Game *pGame, int ammount) {
+    for (int i = 0; i < ammount; i++) {
+        pGame->pEnemies[pGame->nrOfEnemies] =createEnemy(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT);
+          pGame->nrOfEnemies++;
+    }
+  }
+
+  void updateEnemies(Game *pGame, int *ammount) {
+    if (areTheyAllDead(pGame) == true) // yes this looks like shit
+    {
+      //(*ammount) += 2;
+      pGame->nrOfEnemies = 0;
+      spawnEnemies(pGame, *ammount);
+    }
+  }
+
+  bool areTheyAllDead(Game *pGame) {
+    for (int i = 0; i < pGame->nrOfEnemies; i++) {
+      if (isEnemyActive(pGame->pEnemies[i]) == true) {
+        return false;
+      }
+    }
+    return true;
+  }

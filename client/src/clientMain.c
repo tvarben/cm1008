@@ -198,7 +198,7 @@ int initiate(Game *pGame) {
 }
 
 void run(Game *pGame) {
-    pGame->nrOfEnemiesToSpawn= WAVE_1_EASY_MAP; //Change it in ship_data.h. Initial number of enemies, they get incremented by 2 in enemy_1.c.
+    pGame->nrOfEnemiesToSpawn= WAVE_1_EASY_MAP; //Change it in ship_data.h. Initial number of enemies, they get incremented by 2 down below in updateEnemies()
     while (pGame->isRunning) {
         switch (pGame->state) {
             case START:
@@ -265,7 +265,7 @@ void handleOngoingState(Game *pGame) {
     Uint32 now=0, delta=0, lastUpdate=SDL_GetTicks();
     const Uint32 tickInterval=8;
 
-    spawnEnemies(pGame, pGame->nrOfEnemiesToSpawn);// spawn enemies
+    spawnEnemies(pGame, pGame->nrOfEnemiesToSpawn);// spawn enemies locally
     while (pGame->isRunning && pGame->state == ONGOING) {
         now = SDL_GetTicks();
         delta = now - lastUpdate;
@@ -289,19 +289,19 @@ void handleOngoingState(Game *pGame) {
                 }
             }
             for (int i = 0; i < pGame->nrOfEnemies; i++) {
-                updateEnemy(pGame->pEnemies[i]);
+                updateEnemy(pGame->pEnemies[i]);                        //locally
             }
-            updateEnemies(pGame, &pGame->nrOfEnemiesToSpawn); 
+            updateEnemies(pGame, &pGame->nrOfEnemiesToSpawn); // Calls spawnEnemy() down at the bottom of the code
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
             SDL_RenderClear(pGame->pRenderer);
             drawStars(pGame->pStars,pGame->pRenderer);
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 drawShip(pGame->pShips[i]);   
             }
-            for (int i = 0; i < pGame->nrOfEnemies; i++) {
-                if (isEnemyActive(pGame->pEnemies[i]) == true) {
-                    drawEnemy(pGame->pEnemies[i]);
-                }
+            for (int i = 0; i < pGame->nrOfEnemies; i++) {          
+                if (isEnemyActive(pGame->pEnemies[i]) == true) {    //locally
+                    drawEnemy(pGame->pEnemies[i]);                  
+                }                                                   
             }
             SDL_RenderPresent(pGame->pRenderer);
         }
@@ -674,7 +674,7 @@ void resetEnemy(Game *pGame) {
   void updateEnemies(Game *pGame, int *ammount) {
     if (areTheyAllDead(pGame) == true) // yes this looks like shit
     {
-      (*ammount) += 2;
+      //(*ammount) += 2;         // Commented out for easier testing
       pGame->nrOfEnemies = 0;
       spawnEnemies(pGame, *ammount);
     }
