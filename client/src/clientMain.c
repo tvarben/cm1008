@@ -249,6 +249,7 @@ void handleOngoingState(Game *pGame) {
             //updateCannon(pGame->pCannons[0], pGame->pShips[0]);
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 if (pGame->pShips[i]) {
+                    update_projectiles(delta);
                     updateShipOnClients(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
                     updateCannon(pGame->pCannons[i], pGame->pShips[i]); // Test
                 }
@@ -257,6 +258,7 @@ void handleOngoingState(Game *pGame) {
             SDL_RenderClear(pGame->pRenderer);
             drawStars(pGame->pStars,pGame->pRenderer);
             for (int i = 0; i < MAX_PLAYERS; i++) {
+                render_projectiles(pGame->pRenderer);
                 drawShip(pGame->pShips[i]);   
                 drawCannon(pGame->pCannons[i]);
             }
@@ -495,6 +497,11 @@ void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame) {
             case SDL_SCANCODE_RIGHT:
                 cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
                 applyShipCommand(pGame->pShips[pGame->shipId], cData.command);
+                break;
+            case SDL_SCANCODE_SPACE:
+            printf("In applyShipCommand\n");
+                cData.command = SHOOT;
+                handleCannonEvent(pGame->pCannons[pGame->shipId], cData.command);
                 break;
             default:
                 cData.command = STOP_SHIP;

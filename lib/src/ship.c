@@ -14,7 +14,7 @@ struct ship {
     SDL_Renderer* renderer;
     SDL_Texture* texture;
     SDL_Rect shipRect;
-    bool keyLeft, keyRight, keyUp, keyDown, facingLeft;
+    bool keyLeft, keyRight, keyUp, keyDown, facingLeft, shoot, stopShoot;
 };
 
 Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int windowHeight) {
@@ -180,6 +180,11 @@ void applyShipCommand(Ship* pShip, ClientCommand c) {
             pShip->keyLeft = false;
             break;
         case SHOOT:
+            pShip->shoot = true;
+            break;
+        case STOP_SHOOT:
+            pShip->shoot = false;
+            break;
         case QUIT:
         default:
             break;

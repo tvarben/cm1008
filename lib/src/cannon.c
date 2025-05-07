@@ -1,6 +1,7 @@
 #include "cannon.h"
 #include "bullet.h"
 #include "ship.h"
+#include "ship_data.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_scancode.h>
@@ -87,18 +88,18 @@ void updateCannon(Cannon *pCannon, Ship *pShip) {
   }
 }
 
-  void handleCannonEvent(Cannon *c, SDL_Event *event) {
-    //printf("FIRING AWAY SIR! ('_')/ \n");
-    if (event->type == SDL_KEYDOWN && event->key.keysym.scancode == SDL_SCANCODE_SPACE) {
-      if (c->lastFacedLeft) {
-        spawn_projectile(c->rect.x - 8, c->rect.y + 15, -400, 0);
-        //printf("left\n");
-      } else {
-        spawn_projectile(c->rect.x + 20, c->rect.y + 15, 400, 0);
-        //printf("right\n");
-      }
-    }
-  }
+void handleCannonEvent(Cannon *cannon, ClientCommand command) {
+    printf("Came to cannon event\n");
+    //if (/*event->type == SDL_KEYDOWN && event->key.keysym.scancode == SDL_SCANCODE_SPACE*/) {
+        if (cannon->lastFacedLeft) {
+            spawn_projectile(cannon->rect.x - 8, cannon->rect.y + 15, -5, 0);
+            printf("left\n");
+        } else {
+            spawn_projectile(cannon->rect.x + 20, cannon->rect.y + 15, 5, 0);
+            printf("right\n");
+        }
+    //}
+}
 
 void resetCannon(Cannon *c) {
   c->spacebar = false;
