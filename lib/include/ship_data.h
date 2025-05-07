@@ -23,6 +23,7 @@ typedef enum{
     MOVE_RIGHT,
     STOP_SHIP,
     SHOOT,
+    STOP_SHOOT,
     QUIT
 }ClientCommand;
 
