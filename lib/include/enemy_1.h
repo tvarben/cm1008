@@ -3,6 +3,8 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
+#include "ship_data.h"
+
 
 typedef struct enemyImage EnemyImage;
 typedef struct enemy Enemy;
@@ -21,6 +23,12 @@ void damageEnemy(Enemy *pEnemy, int damage, int i);
 bool isInWindow(Enemy *pEnemy);
 bool isEnemyActive(Enemy *pEnemy);
 void printEnemyHealth(Enemy *pEnemy);
+void updateEnemyOnClients(Enemy *pEnemy, Enemy_1_Data enemyData);
+Enemy *createEnemyOnClient(EnemyImage *pEnemyImage, int window_width, int window_height, Enemy_1_Data enemyData);
+static void getStartValuesFromServer(Enemy *pEnemy, Enemy_1_Data enemyData);
+
+void updateEnemies_1_WithServerData(Enemy* pEnemy, Enemy_1_Data* pEnemyData);
+void getEnemy_1_DataPackage(Enemy* pEnemy, Enemy_1_Data* pEnemyData);
 
 
 #endif

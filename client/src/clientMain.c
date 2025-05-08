@@ -43,6 +43,7 @@ typedef struct {
     EnemyImage *pEnemyImage;
     Enemy *pEnemies[MAX_ENEMIES];
     int nrOfEnemies;
+    ServerData serverData;
 
 } Game;
 
@@ -62,8 +63,8 @@ void updateWithServerData(Game *pGame);
 MainMenuChoice handleMainMenuOptions(Game *pGame);
 void showCountdown(Game *pGame);
 void resetEnemy(Game *pGame);
-void spawnEnemies(Game *pGame, int ammount);
-void updateEnemies(Game *pGame, int *ammount);
+void spawnEnemies(Game *pGame, int amount);
+void updateEnemies(Game *pGame, int *amount);
 bool areTheyAllDead(Game *pGame);
 
 int main(int argc, char** argv) {
@@ -141,7 +142,7 @@ int initiate(Game *pGame) {
         printf("SDLNet_ResolveHost(127.0.0.1 2000): %s\n", SDLNet_GetError());
         return 0;
     }*/
-    if (!(pGame->pPacket = SDLNet_AllocPacket(512))) {
+    if (!(pGame->pPacket = SDLNet_AllocPacket(2048))) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 0;
     }
@@ -264,8 +265,9 @@ void handleOngoingState(Game *pGame) {
     ClientData cData;
     Uint32 now=0, delta=0, lastUpdate=SDL_GetTicks();
     const Uint32 tickInterval=8;
+    printf("Ongoing\n");
 
-    spawnEnemies(pGame, pGame->nrOfEnemiesToSpawn);// spawn enemies locally
+    
     while (pGame->isRunning && pGame->state == ONGOING) {
         now = SDL_GetTicks();
         delta = now - lastUpdate;
@@ -288,9 +290,6 @@ void handleOngoingState(Game *pGame) {
                     updateShipOnClients(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
                 }
             }
-            for (int i = 0; i < pGame->nrOfEnemies; i++) {
-                updateEnemy(pGame->pEnemies[i]);                        //locally
-            }
             updateEnemies(pGame, &pGame->nrOfEnemiesToSpawn); // Calls spawnEnemy() down at the bottom of the code
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
             SDL_RenderClear(pGame->pRenderer);
@@ -299,7 +298,7 @@ void handleOngoingState(Game *pGame) {
                 drawShip(pGame->pShips[i]);   
             }
             for (int i = 0; i < pGame->nrOfEnemies; i++) {          
-                if (isEnemyActive(pGame->pEnemies[i]) == true) {    //locally
+                if (isEnemyActive(pGame->pEnemies[i])) {    //locally
                     drawEnemy(pGame->pEnemies[i]);                  
                 }                                                   
             }
@@ -482,6 +481,8 @@ void updateWithServerData(Game *pGame) {
         if (pGame->pShips[i])
             updateShipsWithServerData(pGame->pShips[i], &serverData.ships[i], i, pGame->shipId);
     }
+    //for(int i=0 ;i<MAX_ENEMIES ; i++)
+    //    updateEnemies_1_WithServerData(pGame->pEnemies[i], &serverData.enemies_1[i]);
 }
 
 bool connectToServer(Game *pGame) {
@@ -662,29 +663,29 @@ void resetEnemy(Game *pGame) {
     pGame->nrOfEnemies = 0;
     printf("Enemies destroyed\n");
     // add for new enemy here
-  }
+}
 
-  void spawnEnemies(Game *pGame, int ammount) {
-    for (int i = 0; i < ammount; i++) {
-        pGame->pEnemies[pGame->nrOfEnemies] =createEnemy(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT);
+void spawnEnemies(Game *pGame, int amount) {
+    for (int i = 0; i < amount; i++) {
+        pGame->pEnemies[pGame->nrOfEnemies] = createEnemyOnClient(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
           pGame->nrOfEnemies++;
     }
-  }
+}
 
-  void updateEnemies(Game *pGame, int *ammount) {
-    if (areTheyAllDead(pGame) == true) // yes this looks like shit
+void updateEnemies(Game *pGame, int *amount) {
+    if (areTheyAllDead(pGame))
     {
-      //(*ammount) += 2;         // Commented out for easier testing
+      //(*amount) += 2;         // Commented out for easier testing
       pGame->nrOfEnemies = 0;
-      spawnEnemies(pGame, *ammount);
+      spawnEnemies(pGame, *amount);
     }
-  }
+}
 
-  bool areTheyAllDead(Game *pGame) {
+bool areTheyAllDead(Game *pGame) {
     for (int i = 0; i < pGame->nrOfEnemies; i++) {
-      if (isEnemyActive(pGame->pEnemies[i]) == true) {
+      if (isEnemyActive(pGame->pEnemies[i])) {
         return false;
       }
     }
     return true;
-  }
+}

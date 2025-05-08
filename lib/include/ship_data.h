@@ -44,9 +44,25 @@ typedef struct{
 }ShipData;
 
 typedef struct{
+    float x, y;
+    bool active;
+} Enemy_1_Data;
+
+typedef struct{
+    float x, y;
+    bool active;
+} Enemy_2_Data;
+
+typedef struct{
     GameState gState;
     int sDPlayerId;
     ShipData ships[MAX_PLAYERS];
-}ServerData;
+    
+    int nrOfEnemies, nrOfEnemiesToSpawn;
+    Enemy_1_Data enemies_1[MAX_ENEMIES];
+    //Enemy_2_Data enemies_2[MAX_ENEMIES];
+} ServerData;
+
+
 
 #endif

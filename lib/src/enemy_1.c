@@ -1,4 +1,5 @@
 #include "enemy_1.h"
+#include "ship_data.h"
 #include <SDL2/SDL_image.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -64,6 +65,29 @@ Enemy *createEnemy(EnemyImage *pEnemyImage, int window_width, int window_height)
     return pEnemy;
 }
 
+Enemy *createEnemyOnClient(EnemyImage *pEnemyImage, int window_width, int window_height, Enemy_1_Data enemyData) {
+    Enemy *pEnemy = malloc(sizeof(struct enemy));
+    pEnemy->pRenderer = pEnemyImage->pRenderer;
+    pEnemy->pTexture = pEnemyImage->pTexture;
+    pEnemy->window_width = window_width;
+    pEnemy->window_height = window_height;
+    SDL_QueryTexture(pEnemyImage->pTexture,NULL,NULL,&(pEnemy->rect.w),&(pEnemy->rect.h));
+    getStartValuesFromServer(pEnemy, enemyData);
+    pEnemy->active = true;
+    return pEnemy;
+}
+
+static void getStartValuesFromServer(Enemy *pEnemy, Enemy_1_Data enemyData) {
+    pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
+    pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
+    pEnemy->rectHitbox.w = pEnemy->rect.w - 20;
+    pEnemy->rectHitbox.h = pEnemy->rect.h - 10;
+    pEnemy->damage = 1;
+    pEnemy->health = 2;
+    pEnemy->x = enemyData.x;
+    pEnemy->y = enemyData.y;
+}
+
 static void getStartValues(Enemy *pEnemy){
     int startSpawnOnTheLeft =  rand() % 2; //0 or 1
     pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
@@ -74,12 +98,12 @@ static void getStartValues(Enemy *pEnemy){
     pEnemy->health = 2;
     //float speed = rand() % (50 - 15 + 1) + 15;
     float speed = INITIALSPEED;
-    if (startSpawnOnTheLeft == 1)
+    if (startSpawnOnTheLeft)
     {
-    pEnemy->x = pEnemy->window_width;
-    pEnemy->y = rand() % (pEnemy->window_height - pEnemy->rect.h);
-    pEnemy->vx = -speed; // rakt åt vänster
-    pEnemy->vy = 0;      // ingen rörelse i y-led
+        pEnemy->x = pEnemy->window_width;
+        pEnemy->y = rand() % (pEnemy->window_height - pEnemy->rect.h);
+        pEnemy->vx = -speed; // rakt åt vänster
+        pEnemy->vy = 0;      // ingen rörelse i y-led
    
     }
     else 
@@ -105,8 +129,8 @@ SDL_Rect getRectEnemy(Enemy *pEnemy)
 void updateEnemy(Enemy *pEnemy){
     if(pEnemy->active == true)
     {
-        pEnemy->x+=pEnemy->vx;
-        pEnemy->y+=pEnemy->vy;
+        pEnemy->x += pEnemy->vx;
+        pEnemy->y += pEnemy->vy;
         if (pEnemy->x > pEnemy->window_width || pEnemy->x + pEnemy->rect.w < 0 ||
             pEnemy->y > pEnemy->window_height || pEnemy->y + pEnemy->rect.h < 0)
         {
@@ -115,11 +139,17 @@ void updateEnemy(Enemy *pEnemy){
             printf("Enemy has fled \n");
             return;
         }
-        pEnemy->rect.x=pEnemy->x;
-        pEnemy->rect.y=pEnemy->y;
+        pEnemy->rect.x = pEnemy->x;
+        pEnemy->rect.y = pEnemy->y;
         pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
         pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
    }
+}
+
+void updateEnemyOnClients(Enemy *pEnemy, Enemy_1_Data enemyData) {
+    pEnemy->x = enemyData.x;
+    pEnemy->y = enemyData.y;
+    pEnemy->active = enemyData.active;
 }
 
 void drawEnemy(Enemy *pEnemy){
@@ -189,3 +219,17 @@ void printEnemyHealth(Enemy *pEnemy)
         printf("Health: %d\n",pEnemy->health);
     }
 }
+
+void getEnemy_1_DataPackage(Enemy *pEnemy, Enemy_1_Data *pEnemyData) {
+    pEnemyData->x = pEnemy->x;
+    pEnemyData->y = pEnemy->y;
+    pEnemyData->active = pEnemy->active;
+}
+
+void updateEnemies_1_WithServerData(Enemy *pEnemy, Enemy_1_Data *pEnemyData) {
+    pEnemy->x = pEnemyData->x;
+    pEnemy->y = pEnemyData->y;
+    pEnemy->active = pEnemyData->active;
+}
+
+
