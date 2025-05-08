@@ -20,7 +20,7 @@ void spawn_projectile(float x, float y, float dx, float dy) {
       projectiles[i].active = 1;
       projectiles[i].rect.w = projectile_width; // size of projectile
       projectiles[i].rect.h = projectile_length;
-      printf("spawning projectile\n");
+      //printf("spawning projectile\n");
       return;
     }
   }
@@ -31,13 +31,13 @@ void update_projectiles(Uint32 delta_time) {
     if (projectiles[i].active) {
       projectiles[i].x += projectiles[i].vx;// * delta_time;
       projectiles[i].y += projectiles[i].vy;// * delta_time;
-      printf("Updating projectiles\n");
+      //printf("Updating projectiles\n");
 
       // Deactivate if off screen (based on wndiow size)
       if (projectiles[i].x < 0 || projectiles[i].x > WINDOW_WIDTH ||
           projectiles[i].y < 0 || projectiles[i].y > WINDOW_HEIGHT) {
         projectiles[i].active = 0;
-        printf("deactivating projectile\n");
+        //printf("deactivating projectile\n");
       }
 
       // Update rect position for rendering
@@ -53,7 +53,7 @@ void render_projectiles(SDL_Renderer *renderer) {
   for (int i = 0; i < MAX_PROJECTILES; i++) {
     if (projectiles[i].active) {
       SDL_RenderFillRect(renderer, &projectiles[i].rect);
-      printf("rendering projectile\n");
+      //printf("rendering projectile\n");
     }
   }
 }
