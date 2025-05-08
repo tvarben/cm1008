@@ -51,7 +51,7 @@ void handleLobbyState(Game *pGame);
 void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress, bool textFieldFocused);
 void handleGameOverState(Game *pGame);
 void closeGame(Game *pGame);
-void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame);
+void handleInput(SDL_Event* pEvent, Game* pGame);
 bool connectToServer(Game *pGame);
 void receiveDataFromServer();
 void updateWithServerData(Game *pGame);
@@ -227,12 +227,13 @@ void renderStartWindow(Game *pGame) {
 void handleOngoingState(Game *pGame) {
     SDL_Event event;
     ClientData cData;
-    pGame->lastCommand = STOP_SHIP;
-    Uint32 now=0, delta=0, lastUpdate=SDL_GetTicks();
-    const Uint32 tickInterval=8;
+    Uint32 now=0, delta=0, lastSend = 0, lastUpdate=SDL_GetTicks();
+    const Uint32 tickInterval=8, resendIntervall = 50;
     pGame->command = STOP_SHIP;
+    pGame->lastCommand = STOP_SHIP;
+
     while (pGame->isRunning && pGame->state == ONGOING) {
-        now = SDL_GetTicks();               // används bara på rad 253, men delta används inte i update_projectiles
+        now = SDL_GetTicks();
         delta = now - lastUpdate;           //används bara på rad 253, men delta används inte i update_projectiles
         while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
             updateWithServerData(pGame);
@@ -242,23 +243,23 @@ void handleOngoingState(Game *pGame) {
                 pGame->isRunning = false;
                 return;
             } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
-                handleInput(&event, cData.command, pGame);
+                handleInput(&event, pGame);
             }
         }
         /*if (delta>=tickInterval) {
             lastUpdate=now;*/
         if (timeToUpdate(&lastUpdate, tickInterval)) {
             applyShipCommand(pGame->pShips[pGame->shipId], pGame->command);
-            if (pGame->command != pGame->lastCommand) {
+            if (pGame->command != pGame->lastCommand || now - lastSend >= resendIntervall) { // Skicka endast om användare ändrar command || periodiskt för failsafe
                 ClientData ccData = { .command = pGame->command };
                 memcpy(pGame->pPacket->data, &ccData, sizeof(ClientData));
                 pGame->pPacket->len = sizeof(ClientData);
                 SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
                 pGame->lastCommand = pGame->command;
+                lastSend = now;
             }
 
             updateShipVelocity(pGame->pShips[pGame->shipId]);
-            //updateCannon(pGame->pCannons[0], pGame->pShips[0]);
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 if (pGame->pShips[i]) {
                     update_projectiles(delta);
@@ -488,7 +489,7 @@ void receiveDataFromServer() {
     printf("receiveDataFromServer().\n");
 }
 
-void handleInput(SDL_Event* pEvent, ClientCommand command, Game* pGame) {
+void handleInput(SDL_Event* pEvent, Game* pGame) {
     ClientData cData;
     cData.cDPlayerId = pGame->shipId;  //cDPlayerId not really needed. Server finds out which klient it is based on IP-address
     SDL_Scancode key = pEvent->key.keysym.scancode;
