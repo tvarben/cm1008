@@ -16,8 +16,7 @@ struct Cannon {
   SDL_Texture *texture;
   SDL_Rect rect;
   bool lastFacedLeft;
-  bool spacebar, moveLeftQ, moveRightE,
-      moveDownN; // keys decide direction of bullet
+  bool spacebar, moveLeftQ, moveRightE, moveDownN, shoot; // keys decide direction of bullet
 };
 
 Cannon *createCannon(SDL_Renderer *renderer, int windowWidth,
@@ -89,17 +88,31 @@ void updateCannon(Cannon *pCannon, Ship *pShip) {
 }
 
 void handleCannonEvent(Cannon *cannon, ClientCommand command) {
-    printf("Came to cannon event\n");
-    //if (/*event->type == SDL_KEYDOWN && event->key.keysym.scancode == SDL_SCANCODE_SPACE*/) {
-        if (cannon->lastFacedLeft) {
-            spawn_projectile(cannon->rect.x - 8, cannon->rect.y + 15, -5, 0);
-            printf("left\n");
-        } else {
-            spawn_projectile(cannon->rect.x + 20, cannon->rect.y + 15, 5, 0);
-            printf("right\n");
-        }
-    //}
+  //if (command == SHOOT) {
+    if (cannon->lastFacedLeft) {
+        spawn_projectile(cannon->rect.x - 8, cannon->rect.y + 15, -5, 0);
+        //printf("left\n");
+    } else {
+        spawn_projectile(cannon->rect.x + 20, cannon->rect.y + 15, 5, 0);
+        //printf("right\n");
+    }
+    //command = STOP_SHOOT;
+  //}
 }
+
+void applyCannonCommand(Cannon *pCannon, ClientCommand command) {
+  switch (command) {
+      case SHOOT:
+          pCannon->shoot = true;
+          break;
+      case STOP_SHOOT:
+          pCannon->shoot = false;
+          break;
+      case QUIT:
+      default:
+          break;
+  }
+}    
 
 void resetCannon(Cannon *c) {
   c->spacebar = false;

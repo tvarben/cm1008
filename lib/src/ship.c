@@ -82,7 +82,7 @@ void updateShipVelocity(Ship* pShip) {
 void updateShipOnClients(Ship* pShip, int shipId, int myShipId) {
     const float lerpFactor = 0.75f; // 75% Adjust this value to control the interpolation speed, the closer to 1 the faster
     const float correctionFactor = 5; // nr of pixels, threshold for correction
-    float dx, dy;
+    float dx, dy;  
 
     if (shipId == myShipId) {
         pShip->xStart += pShip->vx * SPEED;
@@ -158,7 +158,7 @@ void destroyShip(Ship* pShip) {
     }
 }
 
-void applyShipCommand(Ship* pShip, ClientCommand command) {
+void applyShipCommand(Ship *pShip, ClientCommand command) {
     switch (command) {
         case STOP_SHIP:
             pShip->keyDown = pShip->keyUp = pShip->keyLeft = pShip->keyRight = false;
@@ -207,6 +207,13 @@ void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int
     pShip->facingLeft = pShipData->facingLeft;
 }
 
+bool isShooting(Ship* pShip) {
+    if (pShip->shoot == true) {
+        printf("Shooting\n");
+        return true;
+    }
+    return false;
+}
 
 /*void handleShipEvent(Ship* pShip, SDL_Event* event) {
     bool down = event->type == SDL_KEYDOWN;

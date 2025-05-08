@@ -36,7 +36,7 @@ typedef struct {
     UDPsocket pSocket;
     IPaddress serverAddress;
     UDPpacket *pPacket;
-    bool isRunning;
+    bool isRunning, isShooting;
     Stars *pStars;
     SDL_Texture *pStartImage_1, *pStartImage_2;
     Text *pCountdownText;
@@ -516,9 +516,10 @@ void handleInput(SDL_Event* pEvent, Game* pGame) {
                 applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
                 break;
             case SDL_SCANCODE_SPACE:
-                printf("In applyShipCommand\n");
-                pGame->command = SHOOT;
-                //cData.command = SHOOT;
+                //printf("In applyShipCommand\n");
+                pGame->command = pEvent->type == SDL_KEYDOWN ? SHOOT : STOP_SHOOT;
+                cData.command = SHOOT;
+                //cData.isShooting = true;
                 handleCannonEvent(pGame->pCannons[pGame->shipId], cData.command);
                 break;
             default:

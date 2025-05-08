@@ -25,7 +25,7 @@ typedef enum{
     SHOOT,
     STOP_SHOOT,
     QUIT
-}ClientCommand;
+} ClientCommand;
 
 typedef enum {
     MAINMENU_NONE,
@@ -37,18 +37,19 @@ typedef enum {
 typedef struct{
     int cDPlayerId; //cDPlayerId not really needed. Server finds out which klient it is based on IP-address
     ClientCommand command;
-}ClientData;
+    bool isShooting;
+} ClientData;
 
 typedef struct{
     float x, y, vx, vy;
     bool facingLeft;
     //int vx, vy;   //Is vx, vy needed?
-}ShipData;
+} ShipData;
 
 typedef struct{
     GameState gState;
     int sDPlayerId;
     ShipData ships[MAX_PLAYERS];
-}ServerData;
+} ServerData;
 
 #endif

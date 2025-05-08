@@ -32,7 +32,7 @@ typedef struct {
     UDPsocket pSocket;
     UDPpacket *pPacket;
     ServerData serverData;
-    bool isRunning;
+    bool isRunning, isShooting;
     Cannon *pCannon;
 } Game;
 
@@ -221,6 +221,11 @@ void handleOngoingState(Game *pGame) {
         if (timeToUpdate(&lastUpdate, tickInterval)) {
             for(int i = 0; i < MAX_PLAYERS; i++) {
                 if (pGame->pShips[i]) {
+                    if (isShooting(pGame->pShips[i]) ) {
+                        printf("IN IS SHOOTING\n");
+                        handleCannonEvent(pGame->pCannons[i], cData.command);
+                    }
+                    update_projectiles(delta);
                     updateShipVelocity(pGame->pShips[i]);
                     updateShipOnServer(pGame->pShips[i]);
                     updateCannon(pGame->pCannons[i], pGame->pShips[i]);
@@ -229,6 +234,7 @@ void handleOngoingState(Game *pGame) {
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
             SDL_RenderClear(pGame->pRenderer);
             for(int i=0; i<MAX_PLAYERS; i++){
+                render_projectiles(pGame->pRenderer);
                 drawShip(pGame->pShips[i]);
                 drawCannon(pGame->pCannons[i]);
                 //draw cannon
