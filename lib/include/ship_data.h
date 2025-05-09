@@ -42,7 +42,7 @@ typedef struct{
 
 typedef struct{
     float x, y, vx, vy;
-    bool facingLeft;
+    bool facingLeft, isShooting;
     //int vx, vy;   //Is vx, vy needed?
 } ShipData;
 
@@ -50,6 +50,7 @@ typedef struct{
     GameState gState;
     int sDPlayerId;
     ShipData ships[MAX_PLAYERS];
+    //bool isShooting;
 } ServerData;
 
 #endif

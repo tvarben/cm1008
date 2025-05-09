@@ -100,7 +100,7 @@ int initiate(Game *pGame) {
     pGame->pGameName = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
                                 "SpaceShooter", WINDOW_WIDTH/2, WINDOW_HEIGHT/4);
     pGame->pExitText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
-                                "Exit [2]", WINDOW_WIDTH/1.5, WINDOW_HEIGHT/2+100);
+                                "Exit [8]", WINDOW_WIDTH/1.5, WINDOW_HEIGHT/2+100);
     pGame->pLobbyText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
                                 "Waiting on clients...", WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
     if(!pGame->pFont){
@@ -111,7 +111,7 @@ int initiate(Game *pGame) {
         printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
         return 0;
     }
-    if (!(pGame->pPacket = SDLNet_AllocPacket(512))) {
+    if (!(pGame->pPacket = SDLNet_AllocPacket(2048))) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 0;
     }
@@ -178,7 +178,7 @@ void handleStartState(Game *pGame) {
                 if (event.key.keysym.sym == SDLK_1) {
                     pGame->state = LOBBY;
                     return;
-                } else if (event.key.keysym.sym == SDLK_2) {
+                } else if (event.key.keysym.sym == SDLK_8) {
                     pGame->isRunning = false;
                     return;
                 }
@@ -212,18 +212,24 @@ void handleOngoingState(Game *pGame) {
                             (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF, port);*/
             memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
             clientIndex = getClientIndex(pGame, &pGame->pPacket->address); 
-            if (clientIndex >= 0 && clientIndex < MAX_PLAYERS)
+            if (clientIndex >= 0 && clientIndex < MAX_PLAYERS) {
                 applyShipCommand(pGame->pShips[clientIndex], cData.command);
+                if (cData.isShooting) { 
+                    setShoot(pGame->pShips[clientIndex], true);
+                    //pGame->pShips[clientIndex]->shoot = true;
+                }
             }
-            
+        }
         /*if (delta >= tickInterval) {
             lastUpdate = now;*/
         if (timeToUpdate(&lastUpdate, tickInterval)) {
             for(int i = 0; i < MAX_PLAYERS; i++) {
                 if (pGame->pShips[i]) {
-                    if (isShooting(pGame->pShips[i]) ) {
+                    //if (isShooting(pGame->pShips[i]) ) {
+                    if (isCannonShooting(pGame->pShips[i])) {
                         printf("IN IS SHOOTING\n");
-                        handleCannonEvent(pGame->pCannons[i], cData.command);
+                        handleCannonEvent(pGame->pCannons[i]);
+                        //setShoot(pGame->pShips[i], false);
                     }
                     update_projectiles(delta);
                     updateShipVelocity(pGame->pShips[i]);
@@ -241,6 +247,9 @@ void handleOngoingState(Game *pGame) {
             }
             SDL_RenderPresent(pGame->pRenderer);
             sendServerData(pGame);
+            for (int i = 0; i < MAX_PLAYERS; i++) {
+                setShoot(pGame->pShips[i], false);
+            }
         }
     }
 }

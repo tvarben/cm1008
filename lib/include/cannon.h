@@ -10,7 +10,7 @@ Cannon *createCannon(SDL_Renderer *renderer, int windowWidth, int windowHeight);
 void drawCannon(Cannon *s);
 void destroyCannon(Cannon *s);
 void updateCannon(Cannon *pCannon, Ship *pShip);
-void handleCannonEvent(Cannon *cannon, ClientCommand command);
+void handleCannonEvent(Cannon *cannon);
 void resetCannon(Cannon *c);
 void applyCannonCommand(Cannon *pCannon, ClientCommand command);
 #endif
