@@ -47,8 +47,8 @@ Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int wind
     SDL_QueryTexture(pShip->texture, NULL, NULL, &pShip->shipRect.w, &pShip->shipRect.h);
     pShip->shipRect.w /= 4;
     pShip->shipRect.h /= 4;
-    pShip->xStart /*= pShip->x */= pShip->shipRect.x = windowWidth/2-pShip->shipRect.h/2;
-    pShip->yStart /*= pShip->y */= pShip->shipRect.y = (playerId*100) + 50;
+    pShip->xStart = pShip->x = pShip->shipRect.x = windowWidth/2-pShip->shipRect.h/2;
+    pShip->yStart = pShip->y = pShip->shipRect.y = (playerId*100) + 50;
     // For smooth movement, initialize target position to start position
     pShip->targetX = pShip->xStart;
     pShip->targetY = pShip->yStart;
@@ -85,19 +85,19 @@ void updateShipOnClients(Ship* pShip, int shipId, int myShipId) {
     float dx, dy;  
 
     if (shipId == myShipId) {
-        pShip->xStart += pShip->vx * SPEED;
-        pShip->yStart += pShip->vy * SPEED;
+        pShip->x += pShip->vx * SPEED;
+        pShip->y += pShip->vy * SPEED;
 
-        dx = pShip->targetX - pShip->xStart;
-        dy = pShip->targetY - pShip->yStart;
+        dx = pShip->targetX - pShip->x;
+        dy = pShip->targetY - pShip->y;
 
         if (dx < -correctionFactor || dx > correctionFactor || dy < -correctionFactor || dy > correctionFactor) {
-            pShip->xStart += (dx) * lerpFactor;
-            pShip->yStart += (dy) * lerpFactor;
+            pShip->x += (dx) * lerpFactor;
+            pShip->y += (dy) * lerpFactor;
         }
     } else {
-            pShip->xStart += (pShip->targetX - pShip->xStart) * lerpFactor;
-            pShip->yStart += (pShip->targetY - pShip->yStart) * lerpFactor;
+            pShip->x += (pShip->targetX - pShip->x) * lerpFactor;
+            pShip->y += (pShip->targetY - pShip->y) * lerpFactor;
     }
     stayInWindow(pShip);
 }
@@ -111,29 +111,29 @@ bool isLeft(Ship *pShip) {
     }
 }
 
-int getShipX(Ship *pShip) { return pShip->xStart; }
-int getShipY(Ship *pShip) { return pShip->yStart; }
+int getShipX(Ship *pShip) { return pShip->x; }
+int getShipY(Ship *pShip) { return pShip->y; }
 
 // For server (no client prediction, pure physics)
 void updateShipOnServer(Ship* pShip) {
 
-    pShip->xStart += pShip->vx * SPEED;
-    pShip->yStart += pShip->vy * SPEED;
+    pShip->x += pShip->vx * SPEED;
+    pShip->y += pShip->vy * SPEED;
 
     stayInWindow(pShip);
 }
 
 void stayInWindow(Ship* pShip) {
-    pShip->shipRect.x = (int)pShip->xStart;
-    pShip->shipRect.y = (int)pShip->yStart;
+    pShip->shipRect.x = (int)pShip->x;
+    pShip->shipRect.y = (int)pShip->y;
 
     // BOUNDARY CHECK
-    if (pShip->xStart < 0) pShip->xStart = 0;
-    if (pShip->yStart < 0) pShip->yStart = 0;
-    if (pShip->xStart > pShip->windowWidth - pShip->shipRect.w) 
-        pShip->xStart = pShip->windowWidth - pShip->shipRect.w;
-    if (pShip->yStart > pShip->windowHeight - pShip->shipRect.h) 
-        pShip->yStart = pShip->windowHeight - pShip->shipRect.h;
+    if (pShip->x < 0) pShip->x = 0;
+    if (pShip->y < 0) pShip->y = 0;
+    if (pShip->x > pShip->windowWidth - pShip->shipRect.w) 
+        pShip->x = pShip->windowWidth - pShip->shipRect.w;
+    if (pShip->y > pShip->windowHeight - pShip->shipRect.h) 
+        pShip->y = pShip->windowHeight - pShip->shipRect.h;
 }
 
 void drawShip(Ship* pShip) {
@@ -186,8 +186,8 @@ void applyShipCommand(Ship *pShip, ClientCommand command) {
 }    
 
 void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
-    pShipData->x = pShip->xStart;
-    pShipData->y = pShip->yStart;
+    pShipData->x = pShip->x;
+    pShipData->y = pShip->y;
     pShipData->vx = pShip->vx;
     pShipData->vy = pShip->vy;
     pShipData->facingLeft = pShip->facingLeft;
