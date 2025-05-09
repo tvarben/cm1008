@@ -14,7 +14,7 @@ struct ship {
     SDL_Renderer* renderer;
     SDL_Texture* texture;
     SDL_Rect shipRect;
-    bool keyLeft, keyRight, keyUp, keyDown, facingLeft, shoot, stopShoot;
+    bool keyLeft, keyRight, keyUp, keyDown, facingLeft, isShooting;
 };
 
 Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int windowHeight) {
@@ -26,7 +26,7 @@ Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int wind
     pShip->windowWidth = windowWidth;
     pShip->windowHeight = windowHeight;
     pShip->renderer = renderer;
-    pShip->keyDown=pShip->keyUp=pShip->keyRight=pShip->keyLeft=false;
+    pShip->keyDown=pShip->keyUp=pShip->keyRight=pShip->keyLeft=pShip->isShooting=false;
 
     SDL_Surface* surface = IMG_Load("../lib/resources//player.png");
     if (!surface) {
@@ -179,12 +179,6 @@ void applyShipCommand(Ship *pShip, ClientCommand command) {
             pShip->keyRight = true;
             pShip->keyLeft = false;
             break;
-        case SHOOT:
-            pShip->shoot = true;
-            break;
-        case STOP_SHOOT:
-            pShip->shoot = false;
-            break;
         case QUIT:
         default:
             break;
@@ -197,6 +191,7 @@ void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
     pShipData->vx = pShip->vx;
     pShipData->vy = pShip->vy;
     pShipData->facingLeft = pShip->facingLeft;
+    pShipData->isShooting = pShip->isShooting;
 }
 
 void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int myShipId) {
@@ -205,14 +200,15 @@ void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int
     pShip->vx = pShipData->vx;
     pShip->vy = pShipData->vy;
     pShip->facingLeft = pShipData->facingLeft;
+    pShip->isShooting = pShipData->isShooting;
 }
 
-bool isShooting(Ship* pShip) {
-    if (pShip->shoot == true) {
-        printf("Shooting\n");
-        return true;
-    }
-    return false;
+bool isCannonShooting(Ship* pShip) {
+    return pShip->isShooting;
+}
+
+void setShoot(Ship *pShip, bool value) {
+    pShip->isShooting = value;
 }
 
 /*void handleShipEvent(Ship* pShip, SDL_Event* event) {

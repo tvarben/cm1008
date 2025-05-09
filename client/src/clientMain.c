@@ -118,7 +118,7 @@ int initiate(Game *pGame) {
                                         "Exit",WINDOW_WIDTH/2, 570);
     pGame->pWaitingText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,
                                         "Waiting for other players to join...",WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
-    if (!(pGame->pPacket = SDLNet_AllocPacket(512))) {
+    if (!(pGame->pPacket = SDLNet_AllocPacket(2048))) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 0;
     }
@@ -162,6 +162,7 @@ int initiate(Game *pGame) {
     }
     pGame->isRunning = true;
     pGame->state = START;
+    pGame->isShooting = false; //
     return 1;
 }
 
@@ -250,8 +251,8 @@ void handleOngoingState(Game *pGame) {
             lastUpdate=now;*/
         if (timeToUpdate(&lastUpdate, tickInterval)) {
             applyShipCommand(pGame->pShips[pGame->shipId], pGame->command);
-            if (pGame->command != pGame->lastCommand || now - lastSend >= resendIntervall) { // Skicka endast om användare ändrar command || periodiskt för failsafe
-                ClientData ccData = { .command = pGame->command };
+            if (pGame->command != pGame->lastCommand || pGame->isShooting || now - lastSend >= resendIntervall) { // Skicka endast om användare ändrar command || periodiskt för failsafe
+                ClientData ccData = { .command = pGame->command, .isShooting = pGame->isShooting };
                 memcpy(pGame->pPacket->data, &ccData, sizeof(ClientData));
                 pGame->pPacket->len = sizeof(ClientData);
                 SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
@@ -260,11 +261,19 @@ void handleOngoingState(Game *pGame) {
             }
 
             updateShipVelocity(pGame->pShips[pGame->shipId]);
+            // if (pGame->isShooting) {
+            //     handleCannonEvent(pGame->pCannons[pGame->shipId]);
+            //     //pGame->isShooting = false;
+            // }
+            //Använder vi ens prediction?
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 if (pGame->pShips[i]) {
                     update_projectiles(delta);
                     updateShipOnClients(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
-                    updateCannon(pGame->pCannons[i], pGame->pShips[i]); // Test
+                    updateCannon(pGame->pCannons[i], pGame->pShips[i]);
+                    if (isCannonShooting(pGame->pShips[i])) {
+                        handleCannonEvent(pGame->pCannons[i]);
+                    }
                 }
             }
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
@@ -276,6 +285,10 @@ void handleOngoingState(Game *pGame) {
                 drawCannon(pGame->pCannons[i]);
             }
             SDL_RenderPresent(pGame->pRenderer);
+            pGame->isShooting = false;
+            for (int i = 0; i < MAX_PLAYERS; i++) {
+                setShoot(pGame->pShips[i], false);
+            }
         }
     }
 }
@@ -516,11 +529,11 @@ void handleInput(SDL_Event* pEvent, Game* pGame) {
                 applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
                 break;
             case SDL_SCANCODE_SPACE:
-                //printf("In applyShipCommand\n");
-                pGame->command = pEvent->type == SDL_KEYDOWN ? SHOOT : STOP_SHOOT;
-                cData.command = SHOOT;
+                //pGame->command = pEvent->type == SDL_KEYDOWN ? SHOOT : STOP_SHOOT;
+                pGame->isShooting = true;
+                //cData.command = SHOOT;
                 //cData.isShooting = true;
-                handleCannonEvent(pGame->pCannons[pGame->shipId], cData.command);
+                //handleCannonEvent(pGame->pCannons[pGame->shipId]);
                 break;
             default:
                 pGame->command = STOP_SHIP;

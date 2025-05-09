@@ -23,5 +23,6 @@ void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int
 int getShipX(Ship *pShip);
 int getShipY(Ship *pShip);
 bool isLeft(Ship *pShip);
-bool isShooting(Ship* pShip);
+bool isCannonShooting(Ship* pShip);
+void setShoot(Ship *pShip, bool value);
 #endif
