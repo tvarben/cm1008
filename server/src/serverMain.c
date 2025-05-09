@@ -47,11 +47,9 @@ void addClient(Game *pGame);
 void closeGame(Game *pGame);
 int getClientIndex(Game *pGame, IPaddress *clientAddr);
 void sendServerData(Game* pGame);
-//void resetEnemy(Game *pGame); NOT IN USE!
 void spawnEnemies_1(Game *pGame, int amount);
 void updateEnemies_1(Game *pGame, int *amount);
 bool areTheyAllDead_1(Game *pGame);
-//void getNrOfEnemiesDataPackage(int nrOfEnemies_1, ServerData *pServerData); NOT IN USE!
 void printPacketsData(Game* pGame);
 
 int main(int argc, char** argv) {
@@ -415,15 +413,6 @@ if (pGame->pEnemy_1Image) destroyEnemy_1Image(pGame->pEnemy_1Image);
     SDL_Quit();
     printf("SDL_Quit");
 }
-//FUNC NOT IN USE! WE use destroyEnemy() in closeGame!
-/*void resetEnemy(Game *pGame) {
-    for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
-      destroyEnemy(pGame->pEnemies_1[i]);
-    }
-    pGame->nrOfEnemies_1 = 0;
-    printf("Enemies destroyed\n");
-    // add for new enemy here
-}*/
 
 void spawnEnemies_1(Game *pGame, int amount) {
     for (int i = 0; i < amount; i++) {

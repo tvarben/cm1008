@@ -28,7 +28,6 @@ typedef struct {
     GameState state;
     Mix_Music *pMusic;
 	TTF_Font *pFont, *pSmallFont;
-	//Text *pStartText; ??
     Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pScoreText, *pMultiPlayerText, *pMenuText, *pGameOverText, *pWaitingText;
     ClientCommand command;
     UDPsocket pSocket;
@@ -62,9 +61,6 @@ void receiveDataFromServer();
 void updateWithServerData(Game *pGame);
 MainMenuChoice handleMainMenuOptions(Game *pGame);
 void showCountdown(Game *pGame);
-//void resetEnemy(Game *pGame); NOT IN USE
-//void spawnEnemies(Game *pGame, int amount); NOT IN USE!
-//void updateEnemies(Game *pGame, int *amount); NOT IN USE!
 bool areTheyAllDead(Game *pGame);
 
 int main(int argc, char** argv) {
@@ -287,7 +283,7 @@ void handleOngoingState(Game *pGame) {
                 drawShip(pGame->pShips[i]);   
             }
             for (int i = 0; i < pGame->nrOfEnemies_1; i++) {          
-                if (isEnemyActive(pGame->pEnemies_1[i])) {    //locally
+                if (isEnemyActive(pGame->pEnemies_1[i])) {    
                     updateEnemyOnClients(pGame->pEnemies_1[i], pGame->serverData.enemies_1[i]);
                     drawEnemy(pGame->pEnemies_1[i]);                  
                 }                                                   
@@ -649,40 +645,4 @@ void closeGame(Game *pGame) {
     IMG_Quit();
     SDL_Quit();
 }
-
-//FUNC NOT IN USE! WE use destroyEnemy() in closeGame!
-/*void resetEnemy(Game *pGame) {
-    for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
-      destroyEnemy(pGame->pEnemies_1[i]);
-    }
-    pGame->nrOfEnemies_1 = 0;
-    printf("Enemies destroyed\n");
-    // add for new enemy here
-}*/
-
-//FUNC NOT IN USE IN CLIENT! We use createEnemyOnClient() in ONGOING state.
-/*void spawnEnemies(Game *pGame, int amount) {
-    for (int i = 0; i < amount; i++) {
-        pGame->pEnemies_1[i] = createEnemyOnClient(pGame->pEnemy_1Image, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
-    }
-}*/
-
-//FUNC NOT IN USE IN CLIENT! This is done in the server and sent out to clients!
-/*void updateEnemies(Game *pGame, int *amount) {
-    if (areTheyAllDead(pGame))
-    {
-      //(*amount) += 2;         // Commented out for easier testing
-      pGame->nrOfEnemies_1 = 0;
-      spawnEnemies(pGame, *amount);
-    }
-}*/
-//FUNC NOT IN USE IN CLIENT! This is done in the server and sent out to clients!
-/*bool areTheyAllDead(Game *pGame) {
-    for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
-      if (isEnemyActive(pGame->pEnemies_1[i])) {
-        return false;
-      }
-    }
-    return true;
-}*/
 
