@@ -136,7 +136,7 @@ void updateEnemy(Enemy *pEnemy){
         {
             //getStartValues(pEnemy); //immediatly respawns enemy once it leaves windows
             pEnemy->active = false;
-            printf("Enemy has fled \n");
+            //printf("Enemy has fled \n");
             return;
         }
         pEnemy->rect.x = pEnemy->x;
@@ -163,11 +163,11 @@ void drawEnemy(Enemy *pEnemy){
     }
 }
 
-void destroyEnemy(Enemy *pEnemy){
+void destroyEnemy_1(Enemy *pEnemy){
         free(pEnemy);
 }
 
-void destroyEnemyImage(EnemyImage *pEnemyImage){
+void destroyEnemy_1Image(EnemyImage *pEnemyImage){
     SDL_DestroyTexture(pEnemyImage->pTexture);
 }
 

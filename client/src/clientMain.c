@@ -39,9 +39,9 @@ typedef struct {
     SDL_Texture *pStartImage_1, *pStartImage_2;
     Text *pCountdownText;
 
-    int nrOfEnemiesToSpawn;
-    EnemyImage *pEnemyImage;
-    Enemy *pEnemies[MAX_ENEMIES];
+    
+    EnemyImage *pEnemy_1Image;
+    Enemy *pEnemies_1[MAX_ENEMIES];
     int nrOfEnemies_1;
     ServerData serverData;
 
@@ -62,9 +62,9 @@ void receiveDataFromServer();
 void updateWithServerData(Game *pGame);
 MainMenuChoice handleMainMenuOptions(Game *pGame);
 void showCountdown(Game *pGame);
-void resetEnemy(Game *pGame);
-void spawnEnemies(Game *pGame, int amount);
-void updateEnemies(Game *pGame, int *amount);
+//void resetEnemy(Game *pGame); NOT IN USE
+//void spawnEnemies(Game *pGame, int amount); NOT IN USE!
+//void updateEnemies(Game *pGame, int *amount); NOT IN USE!
 bool areTheyAllDead(Game *pGame);
 
 int main(int argc, char** argv) {
@@ -130,18 +130,6 @@ int initiate(Game *pGame) {
     pGame->pWaitingText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,
                                         "Waiting for other players to joing...",WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
 
-    /*if(!pGame->pFont){
-        printf("Error: %s\n",TTF_GetError());
-        return 0;
-    }*/ 
-    /*if (!(pGame->pSocket = SDLNet_UDP_Open(0))) {
-        printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
-        return 0;
-    }*/
-    /*if (SDLNet_ResolveHost(&(pGame->serverAddress), "127.0.0.1", SERVER_PORT)) {
-        printf("SDLNet_ResolveHost(127.0.0.1 2000): %s\n", SDLNet_GetError());
-        return 0;
-    }*/
     if (!(pGame->pPacket = SDLNet_AllocPacket(2048))) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 0;
@@ -189,7 +177,7 @@ int initiate(Game *pGame) {
         return 0;
     }
 
-    pGame->pEnemyImage = initiateEnemy(pGame->pRenderer);
+    pGame->pEnemy_1Image = initiateEnemy(pGame->pRenderer);
     pGame->nrOfEnemies_1 = 0;
     printf("Enemy image created\n");
 
@@ -199,7 +187,6 @@ int initiate(Game *pGame) {
 }
 
 void run(Game *pGame) {
-    pGame->nrOfEnemiesToSpawn= WAVE_1_EASY_MAP; //Change it in ship_data.h. Initial number of enemies, they get incremented by 2 down below in updateEnemies()
     while (pGame->isRunning) {
         switch (pGame->state) {
             case START:
@@ -290,9 +277,8 @@ void handleOngoingState(Game *pGame) {
                     updateShipOnClients(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
                 }
             }
-            //updateEnemies(pGame, &pGame->nrOfEnemiesToSpawn); // Calls spawnEnemy() down at the bottom of the code
             for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
-                pGame->pEnemies[i] = createEnemyOnClient(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
+                pGame->pEnemies_1[i] = createEnemyOnClient(pGame->pEnemy_1Image, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
             }
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
             SDL_RenderClear(pGame->pRenderer);
@@ -301,9 +287,9 @@ void handleOngoingState(Game *pGame) {
                 drawShip(pGame->pShips[i]);   
             }
             for (int i = 0; i < pGame->nrOfEnemies_1; i++) {          
-                if (isEnemyActive(pGame->pEnemies[i])) {    //locally
-                    updateEnemyOnClients(pGame->pEnemies[i], pGame->serverData.enemies_1[i]);
-                    drawEnemy(pGame->pEnemies[i]);                  
+                if (isEnemyActive(pGame->pEnemies_1[i])) {    //locally
+                    updateEnemyOnClients(pGame->pEnemies_1[i], pGame->serverData.enemies_1[i]);
+                    drawEnemy(pGame->pEnemies_1[i]);                  
                 }                                                   
             }
             SDL_RenderPresent(pGame->pRenderer);
@@ -654,43 +640,49 @@ void closeGame(Game *pGame) {
     if (pGame->pSocket) SDLNet_UDP_Close(pGame->pSocket);
     if (pGame->pPacket) SDLNet_FreePacket(pGame->pPacket);
 
+
+    for (int i=0; i<MAX_ENEMIES; i++) if (pGame->pEnemies_1[i]) destroyEnemy_1(pGame->pEnemies_1[i]);
+    if (pGame->pEnemy_1Image) destroyEnemy_1Image(pGame->pEnemy_1Image);
+
     SDLNet_Quit();
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();
 }
 
-// do not use this
-void resetEnemy(Game *pGame) {
+//FUNC NOT IN USE! WE use destroyEnemy() in closeGame!
+/*void resetEnemy(Game *pGame) {
     for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
-      destroyEnemy(pGame->pEnemies[i]);
+      destroyEnemy(pGame->pEnemies_1[i]);
     }
     pGame->nrOfEnemies_1 = 0;
     printf("Enemies destroyed\n");
     // add for new enemy here
-}
+}*/
 
-void spawnEnemies(Game *pGame, int amount) {
+//FUNC NOT IN USE IN CLIENT! We use createEnemyOnClient() in ONGOING state.
+/*void spawnEnemies(Game *pGame, int amount) {
     for (int i = 0; i < amount; i++) {
-        pGame->pEnemies[i] = createEnemyOnClient(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
+        pGame->pEnemies_1[i] = createEnemyOnClient(pGame->pEnemy_1Image, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
     }
-}
+}*/
 
-void updateEnemies(Game *pGame, int *amount) {
+//FUNC NOT IN USE IN CLIENT! This is done in the server and sent out to clients!
+/*void updateEnemies(Game *pGame, int *amount) {
     if (areTheyAllDead(pGame))
     {
       //(*amount) += 2;         // Commented out for easier testing
       pGame->nrOfEnemies_1 = 0;
       spawnEnemies(pGame, *amount);
     }
-}
-
-bool areTheyAllDead(Game *pGame) {
+}*/
+//FUNC NOT IN USE IN CLIENT! This is done in the server and sent out to clients!
+/*bool areTheyAllDead(Game *pGame) {
     for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
-      if (isEnemyActive(pGame->pEnemies[i])) {
+      if (isEnemyActive(pGame->pEnemies_1[i])) {
         return false;
       }
     }
     return true;
-}
+}*/
 
