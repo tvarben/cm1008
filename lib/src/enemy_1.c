@@ -73,7 +73,6 @@ Enemy *createEnemyOnClient(EnemyImage *pEnemyImage, int window_width, int window
     pEnemy->window_height = window_height;
     SDL_QueryTexture(pEnemyImage->pTexture,NULL,NULL,&(pEnemy->rect.w),&(pEnemy->rect.h));
     getStartValuesFromServer(pEnemy, enemyData);
-    pEnemy->active = true;
     return pEnemy;
 }
 
@@ -86,6 +85,7 @@ static void getStartValuesFromServer(Enemy *pEnemy, Enemy_1_Data enemyData) {
     pEnemy->health = 2;
     pEnemy->x = enemyData.x;
     pEnemy->y = enemyData.y;
+    pEnemy->active = enemyData.active;
 }
 
 static void getStartValues(Enemy *pEnemy){
@@ -233,9 +233,13 @@ void getEnemy_1_DataPackage(Enemy *pEnemy, Enemy_1_Data *pEnemyData) {
 }
 
 void updateEnemies_1_WithServerData(Enemy *pEnemy, Enemy_1_Data *pEnemyData) {
+    printf("Copying relevant enemy data...\n");
     pEnemy->x = pEnemyData->x;
+    printf("x coordinate data copied...\n");
     pEnemy->y = pEnemyData->y;
+    printf("y coordinate data copied...\n");
     pEnemy->active = pEnemyData->active;
+    printf("Success!\n");
 }
 
 

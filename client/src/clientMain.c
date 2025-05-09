@@ -290,7 +290,10 @@ void handleOngoingState(Game *pGame) {
                     updateShipOnClients(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
                 }
             }
-            updateEnemies(pGame, &pGame->nrOfEnemiesToSpawn); // Calls spawnEnemy() down at the bottom of the code
+            //updateEnemies(pGame, &pGame->nrOfEnemiesToSpawn); // Calls spawnEnemy() down at the bottom of the code
+            for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
+                pGame->pEnemies[i] = createEnemyOnClient(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
+            }
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
             SDL_RenderClear(pGame->pRenderer);
             drawStars(pGame->pStars,pGame->pRenderer);
@@ -299,6 +302,7 @@ void handleOngoingState(Game *pGame) {
             }
             for (int i = 0; i < pGame->nrOfEnemies_1; i++) {          
                 if (isEnemyActive(pGame->pEnemies[i])) {    //locally
+                    updateEnemyOnClients(pGame->pEnemies[i], pGame->serverData.enemies_1[i]);
                     drawEnemy(pGame->pEnemies[i]);                  
                 }                                                   
             }
@@ -481,9 +485,8 @@ void updateWithServerData(Game *pGame) {
         if (pGame->pShips[i])
             updateShipsWithServerData(pGame->pShips[i], &serverData.ships[i], i, pGame->shipId);
     }
-    //pGame->nrOfEnemies_1 = serverData.nrOfEnemies_1;
-    //for(int i=0 ; i < pGame->nrOfEnemies_1 && i<MAX_ENEMIES ; i++)
-    //    updateEnemies_1_WithServerData(pGame->pEnemies[i], &serverData.enemies_1[i]);
+    pGame->nrOfEnemies_1 = serverData.nrOfEnemies_1;
+    pGame->serverData = serverData;
 }
 
 bool connectToServer(Game *pGame) {
@@ -657,6 +660,7 @@ void closeGame(Game *pGame) {
     SDL_Quit();
 }
 
+// do not use this
 void resetEnemy(Game *pGame) {
     for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
       destroyEnemy(pGame->pEnemies[i]);
@@ -668,8 +672,7 @@ void resetEnemy(Game *pGame) {
 
 void spawnEnemies(Game *pGame, int amount) {
     for (int i = 0; i < amount; i++) {
-        pGame->pEnemies[pGame->nrOfEnemies_1] = createEnemyOnClient(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
-          pGame->nrOfEnemies_1++;
+        pGame->pEnemies[i] = createEnemyOnClient(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
     }
 }
 
