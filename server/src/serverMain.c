@@ -32,10 +32,10 @@ typedef struct {
     ServerData serverData;
     bool isRunning;
 
-    int nrOfEnemiesToSpawn;
+    int nrOfEnemiesToSpawn_1;
     EnemyImage *pEnemyImage;
     Enemy *pEnemies[MAX_ENEMIES];
-    int nrOfEnemies;
+    int nrOfEnemies_1;
 } Game;
 
 int initiate(Game *pGame);
@@ -51,6 +51,7 @@ void resetEnemy(Game *pGame);
 void spawnEnemies(Game *pGame, int ammount);
 void updateEnemies(Game *pGame, int *ammount);
 bool areTheyAllDead(Game *pGame);
+void getNrOfEnemiesDataPackage(int nrOfEnemies_1, ServerData *pServerData);
 
 int main(int argc, char** argv) {
     Game game = {0};
@@ -138,7 +139,7 @@ int initiate(Game *pGame) {
     }
 
     pGame->pEnemyImage = initiateEnemy(pGame->pRenderer);
-    pGame->nrOfEnemies = 0;
+    pGame->nrOfEnemies_1 = 0;
     printf("Enemy image created\n");
 
     pGame->isRunning = true;
@@ -147,7 +148,7 @@ int initiate(Game *pGame) {
 }
 
 void run(Game *pGame) {
-    pGame->nrOfEnemiesToSpawn= WAVE_1_EASY_MAP; //Change it in ship_data.h. Initial number of enemies, they get incremented by 2 down below in updateEnemies()
+    pGame->nrOfEnemiesToSpawn_1= WAVE_1_EASY_MAP; //Change it in ship_data.h. Initial number of enemies, they get incremented by 2 down below in updateEnemies()
     while (pGame->isRunning) { 
         switch(pGame->state) {
             case START:
@@ -205,7 +206,7 @@ void handleOngoingState(Game *pGame) {
     const Uint32 tickInterval = 16;
     printf("Ongoing\n");
 
-    pGame->nrOfEnemies = 0;
+    pGame->nrOfEnemies_1 = 0;
     
     while (pGame->isRunning && pGame->state == ONGOING) {
         now = SDL_GetTicks();
@@ -239,8 +240,8 @@ void handleOngoingState(Game *pGame) {
                     updateShipOnServer(pGame->pShips[i]);
                 }
             }
-            updateEnemies(pGame, &pGame->nrOfEnemiesToSpawn); // Calls spawnEnemy() down at the bottom of the code
-            for (int i = 0; i < pGame->nrOfEnemies && i < MAX_ENEMIES; i++) {
+            updateEnemies(pGame, &pGame->nrOfEnemiesToSpawn_1); // Calls spawnEnemy() down at the bottom of the code
+            for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
                 updateEnemy(pGame->pEnemies[i]);                // locally
             }
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
@@ -248,9 +249,10 @@ void handleOngoingState(Game *pGame) {
             for(int i=0; i<MAX_PLAYERS; i++){
                 drawShip(pGame->pShips[i]);
             }
-            for (int i = 0; i < pGame->nrOfEnemies && i < MAX_ENEMIES; i++) {
+            for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
                 if (isEnemyActive(pGame->pEnemies[i]) == true) {    //locally
                     drawEnemy(pGame->pEnemies[i]);
+                    //printf("ALIVE or DEAD? %d\n", isEnemyActive(pGame->pEnemies[i]));
                 }
             }
             SDL_RenderPresent(pGame->pRenderer);
@@ -313,22 +315,18 @@ void addClient(Game *pGame) {
                 printf("*Sending first packet to client %d:\n", clientIndex);
                 printf("  gState: %d\n", sd->gState);
                 printf("  sDPlayerId (assigned ID): %d\n", sd->sDPlayerId);
-
                 // Print each connected player's ship data
                 for (int i = 0; i < MAX_PLAYERS; i++) {
                     printf("  Ship %d: x = %.2f, y = %.2f, angle = %.2f, alive = %d\n",
                         i, sd->ships[i].x, sd->ships[i].y, sd->ships[i].vx, sd->ships[i].vy);
                 }
-
                 // Print enemy count
-                printf("  Enemies_1: %d active, %d to spawn\n", sd->nrOfEnemies, sd->nrOfEnemiesToSpawn);
-
+                printf("  Enemies_1: %d active, %d to spawn\n", sd->nrOfEnemies_1, sd->nrOfEnemiesToSpawn_1);
                 // Print each enemy's data
-                for (int i = 0; i < sd->nrOfEnemies; i++) {
+                for (int i = 0; i < sd->nrOfEnemies_1; i++) {
                     printf("    Enemy_1[%d]: x = %.2f, y = %.2f, hp = %d, alive = %d\n",
                         i, sd->enemies_1[i].x, sd->enemies_1[i].y, sd->enemies_1[i].active);
                 }
-                //C:/Project_Course_C1008/cm1008/server/gameServer.exe
             }else 
                 printf("Failed to Send connection confirmation to client %d.\n", clientIndex);
         }
@@ -345,16 +343,39 @@ void sendServerData(Game* pGame) {
     pGame->serverData.gState = pGame->state;
     for(int i=0 ; i<MAX_PLAYERS ; i++)
         getShipDataPackage(pGame->pShips[i], &pGame->serverData.ships[i]);
-    //for(int i = 0; i < MAX_ENEMIES; i++) 
-    //    getEnemy_1_DataPackage(pGame->pEnemies[i], &pGame->serverData.enemies_1[i]);
-
+    
+    for(int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++)
+        getEnemy_1_DataPackage(pGame->pEnemies[i], &pGame->serverData.enemies_1[i]);
+    pGame->serverData.nrOfEnemies_1 = pGame->nrOfEnemies_1;
+    
+        
     for(int i=0 ; i< MAX_PLAYERS ; i++){
         pGame->serverData.sDPlayerId =i;
         memcpy(pGame->pPacket->data, &(pGame->serverData), sizeof(ServerData));
         pGame->pPacket->len = sizeof(ServerData);
         pGame->pPacket->address = pGame->clients[i];
         SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
+
+        /*ServerData *sd = &pGame->serverData;
+        printf("*Sending updated packet to client %d:\n", i);
+        printf("gState: %d\n", sd->gState);
+        printf("  sDPlayerId (assigned ID): %d\n", sd->sDPlayerId);
+        
+        // Print each connected player's ship data
+        for (int i = 0; i < MAX_PLAYERS; i++) {
+            printf("  Ship %d: x = %.2f, y = %.2f, angle = %.2f, alive = %d\n",
+                i, sd->ships[i].x, sd->ships[i].y, sd->ships[i].vx, sd->ships[i].vy);
+        }
+        // Print enemy count
+        printf("  Enemies_1: %d active, %d to spawn\n", sd->nrOfEnemies_1, sd->nrOfEnemiesToSpawn_1);
+        // Print each enemy's data
+        for (int i = 0; i < sd->nrOfEnemies_1; i++) {
+            printf("    Enemy_1[%d]: x = %.2f, y = %.2f, alive = %d\n",
+                i, sd->enemies_1[i].x, sd->enemies_1[i].y, sd->enemies_1[i].active);
+        }*/
     }
+        
+        
 }
 
 int getClientIndex(Game *pGame, IPaddress *clientAddr) {
@@ -407,35 +428,36 @@ void closeGame(Game *pGame) {
 }
 
 void resetEnemy(Game *pGame) {
-    for (int i = 0; i < pGame->nrOfEnemies && i < MAX_ENEMIES; i++) {
+    for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
       destroyEnemy(pGame->pEnemies[i]);
     }
-    pGame->nrOfEnemies = 0;
+    pGame->nrOfEnemies_1 = 0;
     printf("Enemies destroyed\n");
     // add for new enemy here
-  }
+}
 
   void spawnEnemies(Game *pGame, int ammount) {
     for (int i = 0; i < ammount; i++) {
-        pGame->pEnemies[pGame->nrOfEnemies] =createEnemy(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT);
-          pGame->nrOfEnemies++;
+        pGame->pEnemies[pGame->nrOfEnemies_1] =createEnemy(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT);
+          pGame->nrOfEnemies_1++;
     }
-  }
+}
 
-  void updateEnemies(Game *pGame, int *ammount) {
+void updateEnemies(Game *pGame, int *ammount) {
     if (areTheyAllDead(pGame) == true) // yes this looks like shit
     {
       //(*ammount) += 2;
-      pGame->nrOfEnemies = 0;
+      pGame->nrOfEnemies_1 = 0;
       spawnEnemies(pGame, *ammount);
     }
-  }
+}
 
-  bool areTheyAllDead(Game *pGame) {
-    for (int i = 0; i < pGame->nrOfEnemies && i < MAX_ENEMIES; i++) {
+bool areTheyAllDead(Game *pGame) {
+    for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
       if (isEnemyActive(pGame->pEnemies[i]) == true) {
         return false;
       }
     }
     return true;
-  }
+}
+

@@ -150,6 +150,10 @@ void updateEnemyOnClients(Enemy *pEnemy, Enemy_1_Data enemyData) {
     pEnemy->x = enemyData.x;
     pEnemy->y = enemyData.y;
     pEnemy->active = enemyData.active;
+    pEnemy->rect.x = pEnemy->x;
+    pEnemy->rect.y = pEnemy->y;
+    pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
+    pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
 }
 
 void drawEnemy(Enemy *pEnemy){
@@ -224,6 +228,8 @@ void getEnemy_1_DataPackage(Enemy *pEnemy, Enemy_1_Data *pEnemyData) {
     pEnemyData->x = pEnemy->x;
     pEnemyData->y = pEnemy->y;
     pEnemyData->active = pEnemy->active;
+    // printf("Sending Enemy data to data package:\n Enemies_1 Enemy.active: %d, Enemy.x, Enemy.y: [%.2f,%.2f]\n", pEnemy->active, pEnemy->x, pEnemy->y);
+    // printf("Sending Enemy data to data package:\n Enemies_1 Data.Enemy.active: %d, Data.Enemy.x, Data.Enemy.y: [%.2f,%.2f]\n", pEnemyData->active, pEnemyData->x, pEnemyData->y);
 }
 
 void updateEnemies_1_WithServerData(Enemy *pEnemy, Enemy_1_Data *pEnemyData) {

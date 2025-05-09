@@ -42,7 +42,7 @@ typedef struct {
     int nrOfEnemiesToSpawn;
     EnemyImage *pEnemyImage;
     Enemy *pEnemies[MAX_ENEMIES];
-    int nrOfEnemies;
+    int nrOfEnemies_1;
     ServerData serverData;
 
 } Game;
@@ -190,7 +190,7 @@ int initiate(Game *pGame) {
     }
 
     pGame->pEnemyImage = initiateEnemy(pGame->pRenderer);
-    pGame->nrOfEnemies = 0;
+    pGame->nrOfEnemies_1 = 0;
     printf("Enemy image created\n");
 
     pGame->isRunning = true;
@@ -297,7 +297,7 @@ void handleOngoingState(Game *pGame) {
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 drawShip(pGame->pShips[i]);   
             }
-            for (int i = 0; i < pGame->nrOfEnemies; i++) {          
+            for (int i = 0; i < pGame->nrOfEnemies_1; i++) {          
                 if (isEnemyActive(pGame->pEnemies[i])) {    //locally
                     drawEnemy(pGame->pEnemies[i]);                  
                 }                                                   
@@ -481,7 +481,8 @@ void updateWithServerData(Game *pGame) {
         if (pGame->pShips[i])
             updateShipsWithServerData(pGame->pShips[i], &serverData.ships[i], i, pGame->shipId);
     }
-    //for(int i=0 ;i<MAX_ENEMIES ; i++)
+    //pGame->nrOfEnemies_1 = serverData.nrOfEnemies_1;
+    //for(int i=0 ; i < pGame->nrOfEnemies_1 && i<MAX_ENEMIES ; i++)
     //    updateEnemies_1_WithServerData(pGame->pEnemies[i], &serverData.enemies_1[i]);
 }
 
@@ -657,18 +658,18 @@ void closeGame(Game *pGame) {
 }
 
 void resetEnemy(Game *pGame) {
-    for (int i = 0; i < pGame->nrOfEnemies; i++) {
+    for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
       destroyEnemy(pGame->pEnemies[i]);
     }
-    pGame->nrOfEnemies = 0;
+    pGame->nrOfEnemies_1 = 0;
     printf("Enemies destroyed\n");
     // add for new enemy here
 }
 
 void spawnEnemies(Game *pGame, int amount) {
     for (int i = 0; i < amount; i++) {
-        pGame->pEnemies[pGame->nrOfEnemies] = createEnemyOnClient(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
-          pGame->nrOfEnemies++;
+        pGame->pEnemies[pGame->nrOfEnemies_1] = createEnemyOnClient(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
+          pGame->nrOfEnemies_1++;
     }
 }
 
@@ -676,16 +677,17 @@ void updateEnemies(Game *pGame, int *amount) {
     if (areTheyAllDead(pGame))
     {
       //(*amount) += 2;         // Commented out for easier testing
-      pGame->nrOfEnemies = 0;
+      pGame->nrOfEnemies_1 = 0;
       spawnEnemies(pGame, *amount);
     }
 }
 
 bool areTheyAllDead(Game *pGame) {
-    for (int i = 0; i < pGame->nrOfEnemies; i++) {
+    for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
       if (isEnemyActive(pGame->pEnemies[i])) {
         return false;
       }
     }
     return true;
 }
+
