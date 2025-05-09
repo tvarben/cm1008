@@ -7,7 +7,7 @@
 #define SERVER_PORT 2000
 #define COUNTDOWN 1
 #define MAX_ENEMIES 100
-#define WAVE_1_EASY_MAP 4
+#define WAVE_1_EASY_MAP 2
 
 typedef enum {
     START, 

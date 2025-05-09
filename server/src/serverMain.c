@@ -48,8 +48,8 @@ void closeGame(Game *pGame);
 int getClientIndex(Game *pGame, IPaddress *clientAddr);
 void sendServerData(Game* pGame);
 void resetEnemy(Game *pGame);
-void spawnEnemies(Game *pGame, int ammount);
-void updateEnemies(Game *pGame, int *ammount);
+void spawnEnemies(Game *pGame, int amount);
+void updateEnemies(Game *pGame, int *amount);
 bool areTheyAllDead(Game *pGame);
 void getNrOfEnemiesDataPackage(int nrOfEnemies_1, ServerData *pServerData);
 
@@ -436,19 +436,21 @@ void resetEnemy(Game *pGame) {
     // add for new enemy here
 }
 
-  void spawnEnemies(Game *pGame, int ammount) {
-    for (int i = 0; i < ammount; i++) {
+  void spawnEnemies(Game *pGame, int amount) {
+    for (int i = 0; i < amount; i++) {
         pGame->pEnemies[pGame->nrOfEnemies_1] =createEnemy(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT);
           pGame->nrOfEnemies_1++;
     }
 }
 
-void updateEnemies(Game *pGame, int *ammount) {
-    if (areTheyAllDead(pGame) == true) // yes this looks like shit
+void updateEnemies(Game *pGame, int *amount) {
+    if (areTheyAllDead(pGame) == true)
     {
-      //(*ammount) += 2;
+      (*amount) += 2; // increments even for first wave. WHY?
+      if ((*amount) > MAX_ENEMIES)
+        (*amount) = MAX_ENEMIES;
       pGame->nrOfEnemies_1 = 0;
-      spawnEnemies(pGame, *ammount);
+      spawnEnemies(pGame, *amount);
     }
 }
 
