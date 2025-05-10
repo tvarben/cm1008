@@ -13,10 +13,12 @@
 #include "menu.h"
 #include "stars.h"
 #include "ship_data.h"
+#include "enemy_1.h"
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 #define ASTEROIDPATH "../lib/resources/Asteroid.png"
 #define EARTHPATH "../lib/resources/Earth.png"
+#define enemy1PATH "../lib/resources/ufo.png"
 
 typedef struct {
     SDL_Window *pWindow;
@@ -26,7 +28,6 @@ typedef struct {
     GameState state;
     Mix_Music *pMusic;
 	TTF_Font *pFont, *pSmallFont;
-	//Text *pStartText; ??
     Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pScoreText, *pMultiPlayerText, *pMenuText, *pGameOverText, *pWaitingText;
     ClientCommand command;
     UDPsocket pSocket;
@@ -36,6 +37,13 @@ typedef struct {
     Stars *pStars;
     SDL_Texture *pStartImage_1, *pStartImage_2;
     Text *pCountdownText;
+
+    
+    EnemyImage *pEnemy_1Image;
+    Enemy *pEnemies_1[MAX_ENEMIES];
+    int nrOfEnemies_1;
+    ServerData serverData;
+
 } Game;
 
 int initiate(Game *pGame);
@@ -53,6 +61,7 @@ void receiveDataFromServer();
 void updateWithServerData(Game *pGame);
 MainMenuChoice handleMainMenuOptions(Game *pGame);
 void showCountdown(Game *pGame);
+bool areTheyAllDead(Game *pGame);
 
 int main(int argc, char** argv) {
     Game game = {0};
@@ -68,9 +77,7 @@ int main(int argc, char** argv) {
 }
 
 int initiate(Game *pGame) {
-    srand(time(NULL));
-    Mix_Init(MIX_INIT_WAVPACK);
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0) {
+    srand(time(NULL)); Mix_Init(MIX_INIT_WAVPACK); if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0) {
         printf("SDL Init Error: %s\n", SDL_GetError());
         return 0;
     }
@@ -119,19 +126,7 @@ int initiate(Game *pGame) {
     pGame->pWaitingText = createText(pGame->pRenderer,255,0,0,pGame->pSmallFont,
                                         "Waiting for other players to joing...",WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
 
-    /*if(!pGame->pFont){
-        printf("Error: %s\n",TTF_GetError());
-        return 0;
-    }*/ 
-    /*if (!(pGame->pSocket = SDLNet_UDP_Open(0))) {
-        printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
-        return 0;
-    }*/
-    /*if (SDLNet_ResolveHost(&(pGame->serverAddress), "127.0.0.1", SERVER_PORT)) {
-        printf("SDLNet_ResolveHost(127.0.0.1 2000): %s\n", SDLNet_GetError());
-        return 0;
-    }*/
-    if (!(pGame->pPacket = SDLNet_AllocPacket(512))) {
+    if (!(pGame->pPacket = SDLNet_AllocPacket(2048))) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 0;
     }
@@ -178,6 +173,10 @@ int initiate(Game *pGame) {
         return 0;
     }
 
+    pGame->pEnemy_1Image = initiateEnemy(pGame->pRenderer);
+    pGame->nrOfEnemies_1 = 0;
+    printf("Enemy image created\n");
+
     pGame->isRunning = true;
     pGame->state = START;
     return 1;
@@ -209,16 +208,16 @@ void handleStartState(Game *pGame) {
     SDL_Event event;
     while (pGame->isRunning && pGame->state == START) {
        MainMenuChoice userChoice = handleMainMenuOptions(pGame);
-
-        
         if (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT || userChoice == MAINMENU_EXIT){
                 pGame->isRunning = false;
                 return;
             }else if (userChoice == MAINMENU_SINGLEPLAYER){ 
                 printf("Singleplayer chosen.\n");
+        
             }else if(userChoice == MAINMENU_MULTIPLAYER){
                 printf("Multiplayer chosen.\n");
+                
                 pGame->state = LOBBY;
                 return;
             }
@@ -242,7 +241,6 @@ void renderStartWindow(Game *pGame) {
     SDL_Rect dstRect_2 = { 1000, 125, 50, 50 };  // adjust position and size, placering av planet/måne
     SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage_2, NULL, &dstRect_2);
     SDL_RenderPresent(pGame->pRenderer);
-    
 }
 
 void handleOngoingState(Game *pGame) {
@@ -250,6 +248,9 @@ void handleOngoingState(Game *pGame) {
     ClientData cData;
     Uint32 now=0, delta=0, lastUpdate=SDL_GetTicks();
     const Uint32 tickInterval=8;
+    printf("Ongoing\n");
+
+    
     while (pGame->isRunning && pGame->state == ONGOING) {
         now = SDL_GetTicks();
         delta = now - lastUpdate;
@@ -260,9 +261,9 @@ void handleOngoingState(Game *pGame) {
             if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
                 return;
-            } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
-                handleInput(&event, cData.command, pGame);
-            }
+            }else if(event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) { 
+                handleInput(&event, cData.command, pGame); 
+            } 
         }
         if (delta>=tickInterval) {
             lastUpdate=now;
@@ -272,11 +273,20 @@ void handleOngoingState(Game *pGame) {
                     updateShipOnClients(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
                 }
             }
+            for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
+                pGame->pEnemies_1[i] = createEnemyOnClient(pGame->pEnemy_1Image, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
+            }
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
             SDL_RenderClear(pGame->pRenderer);
             drawStars(pGame->pStars,pGame->pRenderer);
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 drawShip(pGame->pShips[i]);   
+            }
+            for (int i = 0; i < pGame->nrOfEnemies_1; i++) {          
+                if (isEnemyActive(pGame->pEnemies_1[i])) {    
+                    updateEnemyOnClients(pGame->pEnemies_1[i], pGame->serverData.enemies_1[i]);
+                    drawEnemy(pGame->pEnemies_1[i]);                  
+                }                                                   
             }
             SDL_RenderPresent(pGame->pRenderer);
         }
@@ -457,6 +467,8 @@ void updateWithServerData(Game *pGame) {
         if (pGame->pShips[i])
             updateShipsWithServerData(pGame->pShips[i], &serverData.ships[i], i, pGame->shipId);
     }
+    pGame->nrOfEnemies_1 = serverData.nrOfEnemies_1;
+    pGame->serverData = serverData;
 }
 
 bool connectToServer(Game *pGame) {
@@ -575,7 +587,6 @@ void showCountdown(Game *pGame) {
                 break;
             }
         }
-
         Uint32 now = SDL_GetTicks();
         if (now - lastTick >= 1000) {
             lastTick = now;
@@ -589,13 +600,10 @@ void showCountdown(Game *pGame) {
             drawText(pJoinText);
             drawText(pGame->pCountdownText);
             SDL_RenderPresent(pGame->pRenderer);
-
             countdown--;
         }
-
         SDL_Delay(16);
     }
-
     if (pGame->pCountdownText) {
         destroyText(pGame->pCountdownText);
         pGame->pCountdownText = NULL;
@@ -628,8 +636,13 @@ void closeGame(Game *pGame) {
     if (pGame->pSocket) SDLNet_UDP_Close(pGame->pSocket);
     if (pGame->pPacket) SDLNet_FreePacket(pGame->pPacket);
 
+
+    for (int i=0; i<MAX_ENEMIES; i++) if (pGame->pEnemies_1[i]) destroyEnemy_1(pGame->pEnemies_1[i]);
+    if (pGame->pEnemy_1Image) destroyEnemy_1Image(pGame->pEnemy_1Image);
+
     SDLNet_Quit();
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();
 }
+

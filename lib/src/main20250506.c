@@ -1,4 +1,7 @@
-
+#include "../include/bullet.h"
+#include "../include/cannon.h"
+#include "../include/enemies.h"
+#include "../include/enemy2.h"
 #include "../include/menu.h"
 #include "../include/ship.h"
 #include "../include/sound.h"
@@ -17,7 +20,6 @@
 #define WINDOW_WIDTH 1160
 #define WINDOW_HEIGHT 700
 #define MUSIC_FILEPATH "./resources/music.wav"
-#define SHOOT_SFX_FILEPATH "./resources/pew.wav"
 
 // BUGS
 // enemy2 hitbox is off
@@ -40,7 +42,7 @@ typedef struct {
   EnemyImage2 *pEnemyImage2; // new enemy
   Enemy2 *pEnemies2[MAX_ENEMIES];
   Enemy *pEnemies[MAX_ENEMIES];
-  int nrOfEnemies;
+  int nrOfEnemies_1;
   int nrOfEnemies2; // counter for new nr of new enemies
   int timeForNextEnemy;
   int startTime; // in ms
@@ -249,10 +251,9 @@ int initiate(Game *pGame) {
     return 0;
   }
 
-  pGame->nrOfEnemies = 0;
+  pGame->nrOfEnemies_1 = 0;
   pGame->nrOfEnemies2 = 0;
   resetEnemy(pGame);
-  pGame->timeForNextEnemy = 2;
   pGame->networkMenu = false;
   pGame->mapMenu = false;
   pGame->state = START;
@@ -388,8 +389,8 @@ void run(Game *pGame) {
       else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN &&
                event.key.keysym.scancode == SDL_SCANCODE_V) {
         printf("CURRENT NUMBER OF ENEMIES: %d \n",
-               ((pGame->nrOfEnemies) + (pGame->nrOfEnemies2)));
-        for (int i = 0; i < pGame->nrOfEnemies; i++) {
+               ((pGame->nrOfEnemies_1) + (pGame->nrOfEnemies2)));
+        for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
           if (isEnemyActive(pGame->pEnemies[i]) == false) {
             printf("Enemy %d is inactive \n", i);
           } else {
@@ -425,7 +426,7 @@ void run(Game *pGame) {
                  event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
         if (now - pGame->lastAttackTime >= pGame->attackDelay) {
           handleCannonEvent(pGame->pCannon, &event);
-          playSound(&pGame->pSFX, SHOOT_SFX_FILEPATH, 1);
+          playSound(&pGame->pSFX, "resources/pew.wav", 1);
           pGame->lastAttackTime = now;
         }
       } else if (pGame->state == ONGOING &&
@@ -462,10 +463,10 @@ void run(Game *pGame) {
       updateGameTime(pGame);
       updateEnemies(pGame, &nrOfEnemiesToSpawn);
       updateShipVelocity(pGame->pShip); // resolve velocity based on key states
-      updateShip(pGame->pShip);
+      updateShip(pGame->pShip, delta_time);
       updateCannon(pGame->pCannon, pGame->pShip);
-      for (int i = 0; i < pGame->nrOfEnemies; i++) {
-        updateEnemy(pGame->pEnemies[i]);
+      for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
+        updateEnemy(pGame->pEnemies[i], delta_time);
       }
       for (int i = 0; i < pGame->nrOfEnemies2; i++) {
         updateEnemy2(pGame->pEnemies2[i]);
@@ -500,7 +501,7 @@ void run(Game *pGame) {
       if (isPlayerDead(pGame->pShip) == true) {
         pGame->state = GAME_OVER;
       }
-      for (int i = 0; i < pGame->nrOfEnemies; i++) {
+      for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
         if (isEnemyActive(pGame->pEnemies[i]) == true) {
           drawEnemy(pGame->pEnemies[i]);
         }
@@ -510,19 +511,33 @@ void run(Game *pGame) {
           drawEnemy2(pGame->pEnemies2[i]);
         }
       }
-      for (int i = 0; i < pGame->nrOfEnemies; i++) {
+      for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
         if (shipCollision(pGame->pShip, getRectEnemy(pGame->pEnemies[i]))) {
           damageEnemy(pGame->pEnemies[i], 2, i);
           killedEnemies++;
           damageShip(pGame->pShip, 1);
+          playSound(&pGame->pSFX,"resources/Hurt.wav",-1);
         }
       }
       for (int j = 0; j < pGame->nrOfEnemies2; j++) {
         if (shipCollision(pGame->pShip, getRectEnemy2(pGame->pEnemies2[j]))) {
-          damageEnemy2(pGame->pEnemies2[j], 1, j);
+          damageEnemy2(pGame->pEnemies2[j], 4, j);
+          playSound(&pGame->pSFX,"resources/Hurt.wav",-1);
           damageShip(pGame->pShip, 2);
-          if (!isEnemy2Active(pGame->pEnemies2[j])) {
+          if (isEnemy2Active(pGame->pEnemies2[j]) == false) {
             killedEnemies++;
+            continue;
+          }
+        }
+      }
+      for (int j = 0; j < pGame->nrOfEnemies2; j++) {
+        if (isEnemy2Active(pGame->pEnemies2[j])) { // Check if enemy2 is active
+          if (shipCollision(pGame->pShip, getRectEnemy2(pGame->pEnemies2[j]))) {
+            damageEnemy2(pGame->pEnemies2[j], 1, j);
+            damageShip(pGame->pShip, 2);
+            if (isEnemy2Active(pGame->pEnemies2[j]) == false) {
+              killedEnemies++;
+            }
           }
         }
       }
@@ -534,7 +549,7 @@ void run(Game *pGame) {
       getProjectileRects(rectArray);
       for (int i = 0; i < MAX_PROJECTILES; i++) {
         SDL_Rect bulletRect = rectArray[i];
-        for (int k = 0; k < pGame->nrOfEnemies; k++) {
+        for (int k = 0; k < pGame->nrOfEnemies_1; k++) {
           SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies[k]);
           if (SDL_HasIntersection(&enemyRect, &bulletRect)) {
             // printf("enemy num: %d \n", k);
@@ -545,6 +560,7 @@ void run(Game *pGame) {
             }
             removeProjectile(i);
             rectArray[i] = emptyRect;
+            playSound(&pGame->pSFX,"resources/Explosion.wav",1);
           }
         }
         for (int j = 0; j < pGame->nrOfEnemies2; j++) {
@@ -558,6 +574,7 @@ void run(Game *pGame) {
             }
             removeProjectile(i);
             rectArray[j] = emptyRect;
+            playSound(&pGame->pSFX,"resources/Explosion.wav",2);
           }
         }
       }
@@ -613,7 +630,7 @@ void run(Game *pGame) {
       destroyText(pKillCountText);
       drawText(pGame->pGameOverText);
       drawText(pGame->pMenuText);
-      printf("YOU KILLED %d ALIENS! \n", killedEnemies);
+      /*printf("YOU KILLED %d ALIENS! \n", killedEnemies);*/
       SDL_RenderPresent(pGame->pRenderer);
       if (SDL_PointInRect(&mousePoint, MenuRect)) {
         setTextColor(pGame->pMenuText, 255, 255, 100, pGame->pFont, "MENU");
@@ -643,7 +660,7 @@ void closeGame(Game *pGame) {
     destroyText(pGame->pExitText);
   if (pGame->pFont)
     TTF_CloseFont(pGame->pFont);
-  for (int i = 0; i < pGame->nrOfEnemies; i++) {
+  for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
     destroyEnemy(pGame->pEnemies[i]);
     destroyEnemy2(pGame->pEnemies2[i]);
   }
@@ -678,11 +695,11 @@ void updateGameTime(Game *pGame) {
 
 void spawnEnemies(Game *pGame, int ammount) {
   for (int i = 0; i < ammount; i++) {
-    pGame->pEnemies[pGame->nrOfEnemies] =
+    pGame->pEnemies[pGame->nrOfEnemies_1] =
         createEnemy(pGame->pEnemyImage, WINDOW_WIDTH, WINDOW_HEIGHT);
     pGame->pEnemies2[pGame->nrOfEnemies2] =
         createEnemy2(pGame->pEnemyImage2, WINDOW_WIDTH, WINDOW_HEIGHT);
-    pGame->nrOfEnemies++;
+    pGame->nrOfEnemies_1++;
     pGame->nrOfEnemies2++;
   }
 }
@@ -691,25 +708,25 @@ void updateEnemies(Game *pGame, int *ammount) {
   if (areTheyAllDead(pGame) == true) // yes this looks like shit
   {
     (*ammount) += 2;
-    pGame->nrOfEnemies = 0;
+    pGame->nrOfEnemies_1 = 0;
     pGame->nrOfEnemies2 = 0;
     spawnEnemies(pGame, *ammount);
   }
 }
 void resetEnemy(Game *pGame) {
-  for (int i = 0; i < pGame->nrOfEnemies; i++) {
+  for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
     destroyEnemy(pGame->pEnemies[i]);
   }
   for (int j = 0; j < pGame->nrOfEnemies2; j++) {
     destroyEnemy2(pGame->pEnemies2[j]);
   }
-  pGame->nrOfEnemies = 0;
+  pGame->nrOfEnemies_1 = 0;
   pGame->nrOfEnemies2 = 0;
   // add for new enemy here
 }
 
 bool areTheyAllDead(Game *pGame) {
-  for (int i = 0; i < pGame->nrOfEnemies; i++) {
+  for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
     if (isEnemyActive(pGame->pEnemies[i]) == true ||
         isEnemy2Active(pGame->pEnemies2[i]) == true) {
       return false;

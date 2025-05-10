@@ -34,7 +34,7 @@ typedef struct
     Stars *pStars;
     EnemyImage *pEnemyImage;
     Enemy *pEnemies[MAX_ENEMIES];
-    int nrOfEnemies;
+    int nrOfEnemies_1;
     int timeForNextEnemy;
     int startTime;//in ms
     int gameTime;//in s
@@ -150,7 +150,7 @@ int initiate(Game *pGame)
         return 0;
     }
 
-    pGame->nrOfEnemies = 0;
+    pGame->nrOfEnemies_1 = 0;
     resetEnemy(pGame);
     pGame->networkMenu = false;
     pGame->state = START;
@@ -267,8 +267,8 @@ void run(Game *pGame)
             }
             else if (pGame->state == ONGOING && event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_V)
             {
-                printf("CURRENT NUMBER OF ENEMIES: %d \n", pGame->nrOfEnemies);
-                for (int i = 0; i < pGame->nrOfEnemies; i++)
+                printf("CURRENT NUMBER OF ENEMIES: %d \n", pGame->nrOfEnemies_1);
+                for (int i = 0; i < pGame->nrOfEnemies_1; i++)
                 {
                     if (isEnemyActive(pGame->pEnemies[i]) == false)
                     {
@@ -323,13 +323,13 @@ void run(Game *pGame)
             updateShipVelocity(pGame->pShip);           // resolve velocity based on key states
             updateShip(pGame->pShip);
             updateCannon(pGame->pCannon, pGame->pShip);
-            for(int i=0;i<pGame->nrOfEnemies;i++){
+            for(int i=0;i<pGame->nrOfEnemies_1;i++){
                  updateEnemy(pGame->pEnemies[i]);
                  if (isInWindow(pGame->pEnemies[i]) == false)
                  {
                     printf("Enemy %d has fled \n", i+1);
-                    pGame->nrOfEnemies--;
-                    printf("ENEMIES LEFT: %d \n", pGame->nrOfEnemies);
+                    pGame->nrOfEnemies_1--;
+                    printf("ENEMIES LEFT: %d \n", pGame->nrOfEnemies_1);
                  }
                  
             }
@@ -341,8 +341,8 @@ void run(Game *pGame)
             drawShip(pGame->pShip);
             drawCannon(pGame->pCannon);
             render_projectiles(pGame->pRenderer); // test      
-            for(int i=0;i<pGame->nrOfEnemies;i++) drawEnemy(pGame->pEnemies[i]);
-            for(int i=0;i<pGame->nrOfEnemies;i++){
+            for(int i=0;i<pGame->nrOfEnemies_1;i++) drawEnemy(pGame->pEnemies[i]);
+            for(int i=0;i<pGame->nrOfEnemies_1;i++){
                 if(shipCollision(pGame->pShip, getRectEnemy(pGame->pEnemies[i]))){
                     pGame->state = GAME_OVER;
                 }
@@ -352,14 +352,14 @@ void run(Game *pGame)
             for (int i = 0; i < MAX_PROJECTILES; i++)
             {
                 SDL_Rect bulletRect = rectArray[i];
-                for (int k = 0; k < pGame->nrOfEnemies; k++)
+                for (int k = 0; k < pGame->nrOfEnemies_1; k++)
                 {
                     SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies[k]);
                     if (SDL_HasIntersection(&enemyRect, &bulletRect))
                     {
                         printf("enemy nr %d killed \n", k+1);
                         disableEnemy(pGame->pEnemies[k]);
-                        pGame->nrOfEnemies--;
+                        pGame->nrOfEnemies_1--;
                     }
                 }
             }
@@ -419,7 +419,7 @@ void closeGame(Game *pGame)
     if(pGame->pMultiplayerText) destroyText(pGame->pMultiplayerText);
     if(pGame->pExitText) destroyText(pGame->pExitText);
     if(pGame->pFont) TTF_CloseFont(pGame->pFont); 
-    for(int i=0;i<pGame->nrOfEnemies;i++) destroyEnemy(pGame->pEnemies[i]);
+    for(int i=0;i<pGame->nrOfEnemies_1;i++) destroyEnemy(pGame->pEnemies[i]);
     if(pGame->pEnemyImage) destroyEnemyImage(pGame->pEnemyImage);
     closeMusic(pGame->pMusic);
     IMG_Quit();
@@ -446,13 +446,13 @@ void updateGameTime(Game *pGame)
 
 void spawnEnemy(Game *pGame)
 {
-    pGame->pEnemies[pGame->nrOfEnemies] = createEnemy(pGame->pEnemyImage,WINDOW_WIDTH,WINDOW_HEIGHT);
-    pGame->nrOfEnemies++; 
+    pGame->pEnemies[pGame->nrOfEnemies_1] = createEnemy(pGame->pEnemyImage,WINDOW_WIDTH,WINDOW_HEIGHT);
+    pGame->nrOfEnemies_1++; 
 }
 
 void updateEnemies(Game *pGame)
 {
-    if (pGame->nrOfEnemies == 0)
+    if (pGame->nrOfEnemies_1 == 0)
     {
         spawnEnemy(pGame);
         spawnEnemy(pGame);
@@ -463,8 +463,8 @@ void updateEnemies(Game *pGame)
 }
 void resetEnemy(Game *pGame)
 {
-    for(int i=0;i<pGame->nrOfEnemies;i++) destroyEnemy(pGame->pEnemies[i]);
-    pGame->nrOfEnemies = 0;
+    for(int i=0;i<pGame->nrOfEnemies_1;i++) destroyEnemy(pGame->pEnemies[i]);
+    pGame->nrOfEnemies_1 = 0;
 }
 
 int main(int argc, char** argv)
