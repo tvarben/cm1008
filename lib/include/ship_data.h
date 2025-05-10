@@ -8,6 +8,8 @@
 #define WINDOW_HEIGHT 720 //700
 #define SERVER_PORT 60000
 #define COUNTDOWN 1
+#define MAX_ENEMIES 100
+#define WAVE_1_EASY_MAP 2
 
 typedef enum {
     START, 
@@ -46,11 +48,27 @@ typedef struct{
     //int vx, vy;   //Is vx, vy needed?
 } ShipData;
 
+
+typedef struct{
+    float x, y;
+    bool active;
+} Enemy_1_Data;
+
+typedef struct{
+    float x, y;
+    bool active;
+} Enemy_2_Data;
+
 typedef struct{
     GameState gState;
     int sDPlayerId;
     ShipData ships[MAX_PLAYERS];
     //bool isShooting;
+
+    int nrOfEnemies_1, nrOfEnemiesToSpawn_1;
+    //int nrOfEnemies_2, nrOfEnemiesToSpawn_2;
+    Enemy_1_Data enemies_1[MAX_ENEMIES];
+    //Enemy_2_Data enemies_2[MAX_ENEMIES];
 } ServerData;
 
 #endif
