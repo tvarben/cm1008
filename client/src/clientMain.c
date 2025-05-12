@@ -294,17 +294,18 @@ void handleOngoingState(Game *pGame) {
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
             SDL_RenderClear(pGame->pRenderer);
             drawStars(pGame->pStars,pGame->pRenderer);
-            for (int i = 0; i < MAX_PLAYERS; i++) {
-                render_projectiles(pGame->pRenderer);
-                drawShip(pGame->pShips[i]);   
-                drawCannon(pGame->pCannons[i]);
-            }
             for (int i = 0; i < pGame->nrOfEnemies_1; i++) {          
                 if (isEnemyActive(pGame->pEnemies_1[i])) {    
                     updateEnemyOnClients(pGame->pEnemies_1[i], pGame->serverData.enemies_1[i]);
                     drawEnemy(pGame->pEnemies_1[i]);                  
                 }                                                   
             }
+            for (int i = 0; i < MAX_PLAYERS; i++) {
+            render_projectiles(pGame->pRenderer);
+            drawShip(pGame->pShips[i]);   
+            drawCannon(pGame->pCannons[i]);
+            }
+            
             SDL_RenderPresent(pGame->pRenderer);
             pGame->isShooting = false;
             for (int i = 0; i < MAX_PLAYERS; i++) {

@@ -35,7 +35,7 @@ typedef struct {
     ServerData serverData;
     bool isRunning, isShooting;
     Cannon *pCannon;
-    int nrOfEnemiesToSpawn_1, nrOfEnemies_1;
+    int nrOfEnemiesToSpawn_1, nrOfEnemies_1, killedEnemies;
     EnemyImage *pEnemy_1Image;
     Enemy *pEnemies_1[MAX_ENEMIES];
 } Game;
@@ -277,8 +277,27 @@ void handleOngoingState(Game *pGame) {
                 }
             }
             // Bullet collision här ?? Ska man kunna skjuta på varandra?
-
-
+            getProjectileRects(rectArray);
+            for (int i = 0; i < MAX_PROJECTILES; i++)
+            {
+                SDL_Rect bulletRect = rectArray[i];
+                for (int k = 0; k < pGame->nrOfEnemies_1; k++)
+                {
+                    SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies_1[k]);
+                    if (SDL_HasIntersection(&enemyRect, &bulletRect))
+                    {
+                        //printf("enemy num: %d \n", k);
+                        printEnemyHealth(pGame->pEnemies_1[k]);
+                        damageEnemy(pGame->pEnemies_1[k], 1, k);
+                        if (isEnemyActive(pGame->pEnemies_1[k]) == false)
+                        {
+                            (pGame->killedEnemies)++;
+                        }
+                        removeProjectile(i);
+                        rectArray[i]=emptyRect;
+                    }
+                }
+            }
             SDL_RenderPresent(pGame->pRenderer);
             sendServerData(pGame);
             for (int i = 0; i < MAX_PLAYERS; i++) {
