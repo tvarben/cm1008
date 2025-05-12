@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "ship.h"
-#include "ship_data.h"
+#include "data.h"
 #include "text.h"
 
 char* enterIPAddress(SDL_Renderer* renderer, TTF_Font* font) {
