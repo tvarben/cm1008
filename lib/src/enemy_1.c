@@ -1,5 +1,5 @@
 #include "enemy_1.h"
-#include "ship_data.h"
+#include "data.h"
 #include <SDL2/SDL_image.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,6 +24,7 @@ struct enemy{
     SDL_Rect rect;
     SDL_Rect rectHitbox;
 };
+
 static void getStartValues(Enemy *pEnemy);
 
 EnemyImage *initiateEnemy(SDL_Renderer *pRenderer)  
@@ -230,14 +231,4 @@ void getEnemy_1_DataPackage(Enemy *pEnemy, Enemy_1_Data *pEnemyData) {
     pEnemyData->active = pEnemy->active;
     // printf("Sending Enemy data to data package:\n Enemies_1 Enemy.active: %d, Enemy.x, Enemy.y: [%.2f,%.2f]\n", pEnemy->active, pEnemy->x, pEnemy->y);
     // printf("Sending Enemy data to data package:\n Enemies_1 Data.Enemy.active: %d, Data.Enemy.x, Data.Enemy.y: [%.2f,%.2f]\n", pEnemyData->active, pEnemyData->x, pEnemyData->y);
-}
-
-void updateEnemies_1_WithServerData(Enemy *pEnemy, Enemy_1_Data *pEnemyData) {
-    printf("Copying relevant enemy data...\n");
-    pEnemy->x = pEnemyData->x;
-    printf("x coordinate data copied...\n");
-    pEnemy->y = pEnemyData->y;
-    printf("y coordinate data copied...\n");
-    pEnemy->active = pEnemyData->active;
-    printf("Success!\n");
 }

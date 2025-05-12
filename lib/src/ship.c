@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "ship.h"
-#include "ship_data.h"
+#include "data.h"
 
 #define SPEED 3
 
