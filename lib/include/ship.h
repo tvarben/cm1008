@@ -25,4 +25,8 @@ int getShipY(Ship *pShip);
 bool isLeft(Ship *pShip);
 bool isCannonShooting(Ship* pShip);
 void setShoot(Ship *pShip, bool value);
+void damageShip(Ship *pShip, int damage);
+bool isPlayerDead(Ship *pShip);
+void resetHealth(Ship *pShip);
+int shipCollision(Ship *pShip, SDL_Rect rect);
 #endif

@@ -205,6 +205,7 @@ void handleOngoingState(Game *pGame) {
     Uint32 now = 0, delta = 0,lastUpdate = SDL_GetTicks();
     const Uint32 tickInterval = 16;
     pGame->nrOfEnemies_1 = 0;
+    SDL_Rect emptyRect={0,0,0,0}, rectArray[MAX_PROJECTILES] = {0,0,0,0};
 
     while (pGame->isRunning && pGame->state == ONGOING) {
         now = SDL_GetTicks();
@@ -262,6 +263,22 @@ void handleOngoingState(Game *pGame) {
                     //printf("ALIVE or DEAD? %d\n", isEnemyActive(pGame->pEnemies_1[i]));
                 }
             }
+            // Ship collision här ??
+            for (int i = 0; i < MAX_PLAYERS; i++) {
+                for (int j = 0; j < pGame->nrOfEnemies_1 && j < MAX_ENEMIES; j++) {
+                    if (shipCollision(pGame->pShips[i], getRectEnemy(pGame->pEnemies_1[j]))) {
+                        damageShip(pGame->pShips[i], 1);
+                        damageEnemy(pGame->pEnemies_1[j], 1, j);
+                        if (isPlayerDead(pGame->pShips[i])) {
+                            printf("Player %d is dead\n", i);
+                            //resetHealth(pGame->pShips[i]);
+                        }
+                    }
+                }
+            }
+            // Bullet collision här ?? Ska man kunna skjuta på varandra?
+
+
             SDL_RenderPresent(pGame->pRenderer);
             sendServerData(pGame);
             for (int i = 0; i < MAX_PLAYERS; i++) {

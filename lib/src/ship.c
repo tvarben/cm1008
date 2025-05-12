@@ -14,6 +14,7 @@ struct ship {
     SDL_Renderer* renderer;
     SDL_Texture* texture;
     SDL_Rect shipRect;
+    int health;
     bool keyLeft, keyRight, keyUp, keyDown, facingLeft, isShooting;
 };
 
@@ -27,6 +28,7 @@ Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int wind
     pShip->windowHeight = windowHeight;
     pShip->renderer = renderer;
     pShip->keyDown=pShip->keyUp=pShip->keyRight=pShip->keyLeft=pShip->isShooting=false;
+    pShip->health = 2;
 
     SDL_Surface* surface = IMG_Load("../lib/resources//player.png");
     if (!surface) {
@@ -211,22 +213,23 @@ void setShoot(Ship *pShip, bool value) {
     pShip->isShooting = value;
 }
 
-/*void handleShipEvent(Ship* pShip, SDL_Event* event) {
-    bool down = event->type == SDL_KEYDOWN;
+int shipCollision(Ship *pShip, SDL_Rect rect) {
+    return SDL_HasIntersection(&pShip->shipRect, &rect);
+}   
 
-    switch (event->key.keysym.scancode) {
-        case SDL_SCANCODE_W: 
-        case SDL_SCANCODE_UP:
-            pShip->keyUp = down; break;
-        case SDL_SCANCODE_S: 
-        case SDL_SCANCODE_DOWN:
-            pShip->keyDown = down; break;
-        case SDL_SCANCODE_A: 
-        case SDL_SCANCODE_LEFT:
-            pShip->keyLeft = down; break;
-        case SDL_SCANCODE_D: 
-        case SDL_SCANCODE_RIGHT:
-            pShip->keyRight = down; break;
-        default: break;
+void damageShip(Ship *pShip, int damage){
+    pShip->health -= damage;
+    printf("Ship health %d\n",pShip->health);
+}
+bool isPlayerDead(Ship *pShip)
+{
+    if (pShip->health <= 0){
+        return true;
+    }else{
+        return false;
     }
-}*/
+}
+void resetHealth(Ship *pShip){
+    pShip->health = 2;
+    return;
+}
