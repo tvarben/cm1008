@@ -66,11 +66,10 @@ void getProjectileRects(SDL_Rect rectArray[]) {
         if (!projectiles[i].active) {
             rectArray[i] = emptyRect;
         }
-        else{
+        else {
             rectArray[i] = projectiles[i].rect;
     }
 }
-
     return;
 }
 void resetAllBullets() {
