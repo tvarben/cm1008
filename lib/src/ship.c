@@ -29,6 +29,7 @@ Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int wind
     pShip->renderer = renderer;
     pShip->keyDown=pShip->keyUp=pShip->keyRight=pShip->keyLeft=pShip->isShooting=false;
     pShip->health = 2;
+    pShip->isAlive = true;
 
     SDL_Surface* surface = IMG_Load("../lib/resources//player.png");
     if (!surface) {
@@ -211,11 +212,9 @@ void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int
     pShip->isShooting = pShipData->isShooting;
     pShip->isAlive = pShipData->isAlive;
 }
-
 bool isCannonShooting(Ship* pShip) {
     return pShip->isShooting;
 }
-
 void setShoot(Ship *pShip, bool value) {
     pShip->isShooting = value;
 }
@@ -228,13 +227,22 @@ void damageShip(Ship *pShip, int damage){
     printf("Ship health %d\n",pShip->health);
 }
 bool isPlayerDead(Ship *pShip) {
-    if (pShip->health <= 0){
+    if (pShip->health <= 0) {
+        pShip->isAlive = false;
         return true;
-    }else{
+    } else {
         return false;
     }
 }
 void resetHealth(Ship *pShip) {
     pShip->health = 2;
     return;
+}
+bool clientAliveControll(Ship *pShip) {
+    if (pShip->isAlive == false) {
+        pShip->isAlive = true;
+        return false;
+    } else {
+        return true;
+    }
 }

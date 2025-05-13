@@ -300,7 +300,12 @@ void handleOngoingState(Game *pGame) {
                     drawEnemy(pGame->pEnemies_1[i]);                
                 }                                                   
             }
+            // något sker som gör att skeppen tar skada 2 gånger... Ändra hp till 4 och det fungerar som det ska
             for (int i = 0; i < MAX_PLAYERS; i++) {
+            if (!clientAliveControll(pGame->pShips[i])) {
+                damageCannon(pGame->pCannons[i], 2);
+                damageShip(pGame->pShips[i], 2);
+            }
             render_projectiles(pGame->pRenderer);
             drawShip(pGame->pShips[i]);   
             drawCannon(pGame->pCannons[i]);
