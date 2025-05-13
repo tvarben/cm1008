@@ -246,7 +246,7 @@ void getShipDataPackage(Ship *pShip,
   pShipData->y = pShip->y;
   pShipData->vx = pShip->vx;
   pShipData->vy = pShip->vy;
-  pShipData->health = pShip->health; // test
+  pShipData->health = pShip->health; 
   pShipData->facingLeft = pShip->facingLeft;
   pShipData->isShooting = pShip->isShooting;
 }
@@ -257,7 +257,7 @@ void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId,
   pShip->targetY = pShipData->y;
   pShip->vx = pShipData->vx;
   pShip->vy = pShipData->vy;
-  pShip->health = pShipData->health; // doesnt work for some reason
+  pShip->health = pShipData->health; 
   pShip->facingLeft = pShipData->facingLeft;
   pShip->isShooting = pShipData->isShooting;
 }
