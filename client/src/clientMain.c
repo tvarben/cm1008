@@ -12,7 +12,7 @@
 #include "text.h"
 #include "menu.h"
 #include "stars.h"
-#include "data.h"
+#include "ship_data.h"
 #include "bullet.h"
 #include "cannon.h"
 #include "tick.h"

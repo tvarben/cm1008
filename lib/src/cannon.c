@@ -1,7 +1,7 @@
 #include "cannon.h"
 #include "bullet.h"
 #include "ship.h"
-#include "data.h"
+#include "ship_data.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_scancode.h>

@@ -10,7 +10,7 @@
 #include "ship.h"
 #include "sound.h"
 #include "text.h"
-#include "data.h"
+#include "ship_data.h"
 #include "bullet.h"
 #include "cannon.h"
 #include "tick.h"
