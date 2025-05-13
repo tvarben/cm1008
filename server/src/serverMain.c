@@ -401,19 +401,18 @@ void printPacketsData(Game* pGame){
         printf("  Ship %d: x = %.2f, y = %.2f, angle = %.2f, alive = %d\n",
             i, sd->ships[i].x, sd->ships[i].y, sd->ships[i].vx, sd->ships[i].vy);
     }
-    // Print enemy count
-    printf("  Enemies_1: %d active, %d to spawn\n", sd->nrOfEnemies_1, sd->nrOfEnemiesToSpawn_1);
     // Print each enemy_1's data
+    printf("  Enemies_1: %d active, %d to spawn\n", sd->nrOfEnemies_1, sd->nrOfEnemiesToSpawn_1);
     for (int i = 0; i < sd->nrOfEnemies_1; i++) {
         printf("    Enemy_1[%d]: x = %.2f, y = %.2f, alive = %d\n",
             i, sd->enemies_1[i].x, sd->enemies_1[i].y, sd->enemies_1[i].active);
     }
-    /*printf("  Enemies_2: %d active, %d to spawn\n", sd->nrOfEnemies_2, sd->nrOfEnemiesToSpawn_2);
-    Print each enemy_2's data
+    //Print each enemy_2's data
+    printf("  Enemies_2: %d active, %d to spawn\n", sd->nrOfEnemies_2, sd->nrOfEnemiesToSpawn_2);
     for (int i = 0; i < sd->nrOfEnemies_2; i++) {
         printf("    Enemy_1[%d]: x = %.2f, y = %.2f, alive = %d\n",
             i, sd->enemies_1[i].x, sd->enemies_2[i].y, sd->enemies_2[i].active);
-    }*/
+    }
 }
 
 int getClientIndex(Game *pGame, IPaddress *clientAddr) {
