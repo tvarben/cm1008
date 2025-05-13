@@ -271,18 +271,16 @@ void handleOngoingState(Game *pGame) {
                         damageEnemy(pGame->pEnemies_1[j], 1, j);
                         if (isPlayerDead(pGame->pShips[i])) {
                             printf("Player %d is dead\n", i);
-                            //resetHealth(pGame->pShips[i]);
+                            resetHealth(pGame->pShips[i]);
                         }
                     }
                 }
             }
             // Bullet collision här ?? Ska man kunna skjuta på varandra?
             getProjectileRects(rectArray);
-            for (int i = 0; i < MAX_PROJECTILES; i++)
-            {
+            for (int i = 0; i < MAX_PROJECTILES; i++) {
                 SDL_Rect bulletRect = rectArray[i];
-                for (int k = 0; k < pGame->nrOfEnemies_1; k++)
-                {
+                for (int k = 0; k < pGame->nrOfEnemies_1; k++) {
                     SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies_1[k]);
                     if (SDL_HasIntersection(&enemyRect, &bulletRect))
                     {
