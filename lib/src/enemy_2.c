@@ -93,9 +93,9 @@ static void getStartValues_2(Enemy_2 *pEnemy2) {
   pEnemy2->rectHitbox.w = pEnemy2->rect.w - 50;
   pEnemy2->rectHitbox.h = pEnemy2->rect.h - 50;
   pEnemy2->damage = 1;
-  pEnemy2->health = 4;                  // changed health
-    //float speed = rand() % (50 - 15 + 1) + 15;
-    float speed = rand() % (15 - 10 + 1) + 10;
+  pEnemy2->health = 4; // changed health
+  // float speed = rand() % (50 - 15 + 1) + 15;
+  float speed = rand() % (15 - 10 + 1) + 10;
   if (startSpawnOnTheLeft == 1) {
     pEnemy2->x = pEnemy2->window_width;
     pEnemy2->y = rand() % (pEnemy2->window_height - pEnemy2->rect.h);
