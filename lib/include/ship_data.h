@@ -39,12 +39,12 @@ typedef enum {
 typedef struct{
     int cDPlayerId; //cDPlayerId not really needed. Server finds out which klient it is based on IP-address
     ClientCommand command;
-    bool isShooting;
+    bool isShooting, isAlive;
 } ClientData;
 
 typedef struct{
     float x, y, vx, vy;
-    bool facingLeft, isShooting;
+    bool facingLeft, isShooting, isAlive;
     //int vx, vy;   //Is vx, vy needed?
 } ShipData;
 
