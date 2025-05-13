@@ -2,19 +2,17 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_net.h>
-#include <SDL2/SDL_ttf.h>
-#include <stdbool.h>
-#include <stdio.h>
 #include <time.h>
 
-#include "../../lib/include/bullet.h"
-#include "../../lib/include/cannon.h"
-#include "../../lib/include/enemy_1.h"
-#include "../../lib/include/ship.h"
-#include "../../lib/include/ship_data.h"
-#include "../../lib/include/sound.h"
-#include "../../lib/include/text.h"
-#include "../../lib/include/tick.h"
+#include "ship.h"
+#include "sound.h"
+#include "text.h"
+#include "ship_data.h"
+#include "bullet.h"
+#include "cannon.h"
+#include "tick.h"
+#include "enemy_1.h"
+#include "enemy_2.h"
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
@@ -35,9 +33,12 @@ typedef struct {
   ServerData serverData;
   bool isRunning, isShooting;
   Cannon *pCannon;
-  int nrOfEnemiesToSpawn_1, nrOfEnemies_1;
+    
+  int nrOfEnemiesToSpawn_1, nrOfEnemies_1, nrOfEnemiesToSpawn_2, nrOfEnemies_2;
   EnemyImage *pEnemy_1Image;
+    EnemyImage_2 *pEnemy_2Image;
   Enemy *pEnemies_1[MAX_ENEMIES];
+    Enemy_2 *pEnemies_2[MAX_ENEMIES];
 } Game;
 
 int initiate(Game *pGame);
@@ -52,6 +53,10 @@ void sendServerData(Game *pGame);
 void spawnEnemies_1(Game *pGame, int amount);
 void updateEnemies_1(Game *pGame, int *amount);
 bool areTheyAllDead_1(Game *pGame);
+void printPacketsData(Game* pGame);
+void spawnEnemies_2(Game *pGame, int amount);
+void updateEnemies_2(Game *pGame, int *amount);
+bool areTheyAllDead_2(Game *pGame);
 void printPacketsData(Game *pGame);
 
 int main(int argc, char **argv) {
@@ -125,7 +130,7 @@ int initiate(Game *pGame) {
     printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
     return 0;
   }
-  if (!(pGame->pPacket = SDLNet_AllocPacket(2048))) {
+  if (!(pGame->pPacket = SDLNet_AllocPacket(5120))) {
     printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
     return 0;
   }
@@ -148,15 +153,18 @@ int initiate(Game *pGame) {
     return 0;
   }
   pGame->pEnemy_1Image = initiateEnemy(pGame->pRenderer);
+    pGame->pEnemy_2Image = initiateEnemy_2(pGame->pRenderer);
   pGame->nrOfEnemies_1 = 0;
+    pGame->nrOfEnemies_2 = 0;
   pGame->isRunning = true;
   pGame->state = START;
   return 1;
 }
 
 void run(Game *pGame) {
-  printf("Server is listening on port %hu...\n", SERVER_PORT);
-  pGame->nrOfEnemiesToSpawn_1 = WAVE_1_EASY_MAP;
+    printf("Server is listening on port %hu...\n", SERVER_PORT);
+    pGame->nrOfEnemiesToSpawn_1= WAVE_1_EASY_MAP;
+    pGame->nrOfEnemiesToSpawn_2 = WAVE_1_EASY_MAP;
 
   while (pGame->isRunning) {
     switch (pGame->state) {
@@ -253,11 +261,14 @@ void handleOngoingState(Game *pGame) {
           updateCannon(pGame->pCannons[i], pGame->pShips[i]);
         }
       }
-      updateEnemies_1(
-          pGame, &pGame->nrOfEnemiesToSpawn_1); // Calls spawnEnemy() down at
-                                                // the bottom of the code
+      updateEnemies_1(pGame, &pGame->nrOfEnemiesToSpawn_1); // Calls spawnEnemy() down at the bottom of the code
+      updateEnemies_2(pGame, &pGame->nrOfEnemiesToSpawn_2);
+    
       for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
         updateEnemy(pGame->pEnemies_1[i]); // locally
+      }
+      for (int i = 0; i < pGame->nrOfEnemies_2 && i < MAX_ENEMIES; i++) {
+                updateEnemy_2(pGame->pEnemies_2[i]);
       }
       SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
       SDL_RenderClear(pGame->pRenderer);
@@ -272,6 +283,10 @@ void handleOngoingState(Game *pGame) {
           drawEnemy(pGame->pEnemies_1[i]);
           // printf("ALIVE or DEAD? %d\n", isEnemyActive(pGame->pEnemies_1[i]));
         }
+      }
+      for (int i = 0; i < pGame->nrOfEnemies_2 && i < MAX_ENEMIES; i++) {
+                if (isEnemy_2Active(pGame->pEnemies_2[i]))
+                    drawEnemy_2(pGame->pEnemies_2[i]);
       }
       // Ship collision här ??
       for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -368,10 +383,12 @@ void sendServerData(Game *pGame) {
   for (int i = 0; i < MAX_PLAYERS; i++)
     getShipDataPackage(pGame->pShips[i], &pGame->serverData.ships[i]);
 
-  for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++)
-    getEnemy_1_DataPackage(pGame->pEnemies_1[i],
-                           &pGame->serverData.enemies_1[i]);
-  pGame->serverData.nrOfEnemies_1 = pGame->nrOfEnemies_1;
+    for(int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++)
+        getEnemy_1_DataPackage(pGame->pEnemies_1[i], &pGame->serverData.enemies_1[i]);
+    pGame->serverData.nrOfEnemies_1 = pGame->nrOfEnemies_1;
+    for(int i = 0; i < pGame->nrOfEnemies_2 && i < MAX_ENEMIES; i++)
+        getEnemy_2_DataPackage(pGame->pEnemies_2[i], &pGame->serverData.enemies_2[i]);
+    pGame->serverData.nrOfEnemies_2 = pGame->nrOfEnemies_2;
 
   for (int i = 0; i < MAX_PLAYERS; i++) {
     pGame->serverData.sDPlayerId = i;
@@ -479,11 +496,10 @@ void closeGame(Game *pGame) {
 }
 
 void spawnEnemies_1(Game *pGame, int amount) {
-  for (int i = 0; i < amount; i++) {
-    pGame->pEnemies_1[pGame->nrOfEnemies_1] =
-        createEnemy(pGame->pEnemy_1Image, WINDOW_WIDTH, WINDOW_HEIGHT);
-    pGame->nrOfEnemies_1++;
-  }
+    for (int i = 0; i < amount; i++) {
+        pGame->pEnemies_1[pGame->nrOfEnemies_1] = createEnemy(pGame->pEnemy_1Image, WINDOW_WIDTH, WINDOW_HEIGHT);
+        pGame->nrOfEnemies_1++;
+    }
 }
 
 void updateEnemies_1(Game *pGame, int *amount) {
@@ -503,4 +519,31 @@ bool areTheyAllDead_1(Game *pGame) {
     }
   }
   return true;
+}
+
+void spawnEnemies_2(Game *pGame, int amount) {
+    for (int i = 0; i < amount; i++) {
+        pGame->pEnemies_2[pGame->nrOfEnemies_2] = createEnemy_2(pGame->pEnemy_2Image, WINDOW_WIDTH, WINDOW_HEIGHT);
+        pGame->nrOfEnemies_2++;
+    }
+}
+
+void updateEnemies_2(Game *pGame, int *amount) {
+    if (areTheyAllDead_2(pGame) == true)
+    {
+      (*amount) += 2; // increments even for first wave. WHY?
+      if ((*amount) > MAX_ENEMIES)
+        (*amount) = MAX_ENEMIES;
+      pGame->nrOfEnemies_2 = 0;
+      spawnEnemies_2(pGame, *amount);
+    }
+}
+
+bool areTheyAllDead_2(Game *pGame) {
+    for (int i = 0; i < pGame->nrOfEnemies_2 && i < MAX_ENEMIES; i++) {
+      if (isEnemy_2Active(pGame->pEnemies_2[i]) == true) {
+        return false;
+      }
+    }
+    return true;
 }

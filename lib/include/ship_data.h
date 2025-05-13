@@ -1,5 +1,5 @@
-#ifndef SHIP_DATA_H
-#define SHIP_DATA_H
+#ifndef DATA_H
+#define DATA_H
 
 #include <stdbool.h>
 
@@ -9,7 +9,7 @@
 #define SERVER_PORT 60000
 #define COUNTDOWN 1
 #define MAX_ENEMIES 100
-#define WAVE_1_EASY_MAP 2
+#define WAVE_1_EASY_MAP 4
 
 typedef enum {
   START,
@@ -66,10 +66,10 @@ typedef struct {
   ShipData ships[MAX_PLAYERS];
   // bool isShooting;
 
-  int nrOfEnemies_1, nrOfEnemiesToSpawn_1;
-  // int nrOfEnemies_2, nrOfEnemiesToSpawn_2;
-  Enemy_1_Data enemies_1[MAX_ENEMIES];
-  // Enemy_2_Data enemies_2[MAX_ENEMIES];
+    int nrOfEnemies_1, nrOfEnemiesToSpawn_1;
+    int nrOfEnemies_2, nrOfEnemiesToSpawn_2;
+    Enemy_1_Data enemies_1[MAX_ENEMIES];
+    Enemy_2_Data enemies_2[MAX_ENEMIES];
 } ServerData;
 
 #endif
