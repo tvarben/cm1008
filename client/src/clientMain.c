@@ -38,7 +38,7 @@ typedef struct {
     UDPsocket pSocket;
     IPaddress serverAddress;
     UDPpacket *pPacket;
-    bool isRunning, isShooting;
+    bool isRunning, isShooting, spacePressed;
     Stars *pStars;
     SDL_Texture *pStartImage_1, *pStartImage_2;
     Text *pCountdownText;
@@ -246,7 +246,7 @@ void handleOngoingState(Game *pGame) {
 
     while (pGame->isRunning && pGame->state == ONGOING) {
         now = SDL_GetTicks();
-        delta = now - lastUpdate;           //används bara på rad 253, men delta används inte i update_projectiles
+        delta = now - lastUpdate;           //används bara på rad 282
         while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
             updateWithServerData(pGame);
         }
@@ -294,10 +294,10 @@ void handleOngoingState(Game *pGame) {
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
             SDL_RenderClear(pGame->pRenderer);
             drawStars(pGame->pStars,pGame->pRenderer);
-            for (int i = 0; i < pGame->nrOfEnemies_1; i++) {          
-                if (isEnemyActive(pGame->pEnemies_1[i])) {    
+            for (int i = 0; i < pGame->nrOfEnemies_1; i++) {    
+                if (isEnemyActive(pGame->pEnemies_1[i])) {
                     updateEnemyOnClients(pGame->pEnemies_1[i], pGame->serverData.enemies_1[i]);
-                    drawEnemy(pGame->pEnemies_1[i]);                  
+                    drawEnemy(pGame->pEnemies_1[i]);                
                 }                                                   
             }
             for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -531,40 +531,71 @@ void handleInput(SDL_Event* pEvent, Game* pGame) {
     cData.cDPlayerId = pGame->shipId;  //cDPlayerId not really needed. Server finds out which klient it is based on IP-address
     SDL_Scancode key = pEvent->key.keysym.scancode;
     if (pEvent->type == SDL_KEYDOWN || pEvent->type == SDL_KEYUP) {
-        switch(key) {
-            case SDL_SCANCODE_UP:
-                pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
-                /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
-                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
-                break;
-            case SDL_SCANCODE_DOWN:
-                pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
-               /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
-                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
-                break;
-            case SDL_SCANCODE_LEFT:
-                pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
-                /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
-                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
-                break;
-            case SDL_SCANCODE_RIGHT:
-                pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
-                /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
-                applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
-                break;
-            case SDL_SCANCODE_SPACE:
-                //pGame->command = pEvent->type == SDL_KEYDOWN ? SHOOT : STOP_SHOOT;
-                pGame->isShooting = true;
-                //cData.command = SHOOT;
-                //cData.isShooting = true;
-                //handleCannonEvent(pGame->pCannons[pGame->shipId]);
-                break;
-            default:
-                pGame->command = STOP_SHIP;
-                //cData.command = STOP_SHIP;
-                break;
-        }
+    SDL_Scancode key = pEvent->key.keysym.scancode;
+    // Skjut med space ned och upp kanske fixar bug med skott som försvinner
+    switch(key) {
+        case SDL_SCANCODE_UP:
+            pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
+            break;
+        case SDL_SCANCODE_DOWN:
+            pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
+            break;
+        case SDL_SCANCODE_LEFT:
+            pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
+            break;
+        case SDL_SCANCODE_RIGHT:
+            pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
+            break;
+        case SDL_SCANCODE_SPACE:
+            if (pEvent->type == SDL_KEYDOWN) {
+                pGame->spacePressed = true;
+            } else if (pEvent->type == SDL_KEYUP) {
+                if (pGame->spacePressed) {
+                    pGame->isShooting = true;
+                    pGame->spacePressed = false;
+                }
+            }
+            break;
+        default:
+            pGame->command = STOP_SHIP;
+            break;
     }
+}
+    // if (pEvent->type == SDL_KEYDOWN || pEvent->type == SDL_KEYUP) {
+    //     switch(key) {
+    //         case SDL_SCANCODE_UP:
+    //             pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
+    //             /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
+    //             applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
+    //             break;
+    //         case SDL_SCANCODE_DOWN:
+    //             pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
+    //            /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
+    //             applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
+    //             break;
+    //         case SDL_SCANCODE_LEFT:
+    //             pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
+    //             /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
+    //             applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
+    //             break;
+    //         case SDL_SCANCODE_RIGHT:
+    //             pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
+    //             /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
+    //             applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
+    //             break;
+    //         case SDL_SCANCODE_SPACE:
+    //             //pGame->command = pEvent->type == SDL_KEYDOWN ? SHOOT : STOP_SHOOT;
+    //             pGame->isShooting = true;
+    //             //cData.command = SHOOT;
+    //             //cData.isShooting = true;
+    //             //handleCannonEvent(pGame->pCannons[pGame->shipId]);
+    //             break;
+    //         default:
+    //             pGame->command = STOP_SHIP;
+    //             //cData.command = STOP_SHIP;
+    //             break;
+    //     }
+    // }
     /*memcpy(pGame->pPacket->data, &cData, sizeof(ClientData));
     pGame->pPacket->len = sizeof(ClientData);
     SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);*/
