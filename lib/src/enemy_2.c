@@ -1,11 +1,12 @@
-#include "../include/enemy_2.h"
+#include "enemy_2.h"
+#include "ship_data.h"
 #include <SDL2/SDL_image.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-struct enemyImage2 {
+struct enemyImage_2 {
   SDL_Renderer *pRenderer;
   SDL_Texture *pTexture;
 };
@@ -15,20 +16,21 @@ struct enemy2 {
   int health;
   int damage;
   bool active;
-  int window_width, window_height, renderAngle;
+  int window_width, window_height;
   SDL_Renderer *pRenderer;
   SDL_Texture *pTexture;
   SDL_Rect rect;
   SDL_Rect rectHitbox;
 };
 
-static void getStartValues2(Enemy2 *name);
+static void getStartValues_2(Enemy_2 *pEnemy2);
+static void getStartValuesFromServer_2(Enemy_2 *pEnemy, Enemy_2_Data enemyData);
 
-EnemyImage2 *initiateEnemy2(SDL_Renderer *pRenderer) {
-  static EnemyImage2 *pEnemyImage2 = NULL;
+EnemyImage_2 *initiateEnemy_2(SDL_Renderer *pRenderer) {
+  static EnemyImage_2 *pEnemyImage2 = NULL;
   if (pEnemyImage2 == NULL) {
-    pEnemyImage2 = malloc(sizeof(struct enemyImage2));
-    SDL_Surface *surface = IMG_Load("resources/enemy2.png");
+    pEnemyImage2 = malloc(sizeof(struct enemyImage_2));
+    SDL_Surface *surface = IMG_Load("../lib/resources/enemy2.png");
 
     if (!surface) {
       printf("Error: %s\n", SDL_GetError());
@@ -47,22 +49,44 @@ EnemyImage2 *initiateEnemy2(SDL_Renderer *pRenderer) {
   return pEnemyImage2;
 }
 
-Enemy2 *createEnemy2(EnemyImage2 *pEnemyImage2, int window_width,
-                     int window_height) {
-  Enemy2 *pEnemy2 = malloc(sizeof(struct enemy2));
+Enemy_2 *createEnemy_2(EnemyImage_2 *pEnemyImage2, int window_width, int window_height) {
+  printf("creating enemy_2\n");
+  Enemy_2 *pEnemy2 = malloc(sizeof(struct enemy2));
   pEnemy2->pRenderer = pEnemyImage2->pRenderer;
   pEnemy2->pTexture = pEnemyImage2->pTexture;
   pEnemy2->window_width = window_width;
   pEnemy2->window_height = window_height;
   SDL_QueryTexture(pEnemyImage2->pTexture, NULL, NULL, &(pEnemy2->rect.w),
                    &(pEnemy2->rect.h));
-  getStartValues2(pEnemy2);
+  getStartValues_2(pEnemy2);
   pEnemy2->active = true;
-  pEnemy2->renderAngle = rand() % 360;
   return pEnemy2;
 }
 
-static void getStartValues2(Enemy2 *pEnemy2) {
+Enemy_2 *createEnemy_2_OnClients(EnemyImage_2 *pEnemyImage, int window_width, int window_height, Enemy_2_Data enemyData) {
+  Enemy_2 *pEnemy = malloc(sizeof(struct enemy2));
+  pEnemy->pRenderer = pEnemyImage->pRenderer;
+  pEnemy->pTexture = pEnemyImage->pTexture;
+  pEnemy->window_width = window_width;
+  pEnemy->window_height = window_height;
+  SDL_QueryTexture(pEnemyImage->pTexture,NULL,NULL,&(pEnemy->rect.w),&(pEnemy->rect.h));
+  getStartValuesFromServer_2(pEnemy, enemyData);
+  return pEnemy;
+}
+
+static void getStartValuesFromServer_2(Enemy_2 *pEnemy, Enemy_2_Data enemyData) {
+  pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
+  pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
+  pEnemy->rectHitbox.w = pEnemy->rect.w - 20;
+  pEnemy->rectHitbox.h = pEnemy->rect.h - 10;
+  pEnemy->damage = 1;
+  pEnemy->health = 2;
+  pEnemy->x = enemyData.x;
+  pEnemy->y = enemyData.y;
+  pEnemy->active = enemyData.active;
+}
+
+static void getStartValues_2(Enemy_2 *pEnemy2) {
   int startSpawnOnTheLeft = rand() % 2; // 0 or 1
   pEnemy2->rectHitbox.x = pEnemy2->rect.x + 10;
   pEnemy2->rectHitbox.y = pEnemy2->rect.y + 10;
@@ -87,14 +111,14 @@ static void getStartValues2(Enemy2 *pEnemy2) {
   }
 }
 
-SDL_Rect getRectEnemy2(Enemy2 *pEnemy2) {
+SDL_Rect getRectEnemy_2(Enemy_2 *pEnemy2) {
   if (pEnemy2->active == true) {
     return pEnemy2->rectHitbox;
   }
   SDL_Rect empty = {0, 0, 0, 0};
   return empty;
 }
-void updateEnemy2(Enemy2 *pEnemy2) {
+void updateEnemy_2(Enemy_2 *pEnemy2) {
   int amplitude = 5;
   float frequency = 0.03;
   /*double doubleX = pEnemy2->x;*/
@@ -102,11 +126,9 @@ void updateEnemy2(Enemy2 *pEnemy2) {
   if (pEnemy2->active == true) {
     pEnemy2->x += pEnemy2->vx * 0.1; // test values
     pEnemy2->y += sin(pEnemy2->x * frequency) * amplitude;
-    if (pEnemy2->x > pEnemy2->window_width ||
-        pEnemy2->x + pEnemy2->rect.w < 0 ||
-        pEnemy2->y > pEnemy2->window_height ||
-        pEnemy2->y + pEnemy2->rect.h < 0) {
-      getStartValues2(pEnemy2);
+    if (pEnemy2->x > pEnemy2->window_width || pEnemy2->x + pEnemy2->rect.w < 0 || pEnemy2->y > pEnemy2->window_height || pEnemy2->y + pEnemy2->rect.h < 0)
+    {
+      getStartValues_2(pEnemy2);
       pEnemy2->active = false;
       return;
     }
@@ -117,7 +139,17 @@ void updateEnemy2(Enemy2 *pEnemy2) {
   }
 }
 
-void drawEnemy2(Enemy2 *pEnemy2) {
+void updateEnemy_2_OnClients(Enemy_2 *pEnemy, Enemy_2_Data enemyData) {
+    pEnemy->x = enemyData.x;
+    pEnemy->y = enemyData.y;
+    pEnemy->active = enemyData.active;
+    pEnemy->rect.x = pEnemy->x;
+    pEnemy->rect.y = pEnemy->y;
+    pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
+    pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
+}
+
+void drawEnemy_2(Enemy_2 *pEnemy2) {
   if (pEnemy2->active == true) {
     SDL_RenderCopyEx(pEnemy2->pRenderer, pEnemy2->pTexture, NULL,
                      &(pEnemy2->rect), 0, NULL,
@@ -125,19 +157,19 @@ void drawEnemy2(Enemy2 *pEnemy2) {
   }
 }
 
-void destroyEnemy2(Enemy2 *pEnemy2) { free(pEnemy2); }
+void destroyEnemy_2(Enemy_2 *pEnemy2) { free(pEnemy2); }
 
-void destroyEnemyImage2(EnemyImage2 *pEnemyImage2) {
+void destroyEnemyImage_2(EnemyImage_2 *pEnemyImage2) {
   SDL_DestroyTexture(pEnemyImage2->pTexture);
 }
 
-void disableEnemy2(Enemy2 *pEnemy2) {
+void disableEnemy_2(Enemy_2 *pEnemy2) {
   if (pEnemy2->health <= 0) {
     pEnemy2->active = false;
   }
 }
 
-void damageEnemy2(Enemy2 *pEnemy2, int damage, int i) {
+void damageEnemy_2(Enemy_2 *pEnemy2, int damage, int i) {
   pEnemy2->health -= damage;
   if (pEnemy2->health <= 0 && pEnemy2->active == true) {
     pEnemy2->active = false;
@@ -147,25 +179,33 @@ void damageEnemy2(Enemy2 *pEnemy2, int damage, int i) {
     pEnemy2->health = 0;
 }
 
-bool isInWindow2(Enemy2 *pEnemy2) {
+bool isInWindow_2(Enemy_2 *pEnemy2) {
   if (pEnemy2->x > pEnemy2->window_width || pEnemy2->x + pEnemy2->rect.w < 0 ||
       pEnemy2->y > pEnemy2->window_height || pEnemy2->y + pEnemy2->rect.h < 0) {
-    disableEnemy2(pEnemy2);
+    disableEnemy_2(pEnemy2);
     return false;
   } else {
     return true;
   }
 }
 
-bool isEnemy2Active(Enemy2 *pEnemy2) {
+bool isEnemy_2Active(Enemy_2 *pEnemy2) {
   if (pEnemy2->active == false) {
     return false;
   } else {
     return true;
   }
 }
-void printEnemy2Health(Enemy2 *pEnemy2) {
+void printEnemy_2Health(Enemy_2 *pEnemy2) {
   if (pEnemy2->active == true) {
     printf("Health: %d\n", pEnemy2->health);
   }
+}
+
+void getEnemy_2_DataPackage(Enemy_2 *pEnemy, Enemy_2_Data *pEnemyData) {
+    pEnemyData->x = pEnemy->x;
+    pEnemyData->y = pEnemy->y;
+    pEnemyData->active = pEnemy->active;
+    // printf("Sending Enemy data to data package:\n Enemies_1 Enemy.active: %d, Enemy.x, Enemy.y: [%.2f,%.2f]\n", pEnemy->active, pEnemy->x, pEnemy->y);
+    // printf("Sending Enemy data to data package:\n Enemies_1 Data.Enemy.active: %d, Data.Enemy.x, Data.Enemy.y: [%.2f,%.2f]\n", pEnemyData->active, pEnemyData->x, pEnemyData->y);
 }

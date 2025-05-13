@@ -2,21 +2,20 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_net.h>
-#include <SDL2/SDL_ttf.h>
-#include <stdbool.h>
-#include <stdio.h>
 #include <time.h>
 
-#include "../../lib/include/bullet.h"
-#include "../../lib/include/cannon.h"
-#include "../../lib/include/enemy_1.h"
-#include "../../lib/include/menu.h"
-#include "../../lib/include/ship.h"
-#include "../../lib/include/ship_data.h"
-#include "../../lib/include/sound.h"
-#include "../../lib/include/stars.h"
-#include "../../lib/include/text.h"
-#include "../../lib/include/tick.h"
+#include "ship.h"
+#include "sound.h"
+#include "text.h"
+#include "menu.h"
+#include "stars.h"
+#include "ship_data.h"
+#include "bullet.h"
+#include "cannon.h"
+#include "tick.h"
+#include "enemy_1.h"
+#include "enemy_2.h"
+
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 #define ASTEROIDPATH "../lib/resources/Asteroid.png"
@@ -46,6 +45,9 @@ typedef struct {
   EnemyImage *pEnemy_1Image;
   Enemy *pEnemies_1[MAX_ENEMIES];
   int nrOfEnemies_1;
+    Enemy_2 *pEnemies_2[MAX_ENEMIES];
+    EnemyImage_2 *pEnemy_2Image;
+    int nrOfEnemies_2;
   ServerData serverData;
 } Game;
 
@@ -133,7 +135,7 @@ int initiate(Game *pGame) {
       createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont,
                  "Waiting for other players to join...", WINDOW_WIDTH / 2,
                  WINDOW_HEIGHT / 2);
-  if (!(pGame->pPacket = SDLNet_AllocPacket(2048))) {
+  if (!(pGame->pPacket = SDLNet_AllocPacket(5000))) {
     printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
     return 0;
   }
@@ -182,6 +184,8 @@ int initiate(Game *pGame) {
   }
   pGame->pEnemy_1Image = initiateEnemy(pGame->pRenderer);
   pGame->nrOfEnemies_1 = 0;
+    pGame->pEnemy_2Image = initiateEnemy_2(pGame->pRenderer);
+    pGame->nrOfEnemies_2 = 0;
 
   pGame->isRunning = true;
   pGame->state = START;
@@ -313,6 +317,9 @@ void handleOngoingState(Game *pGame) {
             createEnemyOnClient(pGame->pEnemy_1Image, WINDOW_WIDTH,
                                 WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
       }
+            for (int i = 0; i < pGame->nrOfEnemies_2; i++) {
+                pGame->pEnemies_2[i] = createEnemy_2_OnClients(pGame->pEnemy_2Image, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_2[i]);
+            }
 
       SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
       SDL_RenderClear(pGame->pRenderer);
@@ -329,6 +336,13 @@ void handleOngoingState(Game *pGame) {
           drawEnemy(pGame->pEnemies_1[i]);
         }
       }
+            for (int i = 0; i < pGame->nrOfEnemies_2; i++) {
+                if(isEnemy_2Active(pGame->pEnemies_2[i])) {
+                    updateEnemy_2_OnClients(pGame->pEnemies_2[i], pGame->serverData.enemies_2[i]);
+                    drawEnemy_2(pGame->pEnemies_2[i]);
+                }
+            }
+                                                           
       SDL_RenderPresent(pGame->pRenderer);
       pGame->isShooting = false;
       for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -531,6 +545,7 @@ void updateWithServerData(Game *pGame) {
                                 pGame->shipId);
   }
   pGame->nrOfEnemies_1 = serverData.nrOfEnemies_1;
+    pGame->nrOfEnemies_2 = serverData.nrOfEnemies_2;
   pGame->serverData = serverData;
 }
 
@@ -751,6 +766,9 @@ void closeGame(Game *pGame) {
       destroyEnemy_1(pGame->pEnemies_1[i]);
   if (pGame->pEnemy_1Image)
     destroyEnemy_1Image(pGame->pEnemy_1Image);
+    for (int i=0; i<MAX_ENEMIES; i++) if (pGame->pEnemies_2[i]) destroyEnemy_2(pGame->pEnemies_2[i]);
+    if (pGame->pEnemy_2Image) destroyEnemyImage_2(pGame->pEnemy_2Image);
+
 
   SDLNet_Quit();
   TTF_Quit();
