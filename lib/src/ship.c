@@ -16,6 +16,7 @@ struct ship {
     SDL_Rect shipRect;
     int health;
     bool keyLeft, keyRight, keyUp, keyDown, facingLeft, isShooting;
+    
 };
 
 Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int windowHeight) {
@@ -140,7 +141,9 @@ void stayInWindow(Ship* pShip) {
 
 void drawShip(Ship* pShip) {
     SDL_RendererFlip flip = pShip->facingLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-    if (pShip->health == 0) {
+    if (pShip->health <= 0) {
+        pShip->shipRect.w = 0;
+        pShip->shipRect.h = 0;
         return;
     }
     SDL_RenderCopyEx(pShip->renderer, pShip->texture, NULL, &pShip->shipRect, 0, NULL, flip);
@@ -219,20 +222,18 @@ void setShoot(Ship *pShip, bool value) {
 int shipCollision(Ship *pShip, SDL_Rect rect) {
     return SDL_HasIntersection(&pShip->shipRect, &rect);
 }   
-
 void damageShip(Ship *pShip, int damage){
     pShip->health -= damage;
     printf("Ship health %d\n",pShip->health);
 }
-bool isPlayerDead(Ship *pShip)
-{
+bool isPlayerDead(Ship *pShip) {
     if (pShip->health <= 0){
         return true;
     }else{
         return false;
     }
 }
-void resetHealth(Ship *pShip){
+void resetHealth(Ship *pShip) {
     pShip->health = 2;
     return;
 }

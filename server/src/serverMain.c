@@ -267,8 +267,9 @@ void handleOngoingState(Game *pGame) {
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 for (int j = 0; j < pGame->nrOfEnemies_1 && j < MAX_ENEMIES; j++) {
                     if (shipCollision(pGame->pShips[i], getRectEnemy(pGame->pEnemies_1[j]))) {
-                        damageShip(pGame->pShips[i], 1);
                         damageEnemy(pGame->pEnemies_1[j], 1, j);
+                        damageShip(pGame->pShips[i], 1);
+                        damageCannon(pGame->pCannons[i], 1);
                         if (isPlayerDead(pGame->pShips[i])) {
                             printf("Player %d is dead\n", i);
                             //resetHealth(pGame->pShips[i]);
@@ -276,7 +277,7 @@ void handleOngoingState(Game *pGame) {
                     }
                 }
             }
-            // Bullet collision här ?? Ska man kunna skjuta på varandra?
+            // Bullet collision här ??
             getProjectileRects(rectArray);
             for (int i = 0; i < MAX_PROJECTILES; i++) {
                 SDL_Rect bulletRect = rectArray[i];

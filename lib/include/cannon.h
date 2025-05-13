@@ -13,4 +13,6 @@ void updateCannon(Cannon *pCannon, Ship *pShip);
 void handleCannonEvent(Cannon *cannon);
 void resetCannon(Cannon *c);
 void applyCannonCommand(Cannon *pCannon, ClientCommand command);
+void damageCannon(Cannon *pCannon, int damage);
+void resetCannonHealth(Cannon *pCannon);
 #endif
