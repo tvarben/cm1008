@@ -2,7 +2,7 @@
 #define SHIP_H
 
 #include <SDL2/SDL.h>
-#include "data.h"
+#include "ship_data.h"
 #include <stdbool.h>
 
 typedef struct ship Ship;

@@ -3,7 +3,7 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
-#include "data.h"
+#include "ship_data.h"
 
 
 typedef struct enemyImage EnemyImage;
