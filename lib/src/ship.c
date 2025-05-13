@@ -139,7 +139,10 @@ void stayInWindow(Ship* pShip) {
 }
 
 void drawShip(Ship* pShip) {
-    SDL_RendererFlip flip = pShip->facingLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE; //
+    SDL_RendererFlip flip = pShip->facingLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+    if (pShip->health == 0) {
+        return;
+    }
     SDL_RenderCopyEx(pShip->renderer, pShip->texture, NULL, &pShip->shipRect, 0, NULL, flip);
     /*if (s->health >= 2) {
         SDL_RenderCopy(pShip->renderer, pShip->texture, NULL, &pShip->shipRect);

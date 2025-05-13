@@ -271,7 +271,7 @@ void handleOngoingState(Game *pGame) {
                         damageEnemy(pGame->pEnemies_1[j], 1, j);
                         if (isPlayerDead(pGame->pShips[i])) {
                             printf("Player %d is dead\n", i);
-                            resetHealth(pGame->pShips[i]);
+                            //resetHealth(pGame->pShips[i]);
                         }
                     }
                 }
