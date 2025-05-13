@@ -15,8 +15,7 @@ struct ship {
     SDL_Texture* texture;
     SDL_Rect shipRect;
     int health;
-    bool keyLeft, keyRight, keyUp, keyDown, facingLeft, isShooting;
-    
+    bool keyLeft, keyRight, keyUp, keyDown, facingLeft, isShooting, isAlive;
 };
 
 Ship* createShip(int playerId, SDL_Renderer* renderer, int windowWidth, int windowHeight) {
@@ -200,6 +199,7 @@ void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
     pShipData->vy = pShip->vy;
     pShipData->facingLeft = pShip->facingLeft;
     pShipData->isShooting = pShip->isShooting;
+    pShipData->isAlive = pShip->isAlive;
 }
 
 void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int myShipId) {
@@ -209,6 +209,7 @@ void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int
     pShip->vy = pShipData->vy;
     pShip->facingLeft = pShipData->facingLeft;
     pShip->isShooting = pShipData->isShooting;
+    pShip->isAlive = pShipData->isAlive;
 }
 
 bool isCannonShooting(Ship* pShip) {
