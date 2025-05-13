@@ -1,4 +1,4 @@
-#include "enemy_2.h"
+#include "../include/enemy_2.h"
 #include <SDL2/SDL_image.h>
 #include <math.h>
 #include <stdbool.h>
@@ -69,9 +69,9 @@ static void getStartValues2(Enemy2 *pEnemy2) {
   pEnemy2->rectHitbox.w = pEnemy2->rect.w - 50;
   pEnemy2->rectHitbox.h = pEnemy2->rect.h - 50;
   pEnemy2->damage = 1;
-  pEnemy2->health = 4;                  // changed health
-    //float speed = rand() % (50 - 15 + 1) + 15;
-    float speed = rand() % (15 - 10 + 1) + 10;
+  pEnemy2->health = 4; // changed health
+  // float speed = rand() % (50 - 15 + 1) + 15;
+  float speed = rand() % (15 - 10 + 1) + 10;
   if (startSpawnOnTheLeft == 1) {
     pEnemy2->x = pEnemy2->window_width;
     pEnemy2->y = rand() % (pEnemy2->window_height - pEnemy2->rect.h);
@@ -102,8 +102,10 @@ void updateEnemy2(Enemy2 *pEnemy2) {
   if (pEnemy2->active == true) {
     pEnemy2->x += pEnemy2->vx * 0.1; // test values
     pEnemy2->y += sin(pEnemy2->x * frequency) * amplitude;
-    if (pEnemy2->x > pEnemy2->window_width || pEnemy2->x + pEnemy2->rect.w < 0 || pEnemy2->y > pEnemy2->window_height || pEnemy2->y + pEnemy2->rect.h < 0)
-    {
+    if (pEnemy2->x > pEnemy2->window_width ||
+        pEnemy2->x + pEnemy2->rect.w < 0 ||
+        pEnemy2->y > pEnemy2->window_height ||
+        pEnemy2->y + pEnemy2->rect.h < 0) {
       getStartValues2(pEnemy2);
       pEnemy2->active = false;
       return;
