@@ -29,7 +29,7 @@ void spawn_projectile(float x, float y, float dx, float dy) {
 void update_projectiles(Uint32 delta_time) {
     for (int i = 0; i < MAX_PROJECTILES; i++) {
         if (projectiles[i].active) {
-            projectiles[i].x += projectiles[i].vx * delta_time/100;
+            projectiles[i].x += projectiles[i].vx * delta_time/10;
             projectiles[i].y += projectiles[i].vy * delta_time/10;
             printf("active projectile %d\n", i);
 

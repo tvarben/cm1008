@@ -484,7 +484,7 @@ void handleGameOverState(Game *pGame) {
 void updateWithServerData(Game *pGame) {
     ServerData serverData;/////// test
     memcpy(&serverData, pGame->pPacket->data, sizeof(ServerData));
-    pGame->shipId= serverData.sDPlayerId;////// test  Kontrollera varför vi gör detta
+    pGame->shipId= serverData.sDPlayerId;  // test  Kontrollera varför vi gör detta
     for(int i = 0; i < MAX_PLAYERS; i++) {
         if (pGame->pShips[i])
             updateShipsWithServerData(pGame->pShips[i], &serverData.ships[i], i, pGame->shipId);
