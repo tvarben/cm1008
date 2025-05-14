@@ -12,7 +12,6 @@ struct ship {
       targetY; // x och y används inte? kolla rad 50
   // float targetX, targetY; // for smooth movement
   int windowWidth, windowHeight;
-
   SDL_Renderer *renderer;
   SDL_Texture *texture, *shield;
   SDL_Rect shipRect, shieldRect;
@@ -35,7 +34,10 @@ Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth,
   pShip->health = 2;
   pShip->isAlive = true;
 
-  SDL_Surface *surface = IMG_Load("../lib/resources/player.png");
+  //SDL_Surface *surface = IMG_Load("../lib/resources/player.png");
+ char imagePath[64];
+ sprintf(imagePath, "../lib/resources/player%d.png", playerId); 
+ SDL_Surface *surface = IMG_Load(imagePath);
   if (!surface) {
     printf("Error loading player.png: %s\n", IMG_GetError());
     free(pShip);
