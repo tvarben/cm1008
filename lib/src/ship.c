@@ -78,14 +78,14 @@ Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth,
     free(pShip);
     return NULL;
   }
-  SDL_QueryTexture(pShip->shield, NULL, NULL, &pShip->shieldRect.w,
-                   &pShip->shieldRect.h);
-  pShip->shieldRect.w = pShip->shipRect.w;
-  pShip->shieldRect.h = pShip->shipRect.h;
+  SDL_QueryTexture(pShip->shield, NULL, NULL, NULL,
+                   NULL);
+  pShip->shieldRect.w = (pShip->shipRect.w) *1.5; //made the shield wider
+  pShip->shieldRect.h = (pShip->shipRect.h) * 2.25; //made the ship taller
 
   pShip->shieldRect.x = pShip->x;
   pShip->shieldRect.y = pShip->y;
-  SDL_SetTextureAlphaMod(pShip->shield, 150);
+  SDL_SetTextureAlphaMod(pShip->shield, 75); //sets transparency level, lower means more transparent
 
   return pShip;
 }
@@ -167,8 +167,8 @@ void updateShipOnServer(Ship *pShip) {
 void stayInWindow(Ship *pShip) {
   pShip->shipRect.x = (int)pShip->x;
   pShip->shipRect.y = (int)pShip->y;
-  pShip->shieldRect.x = (int)pShip->x;
-  pShip->shieldRect.y = (int)pShip->y;
+  pShip->shieldRect.x = ((int)pShip->x)-10; //not sure if this is more left or more right
+  pShip->shieldRect.y = ((int)pShip->y)-15; //adjusted where shield is placed, -15 is a bit up
 
   // BOUNDARY CHECK
   if (pShip->x < 0)

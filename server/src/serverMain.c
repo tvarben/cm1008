@@ -17,28 +17,28 @@
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
 typedef struct {
-  SDL_Window *pWindow;
-  SDL_Renderer *pRenderer;
-  Ship *pShips[MAX_PLAYERS];
-  Cannon *pCannons[MAX_PLAYERS];
-  int nrOfShips, nrOfClients;
-  GameState state;
-  Mix_Music *pMusic;
-  TTF_Font *pFont;
-  Text *pStartText, *pGameName, *pExitText, *pLobbyText;
-  ClientCommand command;
-  IPaddress clients[MAX_PLAYERS];
-  UDPsocket pSocket;
-  UDPpacket *pPacket;
-  ServerData serverData;
-  bool isRunning, isShooting;
-  Cannon *pCannon;
-    
-  int nrOfEnemiesToSpawn_1, nrOfEnemies_1, nrOfEnemiesToSpawn_2, nrOfEnemies_2;
-  EnemyImage *pEnemy_1Image;
+    SDL_Window *pWindow;
+    SDL_Renderer *pRenderer;
+    Ship *pShips[MAX_PLAYERS];
+    Cannon *pCannons[MAX_PLAYERS];
+    int nrOfShips, nrOfClients;
+    GameState state;
+    Mix_Music *pMusic;
+    TTF_Font *pFont;
+    Text *pStartText, *pGameName, *pExitText, *pLobbyText;
+    ClientCommand command;
+    IPaddress clients[MAX_PLAYERS];
+    UDPsocket pSocket;
+    UDPpacket *pPacket;
+    ServerData serverData;
+    bool isRunning, isShooting;
+    Cannon *pCannon;
+    int nrOfEnemiesToSpawn_1, nrOfEnemies_1, nrOfEnemiesToSpawn_2, nrOfEnemies_2;
+    EnemyImage *pEnemy_1Image;
     EnemyImage_2 *pEnemy_2Image;
-  Enemy *pEnemies_1[MAX_ENEMIES];
+    Enemy *pEnemies_1[MAX_ENEMIES];
     Enemy_2 *pEnemies_2[MAX_ENEMIES];
+    int map;
 } Game;
 
 int initiate(Game *pGame);
@@ -236,6 +236,7 @@ void handleOngoingState(Game *pGame) {
     while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
       memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
       clientIndex = getClientIndex(pGame, &pGame->pPacket->address);
+        pGame->map = cData.map; //idk if this is safe.
       if (clientIndex >= 0 && clientIndex < MAX_PLAYERS) {
         applyShipCommand(pGame->pShips[clientIndex], cData.command);
         if (cData.isShooting) {
@@ -291,8 +292,7 @@ void handleOngoingState(Game *pGame) {
       // Ship collision här ??
       for (int i = 0; i < MAX_PLAYERS; i++) {
         for (int j = 0; j < pGame->nrOfEnemies_1 && j < MAX_ENEMIES; j++) {
-          if (shipCollision(pGame->pShips[i],
-                            getRectEnemy(pGame->pEnemies_1[j]))) {
+          if (shipCollision(pGame->pShips[i], getRectEnemy(pGame->pEnemies_1[j]))) {
             damageShip(pGame->pShips[i], 1);
             damageEnemy(pGame->pEnemies_1[j], 1, j);
             if (isPlayerDead(pGame->pShips[i])) {
@@ -504,7 +504,14 @@ void spawnEnemies_1(Game *pGame, int amount) {
 
 void updateEnemies_1(Game *pGame, int *amount) {
   if (areTheyAllDead_1(pGame) == true) {
-    (*amount) += 2; // increments even for first wave. WHY?
+        if (pGame->map == 1)
+        {  
+            (*amount) += 2;
+        }
+        else if (pGame->map == 2)
+        {
+            (*amount) += 10;
+        }    
     if ((*amount) > MAX_ENEMIES)
       (*amount) = MAX_ENEMIES;
     pGame->nrOfEnemies_1 = 0;

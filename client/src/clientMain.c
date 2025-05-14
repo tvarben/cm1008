@@ -21,6 +21,9 @@
 #define ASTEROIDPATH "../lib/resources/Asteroid.png"
 #define EARTHPATH "../lib/resources/Earth.png"
 #define enemy1PATH "../lib/resources/ufo.png"
+#define hardMapBackgroundPATH "../lib/resources/map2Background.png"
+#define hardMapImage1PATH "../lib/resources/map2Image1.png"
+#define hardMapImage2PATH "../lib/resources/map2Image2.png"
 
 typedef struct {
   SDL_Window *pWindow;
@@ -31,24 +34,26 @@ typedef struct {
   GameState state;
   Mix_Music *pMusic;
   TTF_Font *pFont, *pSmallFont;
-  Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pScoreText,
-      *pMultiPlayerText, *pMenuText, *pGameOverText, *pWaitingText;
+  Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pTimer,
+  *pMultiPlayerText, *pMenuText, *pGameOverText, *pWaitingText;
   ClientCommand command, lastCommand;
   UDPsocket pSocket;
   IPaddress serverAddress;
   UDPpacket *pPacket;
   bool isRunning, isShooting;
   Stars *pStars;
-  SDL_Texture *pStartImage_1, *pStartImage_2;
+    SDL_Texture *pStartImage_1, *pStartImage_2, *pHardMapBackground, *pHardMapImage1, *pHardMapImage2;
   Text *pCountdownText;
-  // New
   EnemyImage *pEnemy_1Image;
   Enemy *pEnemies_1[MAX_ENEMIES];
   int nrOfEnemies_1;
-    Enemy_2 *pEnemies_2[MAX_ENEMIES];
-    EnemyImage_2 *pEnemy_2Image;
-    int nrOfEnemies_2;
+  Enemy_2 *pEnemies_2[MAX_ENEMIES];
+  EnemyImage_2 *pEnemy_2Image;
+  int nrOfEnemies_2;
   ServerData serverData;
+  int map;
+  int gameTime;  // in s
+  int startTime; // in ms
 } Game;
 
 int initiate(Game *pGame);
@@ -57,8 +62,7 @@ void handleStartState(Game *pGame);
 void renderStartWindow(Game *pGame);
 void handleOngoingState(Game *pGame);
 void handleLobbyState(Game *pGame);
-void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress,
-                          bool textFieldFocused);
+void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress,bool textFieldFocused);
 void handleGameOverState(Game *pGame);
 void closeGame(Game *pGame);
 void handleInput(SDL_Event *pEvent, Game *pGame);
@@ -68,6 +72,9 @@ void updateWithServerData(Game *pGame);
 MainMenuChoice handleMainMenuOptions(Game *pGame);
 void showCountdown(Game *pGame);
 bool areTheyAllDead(Game *pGame);
+void updateGameTime(Game *pGame);
+int getTime(Game *pGame);
+void drawMap(Game *pGame);
 
 int main(int argc, char **argv) {
   Game game = {0};
@@ -182,6 +189,43 @@ int initiate(Game *pGame) {
     printf("Texture Creation Error: %s\n", SDL_GetError());
     return 0;
   }
+
+   SDL_Surface *tempSurface_3 = IMG_Load(hardMapBackgroundPATH);
+    if (!tempSurface_3) {
+        printf("Image Load Error: %s\n", IMG_GetError());
+        return 0;
+    }
+  pGame->pHardMapBackground = SDL_CreateTextureFromSurface(pGame->pRenderer, tempSurface_3);
+    SDL_FreeSurface(tempSurface_3);
+    if (!pGame->pHardMapBackground) {
+        printf("Texture Creation Error: %s\n", SDL_GetError());
+        return 0;
+    }
+
+    SDL_Surface *tempSurface_4 = IMG_Load(hardMapImage1PATH);
+    if (!tempSurface_4) {
+        printf("Image Load Error: %s\n", IMG_GetError());
+        return 0;
+    }
+    pGame->pHardMapImage1 = SDL_CreateTextureFromSurface(pGame->pRenderer, tempSurface_4);
+    SDL_FreeSurface(tempSurface_4);
+    if (!pGame->pHardMapImage1) {
+        printf("Texture Creation Error: %s\n", SDL_GetError());
+        return 0;
+    }
+
+    SDL_Surface *tempSurface_5 = IMG_Load(hardMapImage2PATH);
+    if (!tempSurface_5) {
+        printf("Image Load Error: %s\n", IMG_GetError());
+        return 0;
+    }
+    pGame->pHardMapImage2 = SDL_CreateTextureFromSurface(pGame->pRenderer, tempSurface_5);
+    SDL_FreeSurface(tempSurface_5);
+    if (!pGame->pHardMapImage2) {
+        printf("Texture Creation Error: %s\n", SDL_GetError());
+        return 0;
+    }
+
   pGame->pEnemy_1Image = initiateEnemy(pGame->pRenderer);
   pGame->nrOfEnemies_1 = 0;
     pGame->pEnemy_2Image = initiateEnemy_2(pGame->pRenderer);
@@ -239,6 +283,7 @@ void handleStartState(Game *pGame) {
 void renderStartWindow(Game *pGame) {
   SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
   SDL_RenderClear(pGame->pRenderer);
+  SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255); //White stars
   drawStars(pGame->pStars, pGame->pRenderer);
   drawText(pGame->pSinglePlayerText);
   drawText(pGame->pMultiPlayerText);
@@ -261,6 +306,9 @@ void handleOngoingState(Game *pGame) {
   const Uint32 tickInterval = 8, resendIntervall = 50;
   pGame->command = STOP_SHIP;
   pGame->lastCommand = STOP_SHIP;
+  pGame->startTime = SDL_GetTicks64();
+  pGame->gameTime = -1; // i dont know why
+  pGame->map = 1;
 
   while (pGame->isRunning && pGame->state == ONGOING) {
     now = SDL_GetTicks();
@@ -281,17 +329,14 @@ void handleOngoingState(Game *pGame) {
         lastUpdate=now;*/
     if (timeToUpdate(&lastUpdate, tickInterval)) {
       applyShipCommand(pGame->pShips[pGame->shipId], pGame->command);
-      if (pGame->command != pGame->lastCommand || pGame->isShooting ||
-          now - lastSend >=
-              resendIntervall) { // Skicka endast om användare ändrar command ||
-                                 // periodiskt för failsafe
-        ClientData ccData = {.command = pGame->command,
-                             .isShooting = pGame->isShooting};
+      if (pGame->command != pGame->lastCommand || pGame->isShooting || now - lastSend >= resendIntervall) { // Skicka endast om användare ändrar command ||
+        ClientData ccData = {.command = pGame->command, .isShooting = pGame->isShooting, .map = pGame->map};
         memcpy(pGame->pPacket->data, &ccData, sizeof(ClientData));
         pGame->pPacket->len = sizeof(ClientData);
         SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
         pGame->lastCommand = pGame->command;
         lastSend = now;
+        updateGameTime(pGame);
       }
 
       updateShipVelocity(pGame->pShips[pGame->shipId]);
@@ -313,17 +358,16 @@ void handleOngoingState(Game *pGame) {
         }
       }
       for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
-        pGame->pEnemies_1[i] =
-            createEnemyOnClient(pGame->pEnemy_1Image, WINDOW_WIDTH,
-                                WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
+        pGame->pEnemies_1[i] = createEnemyOnClient(pGame->pEnemy_1Image, WINDOW_WIDTH,WINDOW_HEIGHT, pGame->serverData.enemies_1[i]);
       }
-            for (int i = 0; i < pGame->nrOfEnemies_2; i++) {
-                pGame->pEnemies_2[i] = createEnemy_2_OnClients(pGame->pEnemy_2Image, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_2[i]);
-            }
-
-      SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
+      for (int i = 0; i < pGame->nrOfEnemies_2; i++) {
+          pGame->pEnemies_2[i] = createEnemy_2_OnClients(pGame->pEnemy_2Image, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_2[i]);
+      }
+      SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
       SDL_RenderClear(pGame->pRenderer);
-      drawStars(pGame->pStars, pGame->pRenderer);
+      drawMap(pGame);
+      if (pGame->pTimer) drawText(pGame->pTimer);
+      if (pGame->gameTime >= 30) pGame->map = 2;
       for (int i = 0; i < MAX_PLAYERS; i++) {
         render_projectiles(pGame->pRenderer);
         drawShip(pGame->pShips[i]);
@@ -774,4 +818,44 @@ void closeGame(Game *pGame) {
   TTF_Quit();
   IMG_Quit();
   SDL_Quit();
+}
+
+int getTime(Game *pGame){
+    return (SDL_GetTicks64()-pGame->startTime)/1000;
+}
+
+void updateGameTime(Game *pGame) {
+  if (getTime(pGame) > pGame->gameTime && pGame->state == ONGOING) {
+    (pGame->gameTime)++;
+    if (pGame->pTimer) destroyText(pGame->pTimer);
+    static char timerString[30];
+    sprintf(timerString, "%d", getTime(pGame));
+    if (pGame->pSmallFont)
+    {
+        pGame->pTimer = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, timerString, WINDOW_WIDTH / 2, 50);
+    }
+  }
+}
+
+void drawMap(Game *pGame)
+{
+    if (pGame->map == 1)
+    {
+        SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255); // Set star color to white if they arent already
+        drawStars(pGame->pStars,pGame->pRenderer);
+        SDL_Rect earthImageRect = { WINDOW_WIDTH/2.5, WINDOW_HEIGHT/3, 200, 200 };
+        SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage_1, NULL, &earthImageRect);
+    }
+    else if (pGame->map == 2)
+    {
+        SDL_SetRenderDrawColor(pGame->pRenderer, 255, 0, 0, 255); // Set star color to red if they arent already
+        drawStars(pGame->pStars,pGame->pRenderer);
+        SDL_Rect backgroundRect = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
+        SDL_RenderCopy(pGame->pRenderer, pGame->pHardMapBackground, NULL, &backgroundRect);
+        drawStars(pGame->pStars,pGame->pRenderer);
+        SDL_Rect centerImageRect = { WINDOW_WIDTH/3, WINDOW_HEIGHT/3.5, 128*3, 97*3 };
+        SDL_RenderCopy(pGame->pRenderer, pGame->pHardMapImage1, NULL, &centerImageRect);
+        SDL_Rect cornerImageRect = { 100, 65, 48, 48 };
+        SDL_RenderCopy(pGame->pRenderer, pGame->pHardMapImage2, NULL, &cornerImageRect);
+    }
 }
