@@ -221,6 +221,7 @@ void handleOngoingState(Game *pGame) {
   Uint32 now = 0, delta = 0, lastUpdate = SDL_GetTicks();
   const Uint32 tickInterval = 16;
   pGame->nrOfEnemies_1 = 0;
+  pGame->nrOfEnemies_2 = 0;
   SDL_Rect emptyRect = {0, 0, 0, 0}, rectArray[MAX_PROJECTILES] = {0, 0, 0, 0};
 
   while (pGame->isRunning && pGame->state == ONGOING) {
@@ -269,7 +270,7 @@ void handleOngoingState(Game *pGame) {
         updateEnemy(pGame->pEnemies_1[i]); // locally
       }
       for (int i = 0; i < pGame->nrOfEnemies_2 && i < MAX_ENEMIES; i++) {
-                updateEnemy_2(pGame->pEnemies_2[i]);
+        updateEnemy_2(pGame->pEnemies_2[i]);
       }
       SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
       SDL_RenderClear(pGame->pRenderer);
@@ -296,34 +297,62 @@ void handleOngoingState(Game *pGame) {
             damageEnemy(pGame->pEnemies_1[j], 2, j);
             damageShip(pGame->pShips[i], 1);
             damageCannon(pGame->pCannons[i], 1);
-            damageEnemy(pGame->pEnemies_1[j], 1, j);
             if (isPlayerDead(pGame->pShips[i])) {
               printf("Player %d is dead\n", i);
-              // resetHealth(pGame->pShips[i]);
+            }
+          }
+        }
+        
+        for (int j = 0; j < pGame->nrOfEnemies_2 && j < MAX_ENEMIES; j++) {
+          if (shipCollision(pGame->pShips[i], getRectEnemy_2(pGame->pEnemies_2[j]))) {
+            damageEnemy_2(pGame->pEnemies_2[j], 2, j);
+            damageShip(pGame->pShips[i], 1);
+            damageCannon(pGame->pCannons[i], 1);
+            if (isPlayerDead(pGame->pShips[i])) {
+              printf("Player %d is dead\n", i);
             }
           }
         }
       }
+
+            
+      
       // Bullet collision här ?? Ska man kunna skjuta på varandra?
-      getProjectileRects(rectArray);
-            for (int i = 0; i < MAX_PROJECTILES; i++) {
-                SDL_Rect bulletRect = rectArray[i];
-                for (int k = 0; k < pGame->nrOfEnemies_1; k++) {
-                    SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies_1[k]);
-                    if (SDL_HasIntersection(&enemyRect, &bulletRect)) {
-                        //printf("enemy num: %d \n", k);
-                        printEnemyHealth(pGame->pEnemies_1[k]);
-                        damageEnemy(pGame->pEnemies_1[k], 1, k);
-                        if (isEnemyActive(pGame->pEnemies_1[k]) == false){
-                            (pGame->killedEnemies)++;
-                        }
-                        removeProjectile(i);
-                        rectArray[i] = emptyRect;
-                        for (int j = 0; j < MAX_PLAYERS; j++)
-                            setBulletToRemove(pGame->pShips[j], i);
-                    }
-                }
-            }
+     getProjectileRects(rectArray);
+
+      for (int i = 0; i < MAX_PROJECTILES; i++) {
+          SDL_Rect bulletRect = rectArray[i];
+          for (int k = 0; k < pGame->nrOfEnemies_1; k++) {
+              SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies_1[k]);
+              if (SDL_HasIntersection(&enemyRect, &bulletRect)) {
+                  printEnemyHealth(pGame->pEnemies_1[k]);
+                  damageEnemy(pGame->pEnemies_1[k], 1, k);
+                  if (isEnemyActive(pGame->pEnemies_1[k]) == false) {
+                      (pGame->killedEnemies)++;
+                  }
+                  removeProjectile(i);
+                  rectArray[i] = emptyRect;
+                  for (int j = 0; j < MAX_PLAYERS; j++) {
+                      setBulletToRemove(pGame->pShips[j], i);
+                  }
+              }
+          }
+          for (int k = 0; k < pGame->nrOfEnemies_2; k++) {
+              SDL_Rect enemyRect2 = getRectEnemy_2(pGame->pEnemies_2[k]);
+              if (SDL_HasIntersection(&enemyRect2, &bulletRect)) {
+                  printEnemy_2Health(pGame->pEnemies_2[k]);
+                  damageEnemy_2(pGame->pEnemies_2[k], 1, k);
+                  if (isEnemy_2Active(pGame->pEnemies_2[k]) == false) {
+                      (pGame->killedEnemies)++;
+                  }
+                  removeProjectile(i);
+                  rectArray[i] = emptyRect;
+                  for (int j = 0; j < MAX_PLAYERS; j++) {
+                      setBulletToRemove(pGame->pShips[j], i);
+                  }
+              }
+          }
+      }
 
       SDL_RenderPresent(pGame->pRenderer);
       sendServerData(pGame);
