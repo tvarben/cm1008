@@ -37,7 +37,7 @@ typedef enum {
 } MainMenuChoice;
 
 typedef struct{
-    int cDPlayerId; //cDPlayerId not really needed. Server finds out which klient it is based on IP-address
+    int cDPlayerId, bulletToRemove; //cDPlayerId not really needed. Server finds out which klient it is based on IP-address
     ClientCommand command;
     bool isShooting, isAlive;
 } ClientData;
@@ -45,9 +45,8 @@ typedef struct{
 typedef struct{
     float x, y, vx, vy;
     bool facingLeft, isShooting, isAlive;
-    //int vx, vy;   //Is vx, vy needed?
+    int bulletToRemove;
 } ShipData;
-
 
 typedef struct{
     float x, y;

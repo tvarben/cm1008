@@ -288,12 +288,13 @@ void handleOngoingState(Game *pGame) {
                         //printf("enemy num: %d \n", k);
                         printEnemyHealth(pGame->pEnemies_1[k]);
                         damageEnemy(pGame->pEnemies_1[k], 1, k);
-                        if (isEnemyActive(pGame->pEnemies_1[k]) == false)
-                        {
+                        if (isEnemyActive(pGame->pEnemies_1[k]) == false){
                             (pGame->killedEnemies)++;
                         }
                         removeProjectile(i);
-                        rectArray[i]=emptyRect;
+                        rectArray[i] = emptyRect;
+                        for (int j = 0; j < MAX_PLAYERS; j++)
+                            setBulletToRemove(pGame->pShips[j], i);
                     }
                 }
             }
@@ -376,7 +377,7 @@ void sendServerData(Game* pGame) {
 
     for(int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++)
         getEnemy_1_DataPackage(pGame->pEnemies_1[i], &pGame->serverData.enemies_1[i]);
-        pGame->serverData.nrOfEnemies_1 = pGame->nrOfEnemies_1;
+    pGame->serverData.nrOfEnemies_1 = pGame->nrOfEnemies_1;
 
     for(int i=0 ; i< MAX_PLAYERS ; i++){
         pGame->serverData.sDPlayerId =i;

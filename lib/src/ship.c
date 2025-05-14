@@ -14,7 +14,7 @@ struct ship {
     SDL_Renderer* renderer;
     SDL_Texture* texture;
     SDL_Rect shipRect;
-    int health;
+    int health, bulletToRemove;
     bool keyLeft, keyRight, keyUp, keyDown, facingLeft, isShooting, isAlive;
 };
 
@@ -200,7 +200,9 @@ void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
     pShipData->facingLeft = pShip->facingLeft;
     pShipData->isShooting = pShip->isShooting;
     pShipData->isAlive = pShip->isAlive;
+    pShipData->bulletToRemove = pShip->bulletToRemove;
 }
+
 void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int myShipId) {
     pShip->targetX = pShipData->x;
     pShip->targetY = pShipData->y;
@@ -209,10 +211,13 @@ void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int
     pShip->facingLeft = pShipData->facingLeft;
     pShip->isShooting = pShipData->isShooting;
     pShip->isAlive = pShipData->isAlive;
+    pShip->bulletToRemove = pShipData->bulletToRemove;
 }
+
 bool isCannonShooting(Ship* pShip) {
     return pShip->isShooting;
 }
+
 void setShoot(Ship *pShip, bool value) {
     pShip->isShooting = value;
 }
@@ -220,10 +225,12 @@ void setShoot(Ship *pShip, bool value) {
 int shipCollision(Ship *pShip, SDL_Rect rect) {
     return SDL_HasIntersection(&pShip->shipRect, &rect);
 }   
-void damageShip(Ship *pShip, int damage){
+
+void damageShip(Ship *pShip, int damage) {
     pShip->health -= damage;
     //printf("Ship health %d\n",pShip->health);
 }
+
 bool isPlayerDead(Ship *pShip) {
     if (pShip->health <= 0) {
         pShip->isAlive = false;
@@ -232,14 +239,26 @@ bool isPlayerDead(Ship *pShip) {
         return false;
     }
 }
+
 void resetHealth(Ship *pShip) {
     pShip->health = 2;
     return;
 }
+
 bool clientAliveControll(Ship *pShip) {
     if (pShip->isAlive == false) {
         return false;
     } else {
         return true;
     }
+}
+void setBulletToRemove(Ship *pShip, int bulletToRemove) {
+    pShip->bulletToRemove = bulletToRemove;
+}
+
+int getBulletToRemove(Ship *pShip) {
+    int h;
+    if (pShip) h = pShip->bulletToRemove;
+    pShip->bulletToRemove = -1;
+    return h;
 }

@@ -17,7 +17,7 @@ void spawn_projectile(float x, float y, float dx, float dy) {
             projectiles[i].y = y;
             projectiles[i].vx = dx;
             projectiles[i].vy = dy;
-            projectiles[i].active = 1;
+            projectiles[i].active = true;
             projectiles[i].rect.w = projectile_width; // size of projectile
             projectiles[i].rect.h = projectile_length;
             //printf("spawning projectile\n");
@@ -73,7 +73,7 @@ void getProjectileRects(SDL_Rect rectArray[]) {
 
 void resetAllBullets() {
     for(int i=0;i<MAX_PROJECTILES;i++) {
-        projectiles[i].active=false;
+        projectiles[i].active = false;
     }
     return;
 }

@@ -279,6 +279,7 @@ void handleOngoingState(Game *pGame) {
             //Använder vi ens prediction?
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 if (pGame->pShips[i]) {
+                    removeProjectile(getBulletToRemove(pGame->pShips[i]));
                     update_projectiles(delta);
                     updateShipOnClients(pGame->pShips[i], i, pGame->shipId); // <--- pass remote shipId and myShipId
                     updateCannon(pGame->pCannons[i], pGame->pShips[i]);
