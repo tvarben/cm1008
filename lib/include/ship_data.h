@@ -41,6 +41,7 @@ typedef struct {
                   // it is based on IP-address
   ClientCommand command;
   bool isShooting;
+  int map;
 } ClientData;
 
 typedef struct {
@@ -65,11 +66,11 @@ typedef struct {
   int sDPlayerId;
   ShipData ships[MAX_PLAYERS];
   // bool isShooting;
-
-    int nrOfEnemies_1, nrOfEnemiesToSpawn_1;
-    int nrOfEnemies_2, nrOfEnemiesToSpawn_2;
-    Enemy_1_Data enemies_1[MAX_ENEMIES];
-    Enemy_2_Data enemies_2[MAX_ENEMIES];
+  int nrOfEnemies_1, nrOfEnemiesToSpawn_1;
+  int nrOfEnemies_2, nrOfEnemiesToSpawn_2;
+  Enemy_1_Data enemies_1[MAX_ENEMIES];
+  Enemy_2_Data enemies_2[MAX_ENEMIES];
+  int map;
 } ServerData;
 
 #endif
