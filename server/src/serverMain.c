@@ -283,8 +283,7 @@ void handleOngoingState(Game *pGame) {
                 SDL_Rect bulletRect = rectArray[i];
                 for (int k = 0; k < pGame->nrOfEnemies_1; k++) {
                     SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies_1[k]);
-                    if (SDL_HasIntersection(&enemyRect, &bulletRect))
-                    {
+                    if (SDL_HasIntersection(&enemyRect, &bulletRect)) {
                         //printf("enemy num: %d \n", k);
                         printEnemyHealth(pGame->pEnemies_1[k]);
                         damageEnemy(pGame->pEnemies_1[k], 1, k);
@@ -302,6 +301,7 @@ void handleOngoingState(Game *pGame) {
             sendServerData(pGame);
             for (int i = 0; i < MAX_PLAYERS; i++) {
                 setShoot(pGame->pShips[i], false);
+                setBulletToRemove(pGame->pShips[i], -1);
             }
         }
     }
@@ -311,7 +311,7 @@ void handleLobbyState(Game *pGame) {
     SDL_Event event;
     while (pGame->isRunning && pGame->state == LOBBY) {
         if (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT){
+            if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
                 return;
             }

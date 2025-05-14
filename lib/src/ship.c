@@ -257,8 +257,8 @@ void setBulletToRemove(Ship *pShip, int bulletToRemove) {
 }
 
 int getBulletToRemove(Ship *pShip) {
-    int h;
-    if (pShip) h = pShip->bulletToRemove;
+    int bullet;
+    if (pShip) bullet = pShip->bulletToRemove;
     pShip->bulletToRemove = -1;
-    return h;
+    return bullet;
 }

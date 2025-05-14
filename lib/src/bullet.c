@@ -79,6 +79,6 @@ void resetAllBullets() {
 }
 
 void removeProjectile(int i) {
-    projectiles[i].active = false;
+    if (i >= 0) projectiles[i].active = false;
     return;
 }
