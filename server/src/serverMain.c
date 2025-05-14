@@ -39,6 +39,11 @@ typedef struct {
     EnemyImage_2 *pEnemy_2Image;
     Enemy *pEnemies_1[MAX_ENEMIES];
     Enemy_2 *pEnemies_2[MAX_ENEMIES];
+
+    EnemyImage_3 *pEnemy_3Image;
+    Enemy_3 *pEnemies_3[1];
+    int nrOfEnemies_3, nrOfEnemiesToSpawn_3;
+
     int map;
 } Game;
 
@@ -58,6 +63,9 @@ void printPacketsData(Game* pGame);
 void spawnEnemies_2(Game *pGame, int amount);
 void updateEnemies_2(Game *pGame, int *amount);
 bool areTheyAllDead_2(Game *pGame);
+void spawnBoss(Game *pGame);
+void resetBoss(Game *pGame);
+void updateBoss(Game *pGame);
 void printPacketsData(Game *pGame);
 
 int main(int argc, char **argv) {
@@ -154,9 +162,13 @@ int initiate(Game *pGame) {
     return 0;
   }
   pGame->pEnemy_1Image = initiateEnemy(pGame->pRenderer);
-    pGame->pEnemy_2Image = initiateEnemy_2(pGame->pRenderer);
+  pGame->pEnemy_2Image = initiateEnemy_2(pGame->pRenderer);
+  pGame->pEnemy_3Image = initiateEnemy_3(pGame->pRenderer);
+
   pGame->nrOfEnemies_1 = 0;
-    pGame->nrOfEnemies_2 = 0;
+  pGame->nrOfEnemies_2 = 0;
+  pGame->nrOfEnemies_3 = 0;
+
   pGame->isRunning = true;
   pGame->state = START;
   return 1;
@@ -166,6 +178,7 @@ void run(Game *pGame) {
     printf("Server is listening on port %hu...\n", SERVER_PORT);
     pGame->nrOfEnemiesToSpawn_1= WAVE_1_EASY_MAP;
     pGame->nrOfEnemiesToSpawn_2 = WAVE_1_EASY_MAP;
+    pGame->nrOfEnemiesToSpawn_3 = NROFBOSSES;
 
   while (pGame->isRunning) {
     switch (pGame->state) {
@@ -224,6 +237,10 @@ void handleOngoingState(Game *pGame) {
   pGame->nrOfEnemies_1 = 0;
   SDL_Rect emptyRect = {0, 0, 0, 0}, rectArray[MAX_PROJECTILES] = {0, 0, 0, 0};
 
+  if (pGame->nrOfEnemies_3 == 0) {
+    spawnBoss(pGame);
+  }
+
   while (pGame->isRunning && pGame->state == ONGOING) {
     now = SDL_GetTicks();
     delta = now - lastUpdate;
@@ -265,7 +282,9 @@ void handleOngoingState(Game *pGame) {
       }
       updateEnemies_1(pGame, &pGame->nrOfEnemiesToSpawn_1); // Calls spawnEnemy() down at the bottom of the code
       updateEnemies_2(pGame, &pGame->nrOfEnemiesToSpawn_2);
-    
+      
+      updateBoss(pGame);
+      //updateEnemy_3(pGame->pEnemies_3[0]);
       for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
         updateEnemy(pGame->pEnemies_1[i]); // locally
       }
@@ -283,12 +302,14 @@ void handleOngoingState(Game *pGame) {
       for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
         if (isEnemyActive(pGame->pEnemies_1[i]) == true) { // locally
           drawEnemy(pGame->pEnemies_1[i]);
-          // printf("ALIVE or DEAD? %d\n", isEnemyActive(pGame->pEnemies_1[i]));
         }
       }
       for (int i = 0; i < pGame->nrOfEnemies_2 && i < MAX_ENEMIES; i++) {
                 if (isEnemy_2Active(pGame->pEnemies_2[i]))
                     drawEnemy_2(pGame->pEnemies_2[i]);
+      }
+      if (isEnemy_3Active(pGame->pEnemies_3[0]) == true) {
+                drawEnemy_3(pGame->pEnemies_3[0]);
       }
       // Ship collision här ??
       for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -576,4 +597,15 @@ bool areTheyAllDead_2(Game *pGame) {
       }
     }
     return true;
+}
+
+void spawnBoss(Game *pGame){
+  pGame->pEnemies_3[0]=createEnemy_3(pGame->pEnemy_3Image, WINDOW_WIDTH, WINDOW_HEIGHT);
+  pGame->nrOfEnemies_3++;
+}
+
+void updateBoss(Game *pGame){
+  if(isEnemy_3Active(pGame->pEnemies_3[0])){
+    updateEnemy_3(pGame->pEnemies_3[0]);
+  }
 }
