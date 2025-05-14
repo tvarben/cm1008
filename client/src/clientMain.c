@@ -323,7 +323,6 @@ void handleOngoingState(Game *pGame) {
         return;
       } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
         handleInput(&event, pGame);
-        printf("Game time: %d \n", pGame->gameTime);
       }
     }
     /*if (delta>=tickInterval) {
