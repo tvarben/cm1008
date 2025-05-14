@@ -11,7 +11,7 @@
 
 struct Cannon {
   int dy, dx;
-  int windowWidth, windowHeight;
+  int windowWidth, windowHeight, health;
   SDL_Renderer *renderer;
   SDL_Texture *texture;
   SDL_Rect rect;
@@ -31,6 +31,7 @@ Cannon *createCannon(SDL_Renderer *renderer, int windowWidth,
   c->dy = 0; // direction cannon shoots when press space at start of the game
   c->dx = 400;
   c->lastFacedLeft = false;
+  c->health = 2;
   SDL_Surface *surface = IMG_Load("../lib/resources/ship_cannon.png");
   if (!surface) {
     printf("Error loading Cannon.png: %s\n", IMG_GetError());
@@ -58,6 +59,9 @@ Cannon *createCannon(SDL_Renderer *renderer, int windowWidth,
 
 void drawCannon(Cannon *c) {
   SDL_RendererFlip flip = c->lastFacedLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+  if (c->health <= 0) {
+    return;
+  }
   SDL_RenderCopyEx(c->renderer, c->texture, NULL, &c->rect, 0, NULL, flip);
 }
 
@@ -100,4 +104,10 @@ void resetCannon(Cannon *c) {
   c->moveDownN = false;
   c->moveLeftQ = false;
   c->moveRightE = false;
+}
+void damageCannon(Cannon *pCannon, int damage){
+    pCannon->health -= damage;
+}
+void resetCannonHealth(Cannon *pCannon){
+    pCannon->health = 2;
 }
