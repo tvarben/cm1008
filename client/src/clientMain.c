@@ -75,6 +75,7 @@ bool areTheyAllDead(Game *pGame);
 void updateGameTime(Game *pGame);
 int getTime(Game *pGame);
 void drawMap(Game *pGame);
+void drawMapTransitionScreen(SDL_Renderer *renderer);
 
 int main(int argc, char **argv) {
   Game game = {0};
@@ -309,7 +310,8 @@ void handleOngoingState(Game *pGame) {
   pGame->startTime = SDL_GetTicks64();
   pGame->gameTime = -1; // i dont know why
   pGame->map = 1;
-
+  bool seenMapTransition = false;
+  int nextMapShowWhen = 10;
   while (pGame->isRunning && pGame->state == ONGOING) {
     now = SDL_GetTicks();
     delta = now - lastUpdate; // används bara på rad 253, men delta används inte
@@ -368,7 +370,7 @@ void handleOngoingState(Game *pGame) {
       SDL_RenderClear(pGame->pRenderer);
       drawMap(pGame);
       if (pGame->pTimer) drawText(pGame->pTimer);
-      if (pGame->gameTime >= 30) pGame->map = 2;
+      if (pGame->gameTime >= nextMapShowWhen) pGame->map = 2;
       /*for (int i = 0; i < MAX_PLAYERS; i++) {
         render_projectiles(pGame->pRenderer);
         drawShip(pGame->pShips[i]);
@@ -401,6 +403,12 @@ void handleOngoingState(Game *pGame) {
       for (int i = 0; i < MAX_PLAYERS; i++) {
         setShoot(pGame->pShips[i], false);
       }
+      if (seenMapTransition == false && pGame->gameTime >= nextMapShowWhen)
+      {
+        seenMapTransition = true;
+        SDL_SetRenderDrawColor(pGame->pRenderer, 175, 0, 0, 255);
+        drawMapTransitionScreen(pGame->pRenderer);
+      } 
     }
   }
 }
@@ -896,4 +904,10 @@ void drawMap(Game *pGame)
         SDL_Rect cornerImageRect = { 100, 65, 48, 48 };
         SDL_RenderCopy(pGame->pRenderer, pGame->pHardMapImage2, NULL, &cornerImageRect);
     }
+}
+
+void drawMapTransitionScreen(SDL_Renderer *renderer) { //assumes a rendercolor is chosen before
+    SDL_RenderClear(renderer); //clear with said color
+    SDL_RenderPresent(renderer); //draw whole screen
+    SDL_Delay(500);     // Delay for like half a sec
 }
