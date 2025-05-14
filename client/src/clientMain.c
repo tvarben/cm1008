@@ -395,7 +395,6 @@ void handleOngoingState(Game *pGame) {
               render_projectiles(pGame->pRenderer);
               drawShip(pGame->pShips[i]);   
               drawCannon(pGame->pCannons[i]);
-              resetHealth(pGame->pShips[i]);  //
           }
       SDL_RenderPresent(pGame->pRenderer);
       pGame->isShooting = false;
