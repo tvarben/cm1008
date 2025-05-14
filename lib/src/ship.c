@@ -16,8 +16,8 @@ struct ship {
   SDL_Renderer *renderer;
   SDL_Texture *texture, *shield;
   SDL_Rect shipRect, shieldRect;
-  int health;
-  bool keyLeft, keyRight, keyUp, keyDown, facingLeft, isShooting;
+  int health, bulletToRemove;
+  bool keyLeft, keyRight, keyUp, keyDown, facingLeft, isShooting, isAlive;
 };
 
 Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth,
@@ -31,9 +31,9 @@ Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth,
   pShip->windowWidth = windowWidth;
   pShip->windowHeight = windowHeight;
   pShip->renderer = renderer;
-  pShip->keyDown = pShip->keyUp = pShip->keyRight = pShip->keyLeft =
-      pShip->isShooting = false;
+  pShip->keyDown = pShip->keyUp = pShip->keyRight = pShip->keyLeft = pShip->isShooting = false;
   pShip->health = 2;
+  pShip->isAlive = true;
 
   SDL_Surface *surface = IMG_Load("../lib/resources/player.png");
   if (!surface) {
@@ -182,8 +182,12 @@ void stayInWindow(Ship *pShip) {
 }
 
 void drawShip(Ship *pShip) {
-  SDL_RendererFlip flip =
-      pShip->facingLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE; //
+  SDL_RendererFlip flip = pShip->facingLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+    if (pShip->health <= 0) { //
+        pShip->shipRect.w = 0;
+        pShip->shipRect.h = 0;
+        return;
+    }
   SDL_RenderCopyEx(pShip->renderer, pShip->texture, NULL, &pShip->shipRect, 0,
                    NULL, flip);
   if (pShip->health >= 2) {
@@ -249,6 +253,8 @@ void getShipDataPackage(Ship *pShip,
   pShipData->health = pShip->health; 
   pShipData->facingLeft = pShip->facingLeft;
   pShipData->isShooting = pShip->isShooting;
+  pShipData->isAlive = pShip->isAlive;
+  pShipData->bulletToRemove = pShip->bulletToRemove;
 }
 
 void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId,
@@ -260,6 +266,8 @@ void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId,
   pShip->health = pShipData->health; 
   pShip->facingLeft = pShipData->facingLeft;
   pShip->isShooting = pShipData->isShooting;
+  pShip->isAlive = pShipData->isAlive;
+  pShip->bulletToRemove = pShipData->bulletToRemove;
 }
 
 bool isCannonShooting(Ship *pShip) { return pShip->isShooting; }
@@ -274,14 +282,35 @@ void damageShip(Ship *pShip, int damage) {
   pShip->health -= damage;
   printf("Ship health %d\n", pShip->health);
 }
+
 bool isPlayerDead(Ship *pShip) {
-  if (pShip->health <= 0) {
-    return true;
-  } else {
-    return false;
-  }
+    if (pShip->health <= 0) {
+        pShip->isAlive = false;
+        return true;
+    } else {
+        return false;
+    }
 }
+
 void resetHealth(Ship *pShip) {
-  pShip->health = 2;
-  return;
+    pShip->health = 2;
+    return;
+}
+
+bool clientAliveControll(Ship *pShip) {
+    if (pShip->isAlive == false) {
+        return false;
+    } else {
+        return true;
+    }
+}
+void setBulletToRemove(Ship *pShip, int bulletToRemove) {
+    pShip->bulletToRemove = bulletToRemove;
+}
+
+int getBulletToRemove(Ship *pShip) {
+    int bullet;
+    if (pShip) bullet = pShip->bulletToRemove;
+    pShip->bulletToRemove = -1;
+    return bullet;
 }

@@ -32,4 +32,7 @@ void damageShip(Ship *pShip, int damage);
 bool isPlayerDead(Ship *pShip);
 void resetHealth(Ship *pShip);
 int shipCollision(Ship *pShip, SDL_Rect rect);
+bool clientAliveControll(Ship *pShip);
+void setBulletToRemove(Ship *pShip, int bulletToRemove);
+int getBulletToRemove(Ship *pShip);
 #endif
