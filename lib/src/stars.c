@@ -23,7 +23,6 @@ Stars *createStars(int nr_of_stars, int width, int height) {
 }
 
 void drawStars(Stars *pstars, SDL_Renderer *pRenderer) {
-  SDL_SetRenderDrawColor(pRenderer, 255, 255, 255, 100); // Set color to white
   for (int i = 0; i < pstars->nr_of_stars; i++) {
     drawStar(&(pstars->pStarList[i]), pRenderer);
   }
