@@ -1,11 +1,11 @@
-#include "../include/enemy3.h"
+#include "enemy_3.h"
 #include <SDL2/SDL_image.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-struct enemyImage3 {
+struct enemyImage_3 {
   SDL_Renderer *pRenderer;
   SDL_Texture *pTexture;
 };
@@ -22,13 +22,13 @@ struct enemy3 {
   SDL_Rect rectHitbox;
 };
 
-static void getStartValues3(Enemy3 *name);
+static void getStartValues_3(Enemy_3 *name);
 
-EnemyImage3 *initiateEnemy3(SDL_Renderer *pRenderer) {
-  static EnemyImage3 *pEnemyImage3 = NULL;
+EnemyImage_3 *initiateEnemy_3(SDL_Renderer *pRenderer) {
+  static EnemyImage_3 *pEnemyImage3 = NULL;
   if (pEnemyImage3 == NULL) {
-    pEnemyImage3 = malloc(sizeof(struct enemyImage3));
-    SDL_Surface *surface = IMG_Load("resources/boss.png");
+    pEnemyImage3 = malloc(sizeof(struct enemyImage_3));
+    SDL_Surface *surface = IMG_Load("../lib/resources/boss.png");
 
     if (!surface) {
       printf("Error: %s\n", SDL_GetError());
@@ -47,19 +47,19 @@ EnemyImage3 *initiateEnemy3(SDL_Renderer *pRenderer) {
   return pEnemyImage3;
 }
 
-Enemy3 *createEnemy3(EnemyImage3 *pEnemyImage3, int window_width, int window_height) {
-  Enemy3 *pEnemy3 = malloc(sizeof(struct enemy3));
+Enemy_3 *createEnemy_3(EnemyImage_3 *pEnemyImage3, int window_width, int window_height) {
+  Enemy_3 *pEnemy3 = malloc(sizeof(struct enemy3));
   pEnemy3->pRenderer = pEnemyImage3->pRenderer;
   pEnemy3->pTexture = pEnemyImage3->pTexture;
   pEnemy3->window_width = window_width;
   pEnemy3->window_height = window_height;
   SDL_QueryTexture(pEnemyImage3->pTexture, NULL, NULL, &(pEnemy3->rect.w),&(pEnemy3->rect.h));
-  getStartValues3(pEnemy3);
+  getStartValues_3(pEnemy3);
   pEnemy3->active = true;
   return pEnemy3;
 }
 
-static void getStartValues3(Enemy3 *pEnemy3) {
+static void getStartValues_3(Enemy_3 *pEnemy3) {
   int startSpawnOnTheLeft = rand() % 2; // 0 or 1
   pEnemy3->rectHitbox.x = pEnemy3->rect.x + 10;
   pEnemy3->rectHitbox.y = pEnemy3->rect.y + 10;
@@ -81,14 +81,15 @@ static void getStartValues3(Enemy3 *pEnemy3) {
   }
 }
 
-SDL_Rect getRectEnemy3(Enemy3 *pEnemy3) {
+SDL_Rect getRectEnemy_3(Enemy_3 *pEnemy3) {
   if (pEnemy3->active == true) {
     return pEnemy3->rectHitbox;
   }
   SDL_Rect empty = {0, 0, 0, 0};
   return empty;
 }
-void updateEnemy3(Enemy3 *pEnemy3) {
+
+void updateEnemy_3(Enemy_3 *pEnemy3) {
   if (pEnemy3->active == true)
   {
     pEnemy3->x+=pEnemy3->vx*0.1;
@@ -110,25 +111,25 @@ void updateEnemy3(Enemy3 *pEnemy3) {
   }
 }
 
-void drawEnemy3(Enemy3 *pEnemy3) {
+void drawEnemy_3(Enemy_3 *pEnemy3) {
   if (pEnemy3->active == true) {
     SDL_RenderCopyEx(pEnemy3->pRenderer, pEnemy3->pTexture, NULL, &(pEnemy3->rect), 0, NULL,SDL_FLIP_NONE); // made 0 to not rotate enemy.png
   }
 }
 
-void destroyEnemy3(Enemy3 *pEnemy3) { free(pEnemy3); }
+void destroyEnemy_3(Enemy_3 *pEnemy3) { free(pEnemy3); }
 
-void destroyEnemyImage3(EnemyImage3 *pEnemyImage3) {
+void destroyEnemyImage_3(EnemyImage_3 *pEnemyImage3) {
   SDL_DestroyTexture(pEnemyImage3->pTexture);
 }
 
-void disableEnemy3(Enemy3 *pEnemy3) {
+void disableEnemy_3(Enemy_3 *pEnemy3) {
   if (pEnemy3->health <= 0) {
     pEnemy3->active = false;
   }
 }
 
-void damageEnemy3(Enemy3 *pEnemy3, int damage, int i) {
+void damageEnemy_3(Enemy_3 *pEnemy3, int damage, int i) {
   pEnemy3->health -= damage;
   if (pEnemy3->health <= 0 && pEnemy3->active == true) {
     pEnemy3->active = false;
@@ -137,7 +138,7 @@ void damageEnemy3(Enemy3 *pEnemy3, int damage, int i) {
   if (pEnemy3->health < 0) pEnemy3->health = 0;
 }
 
-// bool isInWindow3(Enemy3 *pEnemy3) {
+// bool isInWindow_3(Enemy_3 *pEnemy3) {
 //   if (pEnemy3->x > pEnemy3->window_width || pEnemy3->x + pEnemy3->rect.w < 0 || pEnemy3->y > pEnemy3->window_height || pEnemy3->y + pEnemy3->rect.h < 0) 
 //   {
 //     pEnemy3->vx = pEnemy3->vx * -1; // reverse direction
@@ -149,14 +150,15 @@ void damageEnemy3(Enemy3 *pEnemy3, int damage, int i) {
 //   }
 // }
 
-bool isEnemy3Active(Enemy3 *pEnemy3) {
+bool isEnemy_3Active(Enemy_3 *pEnemy3) {
   if (pEnemy3->active == false) {
     return false;
   } else {
     return true;
   }
 }
-void printEnemy3Health(Enemy3 *pEnemy3) {
+
+void printEnemy_3Health(Enemy_3 *pEnemy3) {
   if (pEnemy3->active == true) {
     printf("Health: %d\n", pEnemy3->health);
   }
