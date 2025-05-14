@@ -27,7 +27,6 @@ void updateEnemyOnClients(Enemy *pEnemy, Enemy_1_Data enemyData);
 Enemy *createEnemyOnClient(EnemyImage *pEnemyImage, int window_width, int window_height, Enemy_1_Data enemyData);
 static void getStartValuesFromServer(Enemy *pEnemy, Enemy_1_Data enemyData);
 
-void updateEnemies_1_WithServerData(Enemy* pEnemy, Enemy_1_Data* pEnemyData);
 void getEnemy_1_DataPackage(Enemy* pEnemy, Enemy_1_Data* pEnemyData);
 
 

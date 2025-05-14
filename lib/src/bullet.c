@@ -1,4 +1,4 @@
-#include "bullet.h"
+#include "../include/bullet.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
@@ -40,11 +40,11 @@ void update_projectiles(Uint32 delta_time) {
                 //printf("deactivating projectile\n");
             }
 
-            // Update rect position for rendering
-            projectiles[i].rect.x = (int)projectiles[i].x;
-            projectiles[i].rect.y = (int)projectiles[i].y;
-        } // casting int gets rid of compiler warnings
-    }
+      // Update rect position for rendering
+      projectiles[i].rect.x = (int)projectiles[i].x;
+      projectiles[i].rect.y = (int)projectiles[i].y;
+    } // casting int gets rid of compiler warnings
+  }
 }
 
 void render_projectiles(SDL_Renderer *renderer) {
