@@ -13,6 +13,7 @@
 #include "tick.h"
 #include "enemy_1.h"
 #include "enemy_2.h"
+#include "enemy_3.h"
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 

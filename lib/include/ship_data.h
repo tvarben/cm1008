@@ -10,6 +10,7 @@
 #define COUNTDOWN 1
 #define MAX_ENEMIES 100
 #define WAVE_1_EASY_MAP 4
+#define NROFBOSSES 1
 
 typedef enum {
   START,
