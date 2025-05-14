@@ -192,7 +192,6 @@ void applyShipCommand(Ship *pShip, ClientCommand command) {
             break;
     }
 }    
-
 void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
     pShipData->x = pShip->x;
     pShipData->y = pShip->y;
@@ -202,7 +201,6 @@ void getShipDataPackage(Ship* pShip, ShipData* pShipData) {
     pShipData->isShooting = pShip->isShooting;
     pShipData->isAlive = pShip->isAlive;
 }
-
 void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int myShipId) {
     pShip->targetX = pShipData->x;
     pShip->targetY = pShipData->y;
@@ -224,7 +222,7 @@ int shipCollision(Ship *pShip, SDL_Rect rect) {
 }   
 void damageShip(Ship *pShip, int damage){
     pShip->health -= damage;
-    printf("Ship health %d\n",pShip->health);
+    //printf("Ship health %d\n",pShip->health);
 }
 bool isPlayerDead(Ship *pShip) {
     if (pShip->health <= 0) {
@@ -240,7 +238,6 @@ void resetHealth(Ship *pShip) {
 }
 bool clientAliveControll(Ship *pShip) {
     if (pShip->isAlive == false) {
-        pShip->isAlive = true;
         return false;
     } else {
         return true;
