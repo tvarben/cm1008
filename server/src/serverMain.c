@@ -302,7 +302,6 @@ void handleOngoingState(Game *pGame) {
             }
           }
         }
-        
         for (int j = 0; j < pGame->nrOfEnemies_2 && j < MAX_ENEMIES; j++) {
           if (shipCollision(pGame->pShips[i], getRectEnemy_2(pGame->pEnemies_2[j]))) {
             damageEnemy_2(pGame->pEnemies_2[j], 2, j);
@@ -314,12 +313,9 @@ void handleOngoingState(Game *pGame) {
           }
         }
       }
-
-            
-      
-      // Bullet collision här ?? Ska man kunna skjuta på varandra?
+                  
+      // Bullet collision här ?? Ska man kunna skjuta på varandra? 
      getProjectileRects(rectArray);
-
       for (int i = 0; i < MAX_PROJECTILES; i++) {
           SDL_Rect bulletRect = rectArray[i];
           for (int k = 0; k < pGame->nrOfEnemies_1; k++) {
