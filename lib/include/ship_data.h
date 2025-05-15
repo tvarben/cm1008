@@ -10,6 +10,7 @@
 #define COUNTDOWN 1
 #define MAX_ENEMIES 100
 #define WAVE_1_EASY_MAP 4
+#define NROFBOSSES 1
 
 typedef enum {
   START,
@@ -23,6 +24,10 @@ typedef enum {
   MOVE_DOWN,
   MOVE_LEFT,
   MOVE_RIGHT,
+  MOVE_UP_LEFT,
+  MOVE_UP_RIGHT,
+  MOVE_DOWN_LEFT,
+  MOVE_DOWN_RIGHT,
   STOP_SHIP,
   SHOOT,
   STOP_SHOOT,
@@ -60,14 +65,21 @@ typedef struct {
 } Enemy_2_Data;
 
 typedef struct {
+  float x, y;
+  bool active;
+} Enemy_3_Data;
+
+typedef struct {
   GameState gState;
   int sDPlayerId;
   ShipData ships[MAX_PLAYERS];
   // bool isShooting;
   int nrOfEnemies_1, nrOfEnemiesToSpawn_1;
   int nrOfEnemies_2, nrOfEnemiesToSpawn_2;
+  int nrOfEnemies_3, nrOfEnemiesToSpawn_3;
   Enemy_1_Data enemies_1[MAX_ENEMIES];
   Enemy_2_Data enemies_2[MAX_ENEMIES];
+  Enemy_3_Data enemies_3[MAX_ENEMIES];
   int map;
 } ServerData;
 
