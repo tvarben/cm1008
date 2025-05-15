@@ -1,4 +1,5 @@
 #include "enemy_3.h"
+#include "ship_data.h"
 #include <SDL2/SDL_image.h>
 #include <math.h>
 #include <stdbool.h>
@@ -59,6 +60,17 @@ Enemy_3 *createEnemy_3(EnemyImage_3 *pEnemyImage3, int window_width, int window_
   return pEnemy3;
 }
 
+Enemy_3 *createEnemy_3_OnClients(EnemyImage_3 *pEnemyImage, int window_width, int window_height, Enemy_3_Data enemyData) {
+  Enemy_3 *pEnemy = malloc(sizeof(struct enemy3));
+  pEnemy->pRenderer = pEnemyImage->pRenderer;
+  pEnemy->pTexture = pEnemyImage->pTexture;
+  pEnemy->window_width = window_width;
+  pEnemy->window_height = window_height;
+  SDL_QueryTexture(pEnemyImage->pTexture,NULL,NULL,&(pEnemy->rect.w),&(pEnemy->rect.h));
+  getStartValuesFromServer_3(pEnemy, enemyData);
+  return pEnemy;
+}
+
 static void getStartValues_3(Enemy_3 *pEnemy3) {
   int startSpawnOnTheLeft = rand() % 2; // 0 or 1
   pEnemy3->rectHitbox.x = pEnemy3->rect.x + 10;
@@ -79,6 +91,18 @@ static void getStartValues_3(Enemy_3 *pEnemy3) {
       pEnemy3->vx = speed; // move right
       pEnemy3->vy = speed; // move down
   }
+}
+
+static void getStartValuesFromServer_3(Enemy_3 *pEnemy, Enemy_3_Data enemyData) {
+  pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
+  pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
+  pEnemy->rectHitbox.w = pEnemy->rect.w - 50;
+  pEnemy->rectHitbox.h = pEnemy->rect.h - 50;
+  pEnemy->damage = 1;
+  pEnemy->health = 100;
+  pEnemy->x = enemyData.x;
+  pEnemy->y = enemyData.y;
+  pEnemy->active = enemyData.active;
 }
 
 SDL_Rect getRectEnemy_3(Enemy_3 *pEnemy3) {
@@ -109,6 +133,16 @@ void updateEnemy_3(Enemy_3 *pEnemy3) {
     pEnemy3->rectHitbox.x = pEnemy3->rect.x + 40;
     pEnemy3->rectHitbox.y = pEnemy3->rect.y + 20;
   }
+}
+
+void updateEnemy_3_OnClients(Enemy_3 *pEnemy, Enemy_3_Data enemyData) {
+    pEnemy->x = enemyData.x;
+    pEnemy->y = enemyData.y;
+    pEnemy->active = enemyData.active;
+    pEnemy->rect.x = pEnemy->x;
+    pEnemy->rect.y = pEnemy->y;
+    pEnemy->rectHitbox.x = pEnemy->rect.x + 40;
+    pEnemy->rectHitbox.y = pEnemy->rect.y + 20;
 }
 
 void drawEnemy_3(Enemy_3 *pEnemy3) {
@@ -162,4 +196,10 @@ void printEnemy_3Health(Enemy_3 *pEnemy3) {
   if (pEnemy3->active == true) {
     printf("Health: %d\n", pEnemy3->health);
   }
+}
+
+void getEnemy_3_DataPackage(Enemy_3 *pEnemy, Enemy_3_Data *pEnemyData) {
+    pEnemyData->x = pEnemy->x;
+    pEnemyData->y = pEnemy->y;
+    pEnemyData->active = pEnemy->active;
 }

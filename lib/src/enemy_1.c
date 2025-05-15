@@ -229,6 +229,4 @@ void getEnemy_1_DataPackage(Enemy *pEnemy, Enemy_1_Data *pEnemyData) {
     pEnemyData->x = pEnemy->x;
     pEnemyData->y = pEnemy->y;
     pEnemyData->active = pEnemy->active;
-    // printf("Sending Enemy data to data package:\n Enemies_1 Enemy.active: %d, Enemy.x, Enemy.y: [%.2f,%.2f]\n", pEnemy->active, pEnemy->x, pEnemy->y);
-    // printf("Sending Enemy data to data package:\n Enemies_1 Data.Enemy.active: %d, Data.Enemy.x, Data.Enemy.y: [%.2f,%.2f]\n", pEnemyData->active, pEnemyData->x, pEnemyData->y);
 }
