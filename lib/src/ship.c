@@ -110,7 +110,7 @@ void updateShipVelocity(Ship *pShip) {
     vy = -1;
   else if (pShip->keyDown && !pShip->keyUp)
     vy = 1;
-
+  
   pShip->vx = vx;
   pShip->vy = vy;
 }
@@ -218,25 +218,38 @@ void destroyShip(Ship *pShip) {
 }
 
 void applyShipCommand(Ship *pShip, ClientCommand command) {
+  pShip->keyDown = pShip->keyUp = pShip->keyLeft = pShip->keyRight = false;
   switch (command) {
   case STOP_SHIP:
     pShip->keyDown = pShip->keyUp = pShip->keyLeft = pShip->keyRight = false;
     break;
   case MOVE_UP:
     pShip->keyUp = true;
-    pShip->keyDown = false;
     break;
   case MOVE_DOWN:
     pShip->keyDown = true;
-    pShip->keyUp = false;
     break;
   case MOVE_LEFT:
     pShip->keyLeft = true;
-    pShip->keyRight = false;
     break;
   case MOVE_RIGHT:
     pShip->keyRight = true;
-    pShip->keyLeft = false;
+    break;
+  case MOVE_UP_LEFT:
+    pShip->keyUp = true;
+    pShip->keyLeft = true;
+    break;
+  case MOVE_UP_RIGHT:
+    pShip->keyUp = true;
+    pShip->keyRight = true;
+    break;
+  case MOVE_DOWN_LEFT:
+    pShip->keyDown = true;
+    pShip->keyLeft = true;
+    break;
+  case MOVE_DOWN_RIGHT:
+    pShip->keyDown = true;
+    pShip->keyRight = true;
     break;
   case QUIT:
   default:
