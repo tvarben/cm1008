@@ -15,6 +15,7 @@
 #include "tick.h"
 #include "enemy_1.h"
 #include "enemy_2.h"
+#include "enemy_3.h"
 
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
@@ -50,6 +51,11 @@ typedef struct {
   Enemy_2 *pEnemies_2[MAX_ENEMIES];
   EnemyImage_2 *pEnemy_2Image;
   int nrOfEnemies_2;
+
+  Enemy_3 *pEnemies_3[NROFBOSSES];
+  EnemyImage_3 *pEnemy_3Image;
+  int nrOfEnemies_3;
+
   ServerData serverData;
   int map;
   int gameTime;  // in s
@@ -228,8 +234,10 @@ int initiate(Game *pGame) {
 
   pGame->pEnemy_1Image = initiateEnemy(pGame->pRenderer);
   pGame->nrOfEnemies_1 = 0;
-    pGame->pEnemy_2Image = initiateEnemy_2(pGame->pRenderer);
-    pGame->nrOfEnemies_2 = 0;
+  pGame->pEnemy_2Image = initiateEnemy_2(pGame->pRenderer);
+  pGame->nrOfEnemies_2 = 0;
+  pGame->pEnemy_3Image = initiateEnemy_3(pGame->pRenderer);
+  pGame->nrOfEnemies_3 = 0;
 
   pGame->isRunning = true;
   pGame->state = START;
@@ -364,6 +372,9 @@ void handleOngoingState(Game *pGame) {
       for (int i = 0; i < pGame->nrOfEnemies_2; i++) {
           pGame->pEnemies_2[i] = createEnemy_2_OnClients(pGame->pEnemy_2Image, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_2[i]);
       }
+      for(int i=0; i<pGame->nrOfEnemies_3; i++){
+        pGame->pEnemies_3[i] = createEnemy_3_OnClients(pGame->pEnemy_3Image, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_3[i]);
+      }
       SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
       SDL_RenderClear(pGame->pRenderer);
       drawMap(pGame);
@@ -381,21 +392,28 @@ void handleOngoingState(Game *pGame) {
           drawEnemy(pGame->pEnemies_1[i]);
         }
       }
-            for (int i = 0; i < pGame->nrOfEnemies_2; i++) {
-                if(isEnemy_2Active(pGame->pEnemies_2[i])) {
-                    updateEnemy_2_OnClients(pGame->pEnemies_2[i], pGame->serverData.enemies_2[i]);
-                    drawEnemy_2(pGame->pEnemies_2[i]);
-                }
-            }
-            for (int i = 0; i < MAX_PLAYERS; i++) {
-              if (!clientAliveControll(pGame->pShips[i])) {
-                  damageCannon(pGame->pCannons[i], 2);
-                  damageShip(pGame->pShips[i], 2);
-              }
-              render_projectiles(pGame->pRenderer);
-              drawShip(pGame->pShips[i]);   
-              drawCannon(pGame->pCannons[i]);
+      for (int i = 0; i < pGame->nrOfEnemies_2; i++) {
+          if(isEnemy_2Active(pGame->pEnemies_2[i])) {
+              updateEnemy_2_OnClients(pGame->pEnemies_2[i], pGame->serverData.enemies_2[i]);
+              drawEnemy_2(pGame->pEnemies_2[i]);
           }
+      }
+      for (int i=0; i<pGame->nrOfEnemies_3; i++)
+      {
+        if(isEnemy_3Active(pGame->pEnemies_3[i])){
+          updateEnemy_3_OnClients(pGame->pEnemies_3[i], pGame->serverData.enemies_3[i]);
+          drawEnemy_3(pGame->pEnemies_3[i]);
+        }
+      }
+      for (int i = 0; i < MAX_PLAYERS; i++) {
+        if (!clientAliveControll(pGame->pShips[i])) {
+            damageCannon(pGame->pCannons[i], 2);
+            damageShip(pGame->pShips[i], 2);
+        }
+        render_projectiles(pGame->pRenderer);
+        drawShip(pGame->pShips[i]);   
+        drawCannon(pGame->pCannons[i]);
+      }
       SDL_RenderPresent(pGame->pRenderer);
       pGame->isShooting = false;
       for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -598,7 +616,8 @@ void updateWithServerData(Game *pGame) {
                                 pGame->shipId);
   }
   pGame->nrOfEnemies_1 = serverData.nrOfEnemies_1;
-    pGame->nrOfEnemies_2 = serverData.nrOfEnemies_2;
+  pGame->nrOfEnemies_2 = serverData.nrOfEnemies_2;
+  pGame->nrOfEnemies_3 = serverData.nrOfEnemies_3;
   pGame->serverData = serverData;
 }
 

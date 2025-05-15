@@ -427,12 +427,15 @@ void sendServerData(Game *pGame) {
   for (int i = 0; i < MAX_PLAYERS; i++)
     getShipDataPackage(pGame->pShips[i], &pGame->serverData.ships[i]);
 
-    for(int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++)
-        getEnemy_1_DataPackage(pGame->pEnemies_1[i], &pGame->serverData.enemies_1[i]);
-    pGame->serverData.nrOfEnemies_1 = pGame->nrOfEnemies_1;
-    for(int i = 0; i < pGame->nrOfEnemies_2 && i < MAX_ENEMIES; i++)
-        getEnemy_2_DataPackage(pGame->pEnemies_2[i], &pGame->serverData.enemies_2[i]);
-    pGame->serverData.nrOfEnemies_2 = pGame->nrOfEnemies_2;
+  for(int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++)
+      getEnemy_1_DataPackage(pGame->pEnemies_1[i], &pGame->serverData.enemies_1[i]);
+  pGame->serverData.nrOfEnemies_1 = pGame->nrOfEnemies_1;
+  for(int i = 0; i < pGame->nrOfEnemies_2 && i < MAX_ENEMIES; i++)
+      getEnemy_2_DataPackage(pGame->pEnemies_2[i], &pGame->serverData.enemies_2[i]);
+  pGame->serverData.nrOfEnemies_2 = pGame->nrOfEnemies_2;
+  for(int i = 0; i < pGame->nrOfEnemies_3 && i < NROFBOSSES; i++)
+      getEnemy_3_DataPackage(pGame->pEnemies_3[i], &pGame->serverData.enemies_3[i]);
+  pGame->serverData.nrOfEnemies_3 = pGame->nrOfEnemies_3;
 
   for (int i = 0; i < MAX_PLAYERS; i++) {
     pGame->serverData.sDPlayerId = i;
