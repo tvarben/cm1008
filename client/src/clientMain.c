@@ -60,6 +60,8 @@ typedef struct {
   int map;
   int gameTime;  // in s
   int startTime; // in ms
+
+  bool keyHeld[SDL_NUM_SCANCODES]; // track all key states for smooth movement!
 } Game;
 
 int initiate(Game *pGame);
@@ -81,6 +83,7 @@ bool areTheyAllDead(Game *pGame);
 void updateGameTime(Game *pGame);
 int getTime(Game *pGame);
 void drawMap(Game *pGame);
+ClientCommand getCurrentCommand(Game *pGame);
 
 int main(int argc, char **argv) {
   Game game = {0};
@@ -239,6 +242,8 @@ int initiate(Game *pGame) {
   pGame->pEnemy_3Image = initiateEnemy_3(pGame->pRenderer);
   pGame->nrOfEnemies_3 = 0;
 
+  memset(pGame->keyHeld, 0, sizeof(pGame->keyHeld));
+
   pGame->isRunning = true;
   pGame->state = START;
   pGame->isShooting = false;
@@ -336,6 +341,7 @@ void handleOngoingState(Game *pGame) {
     /*if (delta>=tickInterval) {
         lastUpdate=now;*/
     if (timeToUpdate(&lastUpdate, tickInterval)) {
+      pGame->command = getCurrentCommand(pGame);
       applyShipCommand(pGame->pShips[pGame->shipId], pGame->command);
       if (pGame->command != pGame->lastCommand || pGame->isShooting || now - lastSend >= resendIntervall) { // Skicka endast om användare ändrar command ||
         ClientData ccData = {.command = pGame->command, .isShooting = pGame->isShooting, .map = pGame->map};
@@ -653,6 +659,47 @@ bool connectToServer(Game *pGame) {
 void receiveDataFromServer() { printf("receiveDataFromServer().\n"); }
 
 void handleInput(SDL_Event* pEvent, Game* pGame) {
+    SDL_Scancode key = pEvent->key.keysym.scancode;
+    if (pEvent->type == SDL_KEYDOWN || pEvent->type == SDL_KEYUP) {
+        bool isDown = (pEvent->type == SDL_KEYDOWN);
+        pGame->keyHeld[key] = isDown;
+
+        if (key == SDL_SCANCODE_SPACE) {
+            if (isDown) {
+                pGame->spacePressed = true;
+            } else if (pGame->spacePressed) {
+                pGame->isShooting = true;
+                pGame->spacePressed = false;
+            }
+        }
+    } else if (pEvent->type == SDL_MOUSEBUTTONDOWN && pEvent->button.button == SDL_BUTTON_LEFT) {
+        pGame->spacePressed = true;
+    } else if (pEvent->type == SDL_MOUSEBUTTONUP && pEvent->button.button == SDL_BUTTON_LEFT && pGame->spacePressed) {
+        pGame->isShooting = true;
+        pGame->spacePressed = false;
+    }
+}
+
+ClientCommand getCurrentCommand(Game *pGame) {
+    bool up = pGame->keyHeld[SDL_SCANCODE_W] || pGame->keyHeld[SDL_SCANCODE_UP];
+    bool down = pGame->keyHeld[SDL_SCANCODE_S] || pGame->keyHeld[SDL_SCANCODE_DOWN];
+    bool left = pGame->keyHeld[SDL_SCANCODE_A] || pGame->keyHeld[SDL_SCANCODE_LEFT];
+    bool right = pGame->keyHeld[SDL_SCANCODE_D] || pGame->keyHeld[SDL_SCANCODE_RIGHT];
+
+    if (up && left) return MOVE_UP_LEFT;
+    if (up && right) return MOVE_UP_RIGHT;
+    if (down && left) return MOVE_DOWN_LEFT;
+    if (down && right) return MOVE_DOWN_RIGHT;
+    if (up) return MOVE_UP;
+    if (down) return MOVE_DOWN;
+    if (left) return MOVE_LEFT;
+    if (right) return MOVE_RIGHT;
+
+    return STOP_SHIP;
+}
+
+
+/*void handleInput(SDL_Event* pEvent, Game* pGame) {
     ClientData cData;
     cData.cDPlayerId = pGame->shipId;  //cDPlayerId not really needed. Server finds out which klient it is based on IP-address
     SDL_Scancode key = pEvent->key.keysym.scancode;
@@ -701,7 +748,7 @@ void handleInput(SDL_Event* pEvent, Game* pGame) {
         pGame->spacePressed = false;
       }
     }
-}
+}*/
     // if (pEvent->type == SDL_KEYDOWN || pEvent->type == SDL_KEYUP) {
     //     switch(key) {
     //         case SDL_SCANCODE_UP:
