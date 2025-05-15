@@ -529,10 +529,16 @@ void closeGame(Game *pGame) {
   printf("Freepacket\n");
 
   for (int i = 0; i < MAX_ENEMIES; i++)
-    if (pGame->pEnemies_1[i])
-      destroyEnemy_1(pGame->pEnemies_1[i]);
-  if (pGame->pEnemy_1Image)
-    destroyEnemy_1Image(pGame->pEnemy_1Image);
+    if (pGame->pEnemies_1[i]) destroyEnemy_1(pGame->pEnemies_1[i]);
+  if (pGame->pEnemy_1Image) destroyEnemy_1Image(pGame->pEnemy_1Image);
+
+  for (int i=0; i<MAX_ENEMIES; i++) 
+    if (pGame->pEnemies_2[i]) destroyEnemy_2(pGame->pEnemies_2[i]);
+  if (pGame->pEnemy_2Image) destroyEnemyImage_2(pGame->pEnemy_2Image);
+
+  for(int i=0; i<NROFBOSSES ; i++)
+    if(pGame->pEnemies_3[i]) destroyEnemy_3(pGame->pEnemies_3[i]);
+  if(pGame->pEnemy_3Image) destroyEnemyImage_3(pGame->pEnemy_3Image);
 
   SDLNet_Quit();
   printf("SDL_NETQuit()\n");
