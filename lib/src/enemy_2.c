@@ -74,18 +74,6 @@ Enemy_2 *createEnemy_2_OnClients(EnemyImage_2 *pEnemyImage, int window_width, in
   return pEnemy;
 }
 
-static void getStartValuesFromServer_2(Enemy_2 *pEnemy, Enemy_2_Data enemyData) {
-  pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
-  pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
-  pEnemy->rectHitbox.w = pEnemy->rect.w - 20;
-  pEnemy->rectHitbox.h = pEnemy->rect.h - 10;
-  pEnemy->damage = 1;
-  pEnemy->health = 2;
-  pEnemy->x = enemyData.x;
-  pEnemy->y = enemyData.y;
-  pEnemy->active = enemyData.active;
-}
-
 static void getStartValues_2(Enemy_2 *pEnemy2) {
   int startSpawnOnTheLeft = rand() % 2; // 0 or 1
   pEnemy2->rectHitbox.x = pEnemy2->rect.x + 10;
@@ -111,6 +99,18 @@ static void getStartValues_2(Enemy_2 *pEnemy2) {
   }
 }
 
+static void getStartValuesFromServer_2(Enemy_2 *pEnemy, Enemy_2_Data enemyData) {
+  pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
+  pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
+  pEnemy->rectHitbox.w = pEnemy->rect.w - 50;
+  pEnemy->rectHitbox.h = pEnemy->rect.h - 50;
+  pEnemy->damage = 1;
+  pEnemy->health = 4;
+  pEnemy->x = enemyData.x;
+  pEnemy->y = enemyData.y;
+  pEnemy->active = enemyData.active;
+}
+
 SDL_Rect getRectEnemy_2(Enemy_2 *pEnemy2) {
   if (pEnemy2->active == true) {
     return pEnemy2->rectHitbox;
@@ -118,6 +118,7 @@ SDL_Rect getRectEnemy_2(Enemy_2 *pEnemy2) {
   SDL_Rect empty = {0, 0, 0, 0};
   return empty;
 }
+
 void updateEnemy_2(Enemy_2 *pEnemy2) {
   int amplitude = 5;
   float frequency = 0.03;
@@ -145,8 +146,8 @@ void updateEnemy_2_OnClients(Enemy_2 *pEnemy, Enemy_2_Data enemyData) {
     pEnemy->active = enemyData.active;
     pEnemy->rect.x = pEnemy->x;
     pEnemy->rect.y = pEnemy->y;
-    pEnemy->rectHitbox.x = pEnemy->rect.x + 10;
-    pEnemy->rectHitbox.y = pEnemy->rect.y + 10;
+    pEnemy->rectHitbox.x = pEnemy->rect.x + 40;
+    pEnemy->rectHitbox.y = pEnemy->rect.y + 20;
 }
 
 void drawEnemy_2(Enemy_2 *pEnemy2) {
@@ -196,6 +197,7 @@ bool isEnemy_2Active(Enemy_2 *pEnemy2) {
     return true;
   }
 }
+
 void printEnemy_2Health(Enemy_2 *pEnemy2) {
   if (pEnemy2->active == true) {
     printf("Health: %d\n", pEnemy2->health);
@@ -206,6 +208,4 @@ void getEnemy_2_DataPackage(Enemy_2 *pEnemy, Enemy_2_Data *pEnemyData) {
     pEnemyData->x = pEnemy->x;
     pEnemyData->y = pEnemy->y;
     pEnemyData->active = pEnemy->active;
-    // printf("Sending Enemy data to data package:\n Enemies_1 Enemy.active: %d, Enemy.x, Enemy.y: [%.2f,%.2f]\n", pEnemy->active, pEnemy->x, pEnemy->y);
-    // printf("Sending Enemy data to data package:\n Enemies_1 Data.Enemy.active: %d, Data.Enemy.x, Data.Enemy.y: [%.2f,%.2f]\n", pEnemyData->active, pEnemyData->x, pEnemyData->y);
 }

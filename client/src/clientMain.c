@@ -15,6 +15,7 @@
 #include "tick.h"
 #include "enemy_1.h"
 #include "enemy_2.h"
+#include "enemy_3.h"
 
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
@@ -50,10 +51,17 @@ typedef struct {
   Enemy_2 *pEnemies_2[MAX_ENEMIES];
   EnemyImage_2 *pEnemy_2Image;
   int nrOfEnemies_2;
+
+  Enemy_3 *pEnemies_3[NROFBOSSES];
+  EnemyImage_3 *pEnemy_3Image;
+  int nrOfEnemies_3;
+
   ServerData serverData;
   int map;
   int gameTime;  // in s
   int startTime; // in ms
+
+  bool keyHeld[SDL_NUM_SCANCODES]; // track all key states for smooth movement!
 } Game;
 
 int initiate(Game *pGame);
@@ -76,6 +84,7 @@ void updateGameTime(Game *pGame);
 int getTime(Game *pGame);
 void drawMap(Game *pGame);
 void drawMapTransitionScreen(SDL_Renderer *renderer);
+ClientCommand getCurrentCommand(Game *pGame);
 
 int main(int argc, char **argv) {
   Game game = {0};
@@ -229,8 +238,12 @@ int initiate(Game *pGame) {
 
   pGame->pEnemy_1Image = initiateEnemy(pGame->pRenderer);
   pGame->nrOfEnemies_1 = 0;
-    pGame->pEnemy_2Image = initiateEnemy_2(pGame->pRenderer);
-    pGame->nrOfEnemies_2 = 0;
+  pGame->pEnemy_2Image = initiateEnemy_2(pGame->pRenderer);
+  pGame->nrOfEnemies_2 = 0;
+  pGame->pEnemy_3Image = initiateEnemy_3(pGame->pRenderer);
+  pGame->nrOfEnemies_3 = 0;
+
+  memset(pGame->keyHeld, 0, sizeof(pGame->keyHeld));
 
   pGame->isRunning = true;
   pGame->state = START;
@@ -323,13 +336,14 @@ void handleOngoingState(Game *pGame) {
       if (event.type == SDL_QUIT) {
         pGame->isRunning = false;
         return;
-      } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+      } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP || event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
         handleInput(&event, pGame);
       }
     }
     /*if (delta>=tickInterval) {
         lastUpdate=now;*/
     if (timeToUpdate(&lastUpdate, tickInterval)) {
+      pGame->command = getCurrentCommand(pGame);
       applyShipCommand(pGame->pShips[pGame->shipId], pGame->command);
       if (pGame->command != pGame->lastCommand || pGame->isShooting || now - lastSend >= resendIntervall) { // Skicka endast om användare ändrar command ||
         ClientData ccData = {.command = pGame->command, .isShooting = pGame->isShooting, .map = pGame->map};
@@ -366,6 +380,9 @@ void handleOngoingState(Game *pGame) {
       for (int i = 0; i < pGame->nrOfEnemies_2; i++) {
           pGame->pEnemies_2[i] = createEnemy_2_OnClients(pGame->pEnemy_2Image, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_2[i]);
       }
+      for(int i=0; i<pGame->nrOfEnemies_3; i++){
+        pGame->pEnemies_3[i] = createEnemy_3_OnClients(pGame->pEnemy_3Image, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->serverData.enemies_3[i]);
+      }
       SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
       SDL_RenderClear(pGame->pRenderer);
       drawMap(pGame);
@@ -383,21 +400,28 @@ void handleOngoingState(Game *pGame) {
           drawEnemy(pGame->pEnemies_1[i]);
         }
       }
-            for (int i = 0; i < pGame->nrOfEnemies_2; i++) {
-                if(isEnemy_2Active(pGame->pEnemies_2[i])) {
-                    updateEnemy_2_OnClients(pGame->pEnemies_2[i], pGame->serverData.enemies_2[i]);
-                    drawEnemy_2(pGame->pEnemies_2[i]);
-                }
-            }
-            for (int i = 0; i < MAX_PLAYERS; i++) {
-              if (!clientAliveControll(pGame->pShips[i])) {
-                  damageCannon(pGame->pCannons[i], 2);
-                  damageShip(pGame->pShips[i], 2);
-              }
-              render_projectiles(pGame->pRenderer);
-              drawShip(pGame->pShips[i]);   
-              drawCannon(pGame->pCannons[i]);
+      for (int i = 0; i < pGame->nrOfEnemies_2; i++) {
+          if(isEnemy_2Active(pGame->pEnemies_2[i])) {
+              updateEnemy_2_OnClients(pGame->pEnemies_2[i], pGame->serverData.enemies_2[i]);
+              drawEnemy_2(pGame->pEnemies_2[i]);
           }
+      }
+      for (int i=0; i<pGame->nrOfEnemies_3; i++)
+      {
+        if(isEnemy_3Active(pGame->pEnemies_3[i])){
+          updateEnemy_3_OnClients(pGame->pEnemies_3[i], pGame->serverData.enemies_3[i]);
+          drawEnemy_3(pGame->pEnemies_3[i]);
+        }
+      }
+      for (int i = 0; i < MAX_PLAYERS; i++) {
+        if (!clientAliveControll(pGame->pShips[i])) {
+            damageCannon(pGame->pCannons[i], 2);
+            damageShip(pGame->pShips[i], 2);
+        }
+        render_projectiles(pGame->pRenderer);
+        drawShip(pGame->pShips[i]);   
+        drawCannon(pGame->pCannons[i]);
+      }
       SDL_RenderPresent(pGame->pRenderer);
       pGame->isShooting = false;
       for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -606,7 +630,8 @@ void updateWithServerData(Game *pGame) {
                                 pGame->shipId);
   }
   pGame->nrOfEnemies_1 = serverData.nrOfEnemies_1;
-    pGame->nrOfEnemies_2 = serverData.nrOfEnemies_2;
+  pGame->nrOfEnemies_2 = serverData.nrOfEnemies_2;
+  pGame->nrOfEnemies_3 = serverData.nrOfEnemies_3;
   pGame->serverData = serverData;
 }
 
@@ -642,40 +667,96 @@ bool connectToServer(Game *pGame) {
 void receiveDataFromServer() { printf("receiveDataFromServer().\n"); }
 
 void handleInput(SDL_Event* pEvent, Game* pGame) {
+    SDL_Scancode key = pEvent->key.keysym.scancode;
+    if (pEvent->type == SDL_KEYDOWN || pEvent->type == SDL_KEYUP) {
+        bool isDown = (pEvent->type == SDL_KEYDOWN);
+        pGame->keyHeld[key] = isDown;
+
+        if (key == SDL_SCANCODE_SPACE) {
+            if (isDown) {
+                pGame->spacePressed = true;
+            } else if (pGame->spacePressed) {
+                pGame->isShooting = true;
+                pGame->spacePressed = false;
+            }
+        }
+    } else if (pEvent->type == SDL_MOUSEBUTTONDOWN && pEvent->button.button == SDL_BUTTON_LEFT) {
+        pGame->spacePressed = true;
+    } else if (pEvent->type == SDL_MOUSEBUTTONUP && pEvent->button.button == SDL_BUTTON_LEFT && pGame->spacePressed) {
+        pGame->isShooting = true;
+        pGame->spacePressed = false;
+    }
+}
+
+ClientCommand getCurrentCommand(Game *pGame) {
+    bool up = pGame->keyHeld[SDL_SCANCODE_W] || pGame->keyHeld[SDL_SCANCODE_UP];
+    bool down = pGame->keyHeld[SDL_SCANCODE_S] || pGame->keyHeld[SDL_SCANCODE_DOWN];
+    bool left = pGame->keyHeld[SDL_SCANCODE_A] || pGame->keyHeld[SDL_SCANCODE_LEFT];
+    bool right = pGame->keyHeld[SDL_SCANCODE_D] || pGame->keyHeld[SDL_SCANCODE_RIGHT];
+
+    if (up && left) return MOVE_UP_LEFT;
+    if (up && right) return MOVE_UP_RIGHT;
+    if (down && left) return MOVE_DOWN_LEFT;
+    if (down && right) return MOVE_DOWN_RIGHT;
+    if (up) return MOVE_UP;
+    if (down) return MOVE_DOWN;
+    if (left) return MOVE_LEFT;
+    if (right) return MOVE_RIGHT;
+
+    return STOP_SHIP;
+}
+
+
+/*void handleInput(SDL_Event* pEvent, Game* pGame) {
     ClientData cData;
     cData.cDPlayerId = pGame->shipId;  //cDPlayerId not really needed. Server finds out which klient it is based on IP-address
     SDL_Scancode key = pEvent->key.keysym.scancode;
     if (pEvent->type == SDL_KEYDOWN || pEvent->type == SDL_KEYUP) {
-    SDL_Scancode key = pEvent->key.keysym.scancode;
-    // Skjut med space ned och upp kanske fixar bug med skott som försvinner
-    switch(key) {
-        case SDL_SCANCODE_UP:
-            pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
-            break;
-        case SDL_SCANCODE_DOWN:
-            pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
-            break;
-        case SDL_SCANCODE_LEFT:
-            pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
-            break;
-        case SDL_SCANCODE_RIGHT:
-            pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
-            break;
-        case SDL_SCANCODE_SPACE:
-            if (pEvent->type == SDL_KEYDOWN) {
-                pGame->spacePressed = true;
-            } else if (pEvent->type == SDL_KEYUP) {
-                if (pGame->spacePressed) {
-                    pGame->isShooting = true;
-                    pGame->spacePressed = false;
-                }
-            }
-            break;
-        default:
-            pGame->command = STOP_SHIP;
-            break;
+      SDL_Scancode key = pEvent->key.keysym.scancode;
+      // Skjut med space ned och upp kanske fixar bug med skott som försvinner
+      switch(key) {
+          case SDL_SCANCODE_UP:
+          case SDL_SCANCODE_W:
+              pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
+              break;
+          case SDL_SCANCODE_DOWN:
+          case SDL_SCANCODE_S:
+              pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
+              break;
+          case SDL_SCANCODE_LEFT:
+          case SDL_SCANCODE_A:
+              pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
+              break;
+          case SDL_SCANCODE_RIGHT:
+          case SDL_SCANCODE_D:
+              pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
+              break;
+          case SDL_SCANCODE_SPACE:
+              if (pEvent->type == SDL_KEYDOWN) {
+                  pGame->spacePressed = true;
+              } else if (pEvent->type == SDL_KEYUP) {
+                  if (pGame->spacePressed) {
+                      pGame->isShooting = true;
+                      pGame->spacePressed = false;
+                  }
+              }
+              break;
+          default:
+              pGame->command = STOP_SHIP;
+              break;
+      }
+    }else if(pEvent->type == SDL_MOUSEBUTTONDOWN){
+        if(pEvent->button.button == SDL_BUTTON_LEFT){
+          //pGame->isShooting = true;
+          pGame->spacePressed = true;
+        }
+    }else if (pEvent->type == SDL_MOUSEBUTTONUP){
+      if(pEvent->button.button == SDL_BUTTON_LEFT && pGame->spacePressed){
+        pGame->isShooting = true;
+        pGame->spacePressed = false;
+      }
     }
-}
+}*/
     // if (pEvent->type == SDL_KEYDOWN || pEvent->type == SDL_KEYUP) {
     //     switch(key) {
     //         case SDL_SCANCODE_UP:
@@ -714,7 +795,6 @@ void handleInput(SDL_Event* pEvent, Game* pGame) {
     /*memcpy(pGame->pPacket->data, &cData, sizeof(ClientData));
     pGame->pPacket->len = sizeof(ClientData);
     SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);*/
-}
 
 MainMenuChoice handleMainMenuOptions(Game *pGame) {
   int x, y;
@@ -852,12 +932,16 @@ void closeGame(Game *pGame) {
     SDLNet_FreePacket(pGame->pPacket);
 
   for (int i = 0; i < MAX_ENEMIES; i++)
-    if (pGame->pEnemies_1[i])
-      destroyEnemy_1(pGame->pEnemies_1[i]);
-  if (pGame->pEnemy_1Image)
-    destroyEnemy_1Image(pGame->pEnemy_1Image);
-    for (int i=0; i<MAX_ENEMIES; i++) if (pGame->pEnemies_2[i]) destroyEnemy_2(pGame->pEnemies_2[i]);
-    if (pGame->pEnemy_2Image) destroyEnemyImage_2(pGame->pEnemy_2Image);
+    if (pGame->pEnemies_1[i]) destroyEnemy_1(pGame->pEnemies_1[i]);
+  if (pGame->pEnemy_1Image) destroyEnemy_1Image(pGame->pEnemy_1Image);
+
+  for (int i=0; i<MAX_ENEMIES; i++) 
+    if (pGame->pEnemies_2[i]) destroyEnemy_2(pGame->pEnemies_2[i]);
+  if (pGame->pEnemy_2Image) destroyEnemyImage_2(pGame->pEnemy_2Image);
+
+  for(int i=0; i<NROFBOSSES ; i++)
+    if(pGame->pEnemies_3[i]) destroyEnemy_3(pGame->pEnemies_3[i]);
+  if(pGame->pEnemy_3Image) destroyEnemyImage_3(pGame->pEnemy_3Image);
 
 
   SDLNet_Quit();
