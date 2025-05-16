@@ -88,35 +88,35 @@ int initiate(Game *pGame) {
     Mix_Init(MIX_INIT_WAVPACK);
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0) {
         printf("SDL Init Error: %s\n", SDL_GetError());
-        return 0;
+        return -1;
     }
     if (IMG_Init(IMG_INIT_PNG) == 0) {
         printf("SDL_image Init Error: %s\n", IMG_GetError());
-        return 0;
+        return -1;
     }
     if (TTF_Init() != 0) {
         printf("Error: %s\n", TTF_GetError());
-        return 0;
+        return -1;
     }
     if (SDLNet_Init()) {
         printf("SDLNet_Init: %s\n", SDLNet_GetError());
-        return 0;
+        return -1;
     }
     pGame->pWindow =
         SDL_CreateWindow("Server", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     if (!pGame->pWindow) {
         printf("Window Error: %s\n", SDL_GetError());
-        return 0;
+        return -1;
     }
     pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!pGame->pRenderer) {
         printf("Renderer Error: %s\n", SDL_GetError());
-        return 0;
+        return -1;
     }
     pGame->pFont = TTF_OpenFont("../lib/resources/arial.ttf", 100);
     if (!pGame->pFont) {
         printf("Error: %s\n", TTF_GetError());
-        return 0;
+        return -1;
     }
     pGame->pStartText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Start [1]", WINDOW_WIDTH / 3,
                                    WINDOW_HEIGHT / 2 + 100);
@@ -128,31 +128,31 @@ int initiate(Game *pGame) {
                                    WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
     if (!pGame->pFont) {
         printf("Error: %s\n", TTF_GetError());
-        return 0;
+        return -1;
     }
     if (!(pGame->pSocket = SDLNet_UDP_Open(SERVER_PORT))) {
         printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
-        return 0;
+        return -1;
     }
     if (!(pGame->pPacket = SDLNet_AllocPacket(5120))) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
-        return 0;
+        return -1;
     }
 
-    for (int i = 0; i < MAX_PLAYERS; i++) {
-        pGame->pShips[i] = createShip(i, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
-        pGame->pCannons[i] = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+    for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
+        pGame->pShips[playerIndex] = createShip(playerIndex, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+        pGame->pCannons[playerIndex] = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
     pGame->nrOfShips = MAX_PLAYERS;
-    for (int i = 0; i < MAX_PLAYERS; i++) {
-        if (!pGame->pShips[i] || !pGame->pCannons[i]) {
+    for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
+        if (!pGame->pShips[playerIndex] || !pGame->pCannons[playerIndex]) {
             printf("Error: %s\n", SDL_GetError());
-            return 0;
+            return -1;
         }
     }
     if (!initMusic(&pGame->pMusic, MUSIC_FILEPATH)) {
         printf("Error: %s\n", Mix_GetError());
-        return 0;
+        return -1;
     }
     pGame->pEnemy_1Image = initiateEnemy(pGame->pRenderer);
     pGame->pEnemy_2Image = initiateEnemy_2(pGame->pRenderer);
@@ -260,18 +260,18 @@ void handleOngoingState(Game *pGame) {
         /*if (delta >= tickInterval) {
             lastUpdate = now;*/
         if (timeToUpdate(&lastUpdate, tickInterval)) {
-            for (int i = 0; i < MAX_PLAYERS; i++) {
-                if (pGame->pShips[i]) {
+            for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
+                if (pGame->pShips[playerIndex]) {
                     // if (isShooting(pGame->pShips[i]) ) {
-                    if (isCannonShooting(pGame->pShips[i])) {
+                    if (isCannonShooting(pGame->pShips[playerIndex])) {
                         printf("IN IS SHOOTING\n");
-                        handleCannonEvent(pGame->pCannons[i]);
+                        handleCannonEvent(pGame->pCannons[playerIndex]);
                         // setShoot(pGame->pShips[i], false);
                     }
                     update_projectiles(delta);
-                    updateShipVelocity(pGame->pShips[i]);
-                    updateShipOnServer(pGame->pShips[i]);
-                    updateCannon(pGame->pCannons[i], pGame->pShips[i]);
+                    updateShipVelocity(pGame->pShips[playerIndex]);
+                    updateShipOnServer(pGame->pShips[playerIndex]);
+                    updateCannon(pGame->pCannons[playerIndex], pGame->pShips[playerIndex]);
                 }
             }
             updateEnemies_1(pGame,
@@ -280,27 +280,27 @@ void handleOngoingState(Game *pGame) {
 
             updateBoss(pGame);
             // updateEnemy_3(pGame->pEnemies_3[0]);
-            for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++)
-                updateEnemy(pGame->pEnemies_1[i]); // locally
+            for (int enemy1Index = 0; enemy1Index < pGame->nrOfEnemies_1 && enemy1Index < MAX_ENEMIES; enemy1Index++)
+                updateEnemy(pGame->pEnemies_1[enemy1Index]); // locally
 
-            for (int i = 0; i < pGame->nrOfEnemies_2 && i < MAX_ENEMIES; i++) {
-                updateEnemy_2(pGame->pEnemies_2[i]);
+            for (int enemy2Index = 0; enemy2Index < pGame->nrOfEnemies_2 && enemy2Index < MAX_ENEMIES; enemy2Index++) {
+                updateEnemy_2(pGame->pEnemies_2[enemy2Index]);
             }
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
             SDL_RenderClear(pGame->pRenderer);
-            for (int i = 0; i < MAX_PLAYERS; i++) {
+            for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
                 render_projectiles(pGame->pRenderer);
-                drawShip(pGame->pShips[i]);
-                drawCannon(pGame->pCannons[i]);
+                drawShip(pGame->pShips[playerIndex]);
+                drawCannon(pGame->pCannons[playerIndex]);
                 // draw cannon
             }
-            for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
-                if (isEnemyActive(pGame->pEnemies_1[i]) == true) { // locally
-                    drawEnemy(pGame->pEnemies_1[i]);
+            for (int enemy1Index = 0; enemy1Index < pGame->nrOfEnemies_1 && enemy1Index < MAX_ENEMIES; enemy1Index++) {
+                if (isEnemyActive(pGame->pEnemies_1[enemy1Index]) == true) { // locally
+                    drawEnemy(pGame->pEnemies_1[enemy1Index]);
                 }
             }
-            for (int i = 0; i < pGame->nrOfEnemies_2 && i < MAX_ENEMIES; i++) {
-                if (isEnemy_2Active(pGame->pEnemies_2[i])) drawEnemy_2(pGame->pEnemies_2[i]);
+            for (int enemy2Index = 0; enemy2Index < pGame->nrOfEnemies_2 && enemy2Index < MAX_ENEMIES; enemy2Index++) {
+                if (isEnemy_2Active(pGame->pEnemies_2[enemy2Index])) drawEnemy_2(pGame->pEnemies_2[enemy2Index]);
             }
             if (isEnemy_3Active(pGame->pEnemies_3[0]) == true) {
                 drawEnemy_3(pGame->pEnemies_3[0]);
