@@ -598,6 +598,8 @@ int getClientIndex(Game *pGame, IPaddress *clientAddr) {
 void closeGame(Game *pGame) {
     for (int i = 0; i < MAX_PLAYERS; i++)
         if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
+	for (int i = 0; i < MAX_PLAYERS; i++)
+		if (pGame->pCannons[i]) destroyCannon(pGame->pCannons[i]);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     printf("Renderer destroyed\n");
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
@@ -628,6 +630,8 @@ void closeGame(Game *pGame) {
         if (pGame->pEnemies_3[i]) destroyEnemy_3(pGame->pEnemies_3[i]);
     if (pGame->pEnemy_3Image) destroyEnemyImage_3(pGame->pEnemy_3Image);
 
+	Mix_CloseAudio();
+    Mix_Quit();
     SDLNet_Quit();
     printf("SDL_NETQuit()\n");
     TTF_Quit();

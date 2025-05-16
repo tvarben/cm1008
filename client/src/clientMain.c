@@ -952,6 +952,10 @@ void closeGame(Game *pGame) {
     if (pGame->pSocket) SDLNet_UDP_Close(pGame->pSocket);
     if (pGame->pPacket) SDLNet_FreePacket(pGame->pPacket);
 
+	if (pGame->pHardMapBackground) SDL_DestroyTexture(pGame->pHardMapBackground);
+	if (pGame->pHardMapImage1) SDL_DestroyTexture(pGame->pHardMapImage1);
+	if (pGame->pHardMapImage2) SDL_DestroyTexture(pGame->pHardMapImage2);
+
     for (int i = 0; i < MAX_ENEMIES; i++)
         if (pGame->pEnemies_1[i]) destroyEnemy_1(pGame->pEnemies_1[i]);
     if (pGame->pEnemy_1Image) destroyEnemy_1Image(pGame->pEnemy_1Image);
@@ -964,6 +968,8 @@ void closeGame(Game *pGame) {
         if (pGame->pEnemies_3[i]) destroyEnemy_3(pGame->pEnemies_3[i]);
     if (pGame->pEnemy_3Image) destroyEnemyImage_3(pGame->pEnemy_3Image);
 
+	Mix_CloseAudio();
+    Mix_Quit();
     SDLNet_Quit();
     TTF_Quit();
     IMG_Quit();
