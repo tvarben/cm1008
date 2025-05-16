@@ -4,18 +4,19 @@
 #include <SDL2/SDL_net.h>
 #include <time.h>
 
-#include "bullet.h"
-#include "cannon.h"
-#include "enemy_1.h"
-#include "enemy_2.h"
-#include "enemy_3.h"
-#include "ship.h"
-#include "ship_data.h"
-#include "sound.h"
-#include "text.h"
-#include "tick.h"
+#include "../../lib/include/bullet.h"
+#include "../../lib/include/cannon.h"
+#include "../../lib/include/enemy_1.h"
+#include "../../lib/include/enemy_2.h"
+#include "../../lib/include/enemy_3.h"
+#include "../../lib/include/ship.h"
+#include "../../lib/include/ship_data.h"
+#include "../../lib/include/sound.h"
+#include "../../lib/include/text.h"
+#include "../../lib/include/tick.h"
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
+#define TOO_MANY_CLIENTS -1
 
 typedef struct {
     SDL_Window *pWindow;
@@ -58,11 +59,11 @@ int getClientIndex(Game *pGame, IPaddress *clientAddr);
 void sendServerData(Game *pGame);
 void spawnEnemies_1(Game *pGame, int amount);
 void updateEnemies_1(Game *pGame, int *amount);
-bool areTheyAllDead_1(Game *pGame);
+bool areAllEnemy_1_Dead(Game *pGame);
 void printPacketsData(Game *pGame);
 void spawnEnemies_2(Game *pGame, int amount);
 void updateEnemies_2(Game *pGame, int *amount);
-bool areTheyAllDead_2(Game *pGame);
+bool areAllEnemy_2_Dead(Game *pGame);
 void spawnBoss(Game *pGame);
 void resetBoss(Game *pGame);
 void updateBoss(Game *pGame);
@@ -101,14 +102,13 @@ int initiate(Game *pGame) {
         printf("SDLNet_Init: %s\n", SDLNet_GetError());
         return 0;
     }
-    pGame->pWindow = SDL_CreateWindow("Server", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                      WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+    pGame->pWindow =
+        SDL_CreateWindow("Server", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     if (!pGame->pWindow) {
         printf("Window Error: %s\n", SDL_GetError());
         return 0;
     }
-    pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1,
-                                          SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!pGame->pRenderer) {
         printf("Renderer Error: %s\n", SDL_GetError());
         return 0;
@@ -118,14 +118,14 @@ int initiate(Game *pGame) {
         printf("Error: %s\n", TTF_GetError());
         return 0;
     }
-    pGame->pStartText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Start [1]",
-                                   WINDOW_WIDTH / 3, WINDOW_HEIGHT / 2 + 100);
-    pGame->pGameName = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "SpaceShooter",
-                                  WINDOW_WIDTH / 2, WINDOW_HEIGHT / 4);
-    pGame->pExitText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Exit [8]",
-                                  WINDOW_WIDTH / 1.5, WINDOW_HEIGHT / 2 + 100);
-    pGame->pLobbyText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
-                                   "Waiting on clients...", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    pGame->pStartText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Start [1]", WINDOW_WIDTH / 3,
+                                   WINDOW_HEIGHT / 2 + 100);
+    pGame->pGameName =
+        createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "SpaceShooter", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 4);
+    pGame->pExitText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Exit [8]", WINDOW_WIDTH / 1.5,
+                                  WINDOW_HEIGHT / 2 + 100);
+    pGame->pLobbyText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Waiting on clients...",
+                                   WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
     if (!pGame->pFont) {
         printf("Error: %s\n", TTF_GetError());
         return 0;
@@ -274,9 +274,8 @@ void handleOngoingState(Game *pGame) {
                     updateCannon(pGame->pCannons[i], pGame->pShips[i]);
                 }
             }
-            updateEnemies_1(
-                pGame,
-                &pGame->nrOfEnemiesToSpawn_1); // Calls spawnEnemy() down at the bottom of the code
+            updateEnemies_1(pGame,
+                            &pGame->nrOfEnemiesToSpawn_1); // Calls spawnEnemy() down at the bottom of the code
             updateEnemies_2(pGame, &pGame->nrOfEnemiesToSpawn_2);
 
             updateBoss(pGame);
@@ -307,24 +306,27 @@ void handleOngoingState(Game *pGame) {
                 drawEnemy_3(pGame->pEnemies_3[0]);
             }
             // Ship collision här ??
-            for (int i = 0; i < MAX_PLAYERS; i++) {
-                for (int j = 0; j < pGame->nrOfEnemies_1 && j < MAX_ENEMIES; j++) {
-                    if (shipCollision(pGame->pShips[i], getRectEnemy(pGame->pEnemies_1[j]))) {
-                        damageEnemy(pGame->pEnemies_1[j], 2, j);
-                        damageShip(pGame->pShips[i], 1);
-                        damageCannon(pGame->pCannons[i], 1);
-                        if (isPlayerDead(pGame->pShips[i])) {
-                            printf("Player %d is dead\n", i);
+            for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
+                for (int enemy1Index = 0; enemy1Index < pGame->nrOfEnemies_1 && enemy1Index < MAX_ENEMIES;
+                     enemy1Index++) {
+                    // might change damage functions to avoid hard coded values
+                    if (shipCollision(pGame->pShips[playerIndex], getRectEnemy(pGame->pEnemies_1[enemy1Index]))) {
+                        damageEnemy(pGame->pEnemies_1[enemy1Index], 2, enemy1Index);
+                        damageShip(pGame->pShips[playerIndex], 1);
+                        damageCannon(pGame->pCannons[playerIndex], 1);
+                        if (isPlayerDead(pGame->pShips[playerIndex])) {
+                            printf("Player %d is dead\n", playerIndex);
                         }
                     }
                 }
-                for (int j = 0; j < pGame->nrOfEnemies_2 && j < MAX_ENEMIES; j++) {
-                    if (shipCollision(pGame->pShips[i], getRectEnemy_2(pGame->pEnemies_2[j]))) {
-                        damageEnemy_2(pGame->pEnemies_2[j], 2, j);
-                        damageShip(pGame->pShips[i], 1);
-                        damageCannon(pGame->pCannons[i], 1);
-                        if (isPlayerDead(pGame->pShips[i])) {
-                            printf("Player %d is dead\n", i);
+                for (int enemy2Index = 0; enemy2Index < pGame->nrOfEnemies_2 && enemy2Index < MAX_ENEMIES;
+                     enemy2Index++) {
+                    if (shipCollision(pGame->pShips[playerIndex], getRectEnemy_2(pGame->pEnemies_2[enemy2Index]))) {
+                        damageEnemy_2(pGame->pEnemies_2[enemy2Index], 2, enemy2Index);
+                        damageShip(pGame->pShips[playerIndex], 1);
+                        damageCannon(pGame->pCannons[playerIndex], 1);
+                        if (isPlayerDead(pGame->pShips[playerIndex])) {
+                            printf("Player %d is dead\n", playerIndex);
                         }
                     }
                 }
@@ -332,119 +334,119 @@ void handleOngoingState(Game *pGame) {
 
             // Bullet collision här ?? Ska man kunna skjuta på varandra?
             getProjectileRects(rectArray);
-            for (int i = 0; i < MAX_PROJECTILES; i++) {
-                SDL_Rect bulletRect = rectArray[i];
-                for (int k = 0; k < pGame->nrOfEnemies_1; k++) {
-                    SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies_1[k]);
+            for (int spawnedBullet = 0; spawnedBullet < MAX_PROJECTILES; spawnedBullet++) {
+                SDL_Rect bulletRect = rectArray[spawnedBullet];
+                for (int enemy1Index = 0; enemy1Index < pGame->nrOfEnemies_1; enemy1Index++) {
+                    SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies_1[enemy1Index]);
                     if (SDL_HasIntersection(&enemyRect, &bulletRect)) {
-                        printEnemyHealth(pGame->pEnemies_1[k]);
-                        damageEnemy(pGame->pEnemies_1[k], 1, k);
-                        if (isEnemyActive(pGame->pEnemies_1[k]) == false) {
+                        printEnemyHealth(pGame->pEnemies_1[enemy1Index]);
+                        damageEnemy(pGame->pEnemies_1[enemy1Index], 1, enemy1Index);
+                        if (isEnemyActive(pGame->pEnemies_1[enemy1Index]) == false) {
                             (pGame->killedEnemies)++;
                         }
-                        removeProjectile(i);
-                        rectArray[i] = emptyRect;
-                        for (int j = 0; j < MAX_PLAYERS; j++) {
-                            setBulletToRemove(pGame->pShips[j], i);
+                        removeProjectile(spawnedBullet);
+                        rectArray[spawnedBullet] = emptyRect;
+                        for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
+                            setBulletToRemove(pGame->pShips[playerIndex], spawnedBullet);
                         }
                     }
                 }
-                for (int k = 0; k < pGame->nrOfEnemies_2; k++) {
-                    SDL_Rect enemyRect2 = getRectEnemy_2(pGame->pEnemies_2[k]);
+                for (int enemy2Index = 0; enemy2Index < pGame->nrOfEnemies_2; enemy2Index++) {
+                    SDL_Rect enemyRect2 = getRectEnemy_2(pGame->pEnemies_2[enemy2Index]);
                     if (SDL_HasIntersection(&enemyRect2, &bulletRect)) {
-                        printEnemy_2Health(pGame->pEnemies_2[k]);
-                        damageEnemy_2(pGame->pEnemies_2[k], 1, k);
-                        if (isEnemy_2Active(pGame->pEnemies_2[k]) == false) {
+                        printEnemy_2Health(pGame->pEnemies_2[enemy2Index]);
+                        damageEnemy_2(pGame->pEnemies_2[enemy2Index], 1, enemy2Index);
+                        if (isEnemy_2Active(pGame->pEnemies_2[enemy2Index]) == false) {
                             (pGame->killedEnemies)++;
                         }
-                        removeProjectile(i);
-                        rectArray[i] = emptyRect;
-                        for (int j = 0; j < MAX_PLAYERS; j++) {
-                            setBulletToRemove(pGame->pShips[j], i);
+                        removeProjectile(spawnedBullet);
+                        rectArray[spawnedBullet] = emptyRect;
+                        for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
+                            setBulletToRemove(pGame->pShips[playerIndex], spawnedBullet);
                         }
                     }
                 }
             }
         }
         // Ship collision här ??
-        for (int i = 0; i < MAX_PLAYERS; i++) {
-            for (int j = 0; j < pGame->nrOfEnemies_1 && j < MAX_ENEMIES; j++) {
-                if (shipCollision(pGame->pShips[i], getRectEnemy(pGame->pEnemies_1[j]))) {
-                    damageEnemy(pGame->pEnemies_1[j], 2, j);
-                    damageShip(pGame->pShips[i], 1);
-                    damageCannon(pGame->pCannons[i], 1);
-                    if (isPlayerDead(pGame->pShips[i])) {
-                        printf("Player %d is dead\n", i);
+        for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
+            for (int enemy1Index = 0; enemy1Index < pGame->nrOfEnemies_1 && enemy1Index < MAX_ENEMIES; enemy1Index++) {
+                if (shipCollision(pGame->pShips[playerIndex], getRectEnemy(pGame->pEnemies_1[enemy1Index]))) {
+                    damageEnemy(pGame->pEnemies_1[enemy1Index], 2, enemy1Index);
+                    damageShip(pGame->pShips[playerIndex], 1);
+                    damageCannon(pGame->pCannons[playerIndex], 1);
+                    if (isPlayerDead(pGame->pShips[playerIndex])) {
+                        printf("Player %d is dead\n", playerIndex);
                     }
                 }
             }
-            for (int j = 0; j < pGame->nrOfEnemies_2 && j < MAX_ENEMIES; j++) {
-                if (shipCollision(pGame->pShips[i], getRectEnemy_2(pGame->pEnemies_2[j]))) {
-                    damageEnemy_2(pGame->pEnemies_2[j], 2, j);
-                    damageShip(pGame->pShips[i], 1);
-                    damageCannon(pGame->pCannons[i], 1);
-                    if (isPlayerDead(pGame->pShips[i])) {
-                        printf("Player %d is dead\n", i);
+            for (int enemy2Index = 0; enemy2Index < pGame->nrOfEnemies_2 && enemy2Index < MAX_ENEMIES; enemy2Index++) {
+                if (shipCollision(pGame->pShips[playerIndex], getRectEnemy_2(pGame->pEnemies_2[enemy2Index]))) {
+                    damageEnemy_2(pGame->pEnemies_2[enemy2Index], 2, enemy2Index);
+                    damageShip(pGame->pShips[playerIndex], 1);
+                    damageCannon(pGame->pCannons[playerIndex], 1);
+                    if (isPlayerDead(pGame->pShips[playerIndex])) {
+                        printf("Player %d is dead\n", playerIndex);
                     }
                 }
             }
-            for (int j = 0; j < pGame->nrOfEnemies_3 && j < MAX_ENEMIES; j++) {
-                if (shipCollision(pGame->pShips[i], getRectEnemy_3(pGame->pEnemies_3[j]))) {
-                    damageEnemy_3(pGame->pEnemies_3[j], 2, j);
-                    damageShip(pGame->pShips[i], 1);
-                    damageCannon(pGame->pCannons[i], 1);
-                    if (isPlayerDead(pGame->pShips[i])) {
-                        printf("Player %d is dead\n", i);
+            for (int bossIndex = 0; bossIndex < pGame->nrOfEnemies_3 && bossIndex < MAX_ENEMIES; bossIndex++) {
+                if (shipCollision(pGame->pShips[playerIndex], getRectEnemy_3(pGame->pEnemies_3[bossIndex]))) {
+                    damageEnemy_3(pGame->pEnemies_3[bossIndex], 2, bossIndex);
+                    damageShip(pGame->pShips[playerIndex], 1);
+                    damageCannon(pGame->pCannons[playerIndex], 1);
+                    if (isPlayerDead(pGame->pShips[playerIndex])) {
+                        printf("Player %d is dead\n", playerIndex);
                     }
                 }
             }
         }
         // Bullet collision här ?? Ska man kunna skjuta på varandra?
         getProjectileRects(rectArray);
-        for (int i = 0; i < MAX_PROJECTILES; i++) {
-            SDL_Rect bulletRect = rectArray[i];
-            for (int k = 0; k < pGame->nrOfEnemies_1; k++) {
-                SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies_1[k]);
+        for (int bulletIndex = 0; bulletIndex < MAX_PROJECTILES; bulletIndex++) {
+            SDL_Rect bulletRect = rectArray[bulletIndex];
+            for (int enemy1Index = 0; enemy1Index < pGame->nrOfEnemies_1; enemy1Index++) {
+                SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies_1[enemy1Index]);
                 if (SDL_HasIntersection(&enemyRect, &bulletRect)) {
-                    printEnemyHealth(pGame->pEnemies_1[k]);
-                    damageEnemy(pGame->pEnemies_1[k], 1, k);
-                    if (isEnemyActive(pGame->pEnemies_1[k]) == false) {
+                    printEnemyHealth(pGame->pEnemies_1[enemy1Index]);
+                    damageEnemy(pGame->pEnemies_1[enemy1Index], 1, enemy1Index);
+                    if (isEnemyActive(pGame->pEnemies_1[enemy1Index]) == false) {
                         (pGame->killedEnemies)++;
                     }
-                    removeProjectile(i);
-                    rectArray[i] = emptyRect;
-                    for (int j = 0; j < MAX_PLAYERS; j++) {
-                        setBulletToRemove(pGame->pShips[j], i);
+                    removeProjectile(bulletIndex);
+                    rectArray[bulletIndex] = emptyRect;
+                    for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
+                        setBulletToRemove(pGame->pShips[playerIndex], bulletIndex);
                     }
                 }
             }
-            for (int k = 0; k < pGame->nrOfEnemies_2; k++) {
-                SDL_Rect enemyRect2 = getRectEnemy_2(pGame->pEnemies_2[k]);
+            for (int enemy2Index = 0; enemy2Index < pGame->nrOfEnemies_2; enemy2Index++) {
+                SDL_Rect enemyRect2 = getRectEnemy_2(pGame->pEnemies_2[enemy2Index]);
                 if (SDL_HasIntersection(&enemyRect2, &bulletRect)) {
-                    printEnemy_2Health(pGame->pEnemies_2[k]);
-                    damageEnemy_2(pGame->pEnemies_2[k], 1, k);
-                    if (isEnemy_2Active(pGame->pEnemies_2[k]) == false) {
+                    printEnemy_2Health(pGame->pEnemies_2[enemy2Index]);
+                    damageEnemy_2(pGame->pEnemies_2[enemy2Index], 1, enemy2Index);
+                    if (isEnemy_2Active(pGame->pEnemies_2[enemy2Index]) == false) {
                         (pGame->killedEnemies)++;
                     }
-                    removeProjectile(i);
-                    rectArray[i] = emptyRect;
-                    for (int j = 0; j < MAX_PLAYERS; j++) {
-                        setBulletToRemove(pGame->pShips[j], i);
+                    removeProjectile(bulletIndex);
+                    rectArray[bulletIndex] = emptyRect;
+                    for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
+                        setBulletToRemove(pGame->pShips[playerIndex], bulletIndex);
                     }
                 }
             }
-            for (int k = 0; k < pGame->nrOfEnemies_3; k++) {
-                SDL_Rect enemyRect3 = getRectEnemy_3(pGame->pEnemies_3[k]);
+            for (int bossIndex = 0; bossIndex < pGame->nrOfEnemies_3; bossIndex++) {
+                SDL_Rect enemyRect3 = getRectEnemy_3(pGame->pEnemies_3[bossIndex]);
                 if (SDL_HasIntersection(&enemyRect3, &bulletRect)) {
-                    printEnemy_3Health(pGame->pEnemies_3[k]);
-                    damageEnemy_3(pGame->pEnemies_3[k], 1, k);
-                    if (isEnemy_3Active(pGame->pEnemies_3[k]) == false) {
+                    printEnemy_3Health(pGame->pEnemies_3[bossIndex]);
+                    damageEnemy_3(pGame->pEnemies_3[bossIndex], 1, bossIndex);
+                    if (isEnemy_3Active(pGame->pEnemies_3[bossIndex]) == false) {
                         (pGame->killedEnemies)++;
                     }
-                    removeProjectile(i);
-                    rectArray[i] = emptyRect;
-                    for (int j = 0; j < MAX_PLAYERS; j++) {
-                        setBulletToRemove(pGame->pShips[j], i);
+                    removeProjectile(bulletIndex);
+                    rectArray[bulletIndex] = emptyRect;
+                    for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
+                        setBulletToRemove(pGame->pShips[playerIndex], bulletIndex);
                     }
                 }
             }
@@ -452,9 +454,9 @@ void handleOngoingState(Game *pGame) {
 
         SDL_RenderPresent(pGame->pRenderer);
         sendServerData(pGame);
-        for (int i = 0; i < MAX_PLAYERS; i++) {
-            setShoot(pGame->pShips[i], false);
-            setBulletToRemove(pGame->pShips[i], -1);
+        for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
+            setShoot(pGame->pShips[playerIndex], false);
+            setBulletToRemove(pGame->pShips[playerIndex], -1);
         }
     }
 }
@@ -473,10 +475,10 @@ void handleLobbyState(Game *pGame) {
             printf("After addClient()");
             if (pGame->nrOfClients == MAX_PLAYERS) {
                 pGame->state = ONGOING;
-                for (int i = 0; i < MAX_PLAYERS; i++) {
+                for (int player = 0; player < MAX_PLAYERS; player++) {
                     const char *msg = "ONGOING";
                     memcpy(pGame->pPacket->data, msg, strlen(msg) + 1);
-                    pGame->pPacket->address = pGame->clients[i];
+                    pGame->pPacket->address = pGame->clients[player];
                     SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
                 }
             }
@@ -524,24 +526,24 @@ void handleGameOverState(Game *pGame) {
 void sendServerData(Game *pGame) {
     if (pGame->nrOfClients == 0) return; // No clients connected
     pGame->serverData.gState = pGame->state;
-    for (int i = 0; i < MAX_PLAYERS; i++)
-        getShipDataPackage(pGame->pShips[i], &pGame->serverData.ships[i]);
+    for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++)
+        getShipDataPackage(pGame->pShips[playerIndex], &pGame->serverData.ships[playerIndex]);
 
-    for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++)
-        getEnemy_1_DataPackage(pGame->pEnemies_1[i], &pGame->serverData.enemies_1[i]);
+    for (int enemy1Index = 0; enemy1Index < pGame->nrOfEnemies_1 && enemy1Index < MAX_ENEMIES; enemy1Index++)
+        getEnemy_1_DataPackage(pGame->pEnemies_1[enemy1Index], &pGame->serverData.enemies_1[enemy1Index]);
     pGame->serverData.nrOfEnemies_1 = pGame->nrOfEnemies_1;
-    for (int i = 0; i < pGame->nrOfEnemies_2 && i < MAX_ENEMIES; i++)
-        getEnemy_2_DataPackage(pGame->pEnemies_2[i], &pGame->serverData.enemies_2[i]);
+    for (int enemy2Index = 0; enemy2Index < pGame->nrOfEnemies_2 && enemy2Index < MAX_ENEMIES; enemy2Index++)
+        getEnemy_2_DataPackage(pGame->pEnemies_2[enemy2Index], &pGame->serverData.enemies_2[enemy2Index]);
     pGame->serverData.nrOfEnemies_2 = pGame->nrOfEnemies_2;
-    for (int i = 0; i < pGame->nrOfEnemies_3 && i < NROFBOSSES; i++)
-        getEnemy_3_DataPackage(pGame->pEnemies_3[i], &pGame->serverData.enemies_3[i]);
+    for (int bossIndex = 0; bossIndex < pGame->nrOfEnemies_3 && bossIndex < NROFBOSSES; bossIndex++)
+        getEnemy_3_DataPackage(pGame->pEnemies_3[bossIndex], &pGame->serverData.enemies_3[bossIndex]);
     pGame->serverData.nrOfEnemies_3 = pGame->nrOfEnemies_3;
 
-    for (int i = 0; i < MAX_PLAYERS; i++) {
-        pGame->serverData.sDPlayerId = i;
+    for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
+        pGame->serverData.sDPlayerId = playerIndex;
         memcpy(pGame->pPacket->data, &(pGame->serverData), sizeof(ServerData));
         pGame->pPacket->len = sizeof(ServerData);
-        pGame->pPacket->address = pGame->clients[i];
+        pGame->pPacket->address = pGame->clients[playerIndex];
         SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
     }
 }
@@ -556,16 +558,16 @@ void printPacketsData(Game *pGame) {
     printf("  sDPlayerId (assigned ID): %d\n", sd->sDPlayerId);
 
     // Print each connected player's ship data
-    for (int i = 0; i < MAX_PLAYERS; i++) {
-        printf("  Ship %d: x = %.2f, y = %.2f, angle = %.2f, alive = %d\n", i, sd->ships[i].x,
-               sd->ships[i].y, sd->ships[i].vx, sd->ships[i].vy);
+    for (int playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
+        printf("  Ship %d: x = %.2f, y = %.2f, angle = %.2f, alive = %d\n", playerIndex, sd->ships[playerIndex].x,
+               sd->ships[playerIndex].y, sd->ships[playerIndex].vx, sd->ships[playerIndex].vy);
     }
     // Print enemy count
     printf("  Enemies_1: %d active, %d to spawn\n", sd->nrOfEnemies_1, sd->nrOfEnemiesToSpawn_1);
     // Print each enemy_1's data
-    for (int i = 0; i < sd->nrOfEnemies_1; i++) {
-        printf("    Enemy_1[%d]: x = %.2f, y = %.2f, alive = %d\n", i, sd->enemies_1[i].x,
-               sd->enemies_1[i].y, sd->enemies_1[i].active);
+    for (int enemy1Index = 0; enemy1Index < sd->nrOfEnemies_1; enemy1Index++) {
+        printf("    Enemy_1[%d]: x = %.2f, y = %.2f, alive = %d\n", enemy1Index, sd->enemies_1[enemy1Index].x,
+               sd->enemies_1[enemy1Index].y, sd->enemies_1[enemy1Index].active);
     }
     /*printf("  Enemies_2: %d active, %d to spawn\n", sd->nrOfEnemies_2,
     sd->nrOfEnemiesToSpawn_2); Print each enemy_2's data for (int i = 0; i <
@@ -575,29 +577,29 @@ void printPacketsData(Game *pGame) {
 }
 
 int getClientIndex(Game *pGame, IPaddress *clientAddr) {
-    for (int i = 0; i < pGame->nrOfClients; i++) {
-        if (pGame->clients[i].host == clientAddr->host &&
-            pGame->clients[i].port == clientAddr->port) {
-            return i; // Existing client
+    for (int playerIndex = 0; playerIndex < pGame->nrOfClients; playerIndex++) {
+        if (pGame->clients[playerIndex].host == clientAddr->host &&
+            pGame->clients[playerIndex].port == clientAddr->port) {
+            return playerIndex; // Existing client
         }
     }
     if (pGame->nrOfClients < MAX_PLAYERS) {
         // New client
         pGame->clients[pGame->nrOfClients] = *clientAddr;
-        for (int i = 0; i < pGame->nrOfClients; i++) {
-            Uint32 ip = SDL_SwapBE32(pGame->clients[i].host);
-            Uint16 port = SDL_SwapBE16(pGame->clients[i].port);
-            printf("Client %d: %d.%d.%d.%d:%d\n", i, (ip >> 24) & 0xFF, (ip >> 16) & 0xFF,
-                   (ip >> 8) & 0xFF, ip & 0xFF, port);
+        for (int playerIndex = 0; playerIndex < pGame->nrOfClients; playerIndex++) {
+            Uint32 ip = SDL_SwapBE32(pGame->clients[playerIndex].host);
+            Uint16 port = SDL_SwapBE16(pGame->clients[playerIndex].port);
+            printf("Client %d: %d.%d.%d.%d:%d\n", playerIndex, (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF,
+                   ip & 0xFF, port);
         }
         return pGame->nrOfClients++;
     }
-    return -1; // Too many clients
+    return TOO_MANY_CLIENTS;
 }
 
 void closeGame(Game *pGame) {
-    for (int i = 0; i < MAX_PLAYERS; i++)
-        if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
+    for (int clientIndex = 0; clientIndex < MAX_PLAYERS; clientIndex++)
+        if (pGame->pShips[clientIndex]) destroyShip(pGame->pShips[clientIndex]);
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     printf("Renderer destroyed\n");
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
@@ -616,16 +618,16 @@ void closeGame(Game *pGame) {
     if (pGame->pPacket) SDLNet_FreePacket(pGame->pPacket);
     printf("Freepacket\n");
 
-    for (int i = 0; i < MAX_ENEMIES; i++)
-        if (pGame->pEnemies_1[i]) destroyEnemy_1(pGame->pEnemies_1[i]);
+    for (int enemy1Index = 0; enemy1Index < MAX_ENEMIES; enemy1Index++)
+        if (pGame->pEnemies_1[enemy1Index]) destroyEnemy_1(pGame->pEnemies_1[enemy1Index]);
     if (pGame->pEnemy_1Image) destroyEnemy_1Image(pGame->pEnemy_1Image);
 
-    for (int i = 0; i < MAX_ENEMIES; i++)
-        if (pGame->pEnemies_2[i]) destroyEnemy_2(pGame->pEnemies_2[i]);
+    for (int enemy2Index = 0; enemy2Index < MAX_ENEMIES; enemy2Index++)
+        if (pGame->pEnemies_2[enemy2Index]) destroyEnemy_2(pGame->pEnemies_2[enemy2Index]);
     if (pGame->pEnemy_2Image) destroyEnemyImage_2(pGame->pEnemy_2Image);
 
-    for (int i = 0; i < NROFBOSSES; i++)
-        if (pGame->pEnemies_3[i]) destroyEnemy_3(pGame->pEnemies_3[i]);
+    for (int bossIndex = 0; bossIndex < NROFBOSSES; bossIndex++)
+        if (pGame->pEnemies_3[bossIndex]) destroyEnemy_3(pGame->pEnemies_3[bossIndex]);
     if (pGame->pEnemy_3Image) destroyEnemyImage_3(pGame->pEnemy_3Image);
 
     SDLNet_Quit();
@@ -637,15 +639,14 @@ void closeGame(Game *pGame) {
 }
 
 void spawnEnemies_1(Game *pGame, int amount) {
-    for (int i = 0; i < amount; i++) {
-        pGame->pEnemies_1[pGame->nrOfEnemies_1] =
-            createEnemy(pGame->pEnemy_1Image, WINDOW_WIDTH, WINDOW_HEIGHT);
+    for (int spawnCount = 0; spawnCount < amount; spawnCount++) {
+        pGame->pEnemies_1[pGame->nrOfEnemies_1] = createEnemy(pGame->pEnemy_1Image, WINDOW_WIDTH, WINDOW_HEIGHT);
         pGame->nrOfEnemies_1++;
     }
 }
 
 void updateEnemies_1(Game *pGame, int *amount) {
-    if (areTheyAllDead_1(pGame) == true) {
+    if (areAllEnemy_1_Dead(pGame) == true) {
         if (pGame->map == 1) {
             (*amount) += 2;
         } else if (pGame->map == 2) {
@@ -657,9 +658,9 @@ void updateEnemies_1(Game *pGame, int *amount) {
     }
 }
 
-bool areTheyAllDead_1(Game *pGame) {
-    for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
-        if (isEnemyActive(pGame->pEnemies_1[i]) == true) {
+bool areAllEnemy_1_Dead(Game *pGame) { // rename later to areAllEnemy_1_Dead
+    for (int enemy1Index = 0; enemy1Index < pGame->nrOfEnemies_1 && enemy1Index < MAX_ENEMIES; enemy1Index++) {
+        if (isEnemyActive(pGame->pEnemies_1[enemy1Index]) == true) {
             return false;
         }
     }
@@ -667,15 +668,14 @@ bool areTheyAllDead_1(Game *pGame) {
 }
 
 void spawnEnemies_2(Game *pGame, int amount) {
-    for (int i = 0; i < amount; i++) {
-        pGame->pEnemies_2[pGame->nrOfEnemies_2] =
-            createEnemy_2(pGame->pEnemy_2Image, WINDOW_WIDTH, WINDOW_HEIGHT);
+    for (int spawnCount = 0; spawnCount < amount; spawnCount++) {
+        pGame->pEnemies_2[pGame->nrOfEnemies_2] = createEnemy_2(pGame->pEnemy_2Image, WINDOW_WIDTH, WINDOW_HEIGHT);
         pGame->nrOfEnemies_2++;
     }
 }
 
 void updateEnemies_2(Game *pGame, int *amount) {
-    if (areTheyAllDead_2(pGame) == true) {
+    if (areAllEnemy_2_Dead(pGame) == true) {
         (*amount) += 2; // increments even for first wave. WHY?
         if ((*amount) > MAX_ENEMIES) (*amount) = MAX_ENEMIES;
         pGame->nrOfEnemies_2 = 0;
@@ -683,9 +683,9 @@ void updateEnemies_2(Game *pGame, int *amount) {
     }
 }
 
-bool areTheyAllDead_2(Game *pGame) {
-    for (int i = 0; i < pGame->nrOfEnemies_2 && i < MAX_ENEMIES; i++) {
-        if (isEnemy_2Active(pGame->pEnemies_2[i]) == true) {
+bool areAllEnemy_2_Dead(Game *pGame) {
+    for (int enemy2Index = 0; enemy2Index < pGame->nrOfEnemies_2 && enemy2Index < MAX_ENEMIES; enemy2Index++) {
+        if (isEnemy_2Active(pGame->pEnemies_2[enemy2Index]) == true) {
             return false;
         }
     }
