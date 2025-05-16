@@ -4,4 +4,5 @@ UseTab: Never
 BreakBeforeBraces: Attach
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: true
-ColumnLimit: 100
+ColumnLimit: 120
+
