@@ -281,10 +281,17 @@ void handleOngoingState(Game *pGame) {
           updateCannon(pGame->pCannons[i], pGame->pShips[i]);
         }
       }
-      updateEnemies_1(pGame, &pGame->nrOfEnemiesToSpawn_1); // Calls spawnEnemy() down at the bottom of the code
-      updateEnemies_2(pGame, &pGame->nrOfEnemiesToSpawn_2);
+      if (pGame->map == 2)
+      {
+        for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
+          damageEnemy(pGame->pEnemies_1[i], 100, i);
+        }
+      }
+
+      if (pGame->map == 1) updateEnemies_1(pGame, &pGame->nrOfEnemiesToSpawn_1);
+      if (pGame->map == 2) updateEnemies_2(pGame, &pGame->nrOfEnemiesToSpawn_2);
+      if (pGame->map == 2) updateBoss(pGame);
       
-      updateBoss(pGame);
       //updateEnemy_3(pGame->pEnemies_3[0]);
       for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
         updateEnemy(pGame->pEnemies_1[i]); // locally
@@ -320,7 +327,7 @@ void handleOngoingState(Game *pGame) {
             damageShip(pGame->pShips[i], 1);
             damageCannon(pGame->pCannons[i], 1);
             if (isPlayerDead(pGame->pShips[i])) {
-              printf("Player %d is dead\n", i);
+              printf("Player %d killed by enemy1\n", i);
             }
           }
         }
@@ -330,7 +337,7 @@ void handleOngoingState(Game *pGame) {
             damageShip(pGame->pShips[i], 1);
             damageCannon(pGame->pCannons[i], 1);
             if (isPlayerDead(pGame->pShips[i])) {
-              printf("Player %d is dead\n", i);
+              printf("Player %d killed by enemy2\n", i);
             }
           }
         }
@@ -340,7 +347,7 @@ void handleOngoingState(Game *pGame) {
             damageShip(pGame->pShips[i], 1);
             damageCannon(pGame->pCannons[i], 1);
             if (isPlayerDead(pGame->pShips[i])) {
-              printf("Player %d is dead\n", i);
+              printf("Player %d killed by enemy3\n", i);
             }
           }
         }
@@ -610,7 +617,7 @@ void updateEnemies_1(Game *pGame, int *amount) {
         {  
             (*amount) += 2;
         }
-        else if (pGame->map == 2)
+        else if (pGame->map == 2) //this is unneccesary now as enemy1 is never spawned in map2. 
         {
             (*amount) += 10;
         }    
@@ -640,7 +647,7 @@ void spawnEnemies_2(Game *pGame, int amount) {
 void updateEnemies_2(Game *pGame, int *amount) {
     if (areTheyAllDead_2(pGame) == true)
     {
-      (*amount) += 2; // increments even for first wave. WHY?
+      (*amount) += 6; // increments even for first wave. WHY?
       if ((*amount) > MAX_ENEMIES)
         (*amount) = MAX_ENEMIES;
       pGame->nrOfEnemies_2 = 0;
