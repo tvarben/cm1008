@@ -87,7 +87,7 @@ Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth,
 
   pShip->shieldRect.x = pShip->x;
   pShip->shieldRect.y = pShip->y;
-  SDL_SetTextureAlphaMod(pShip->shield, 75); //sets transparency level, lower means more transparent
+  SDL_SetTextureAlphaMod(pShip->shield, 50); //sets transparency level, lower means more transparent
 
   return pShip;
 }
@@ -169,7 +169,14 @@ void updateShipOnServer(Ship *pShip) {
 void stayInWindow(Ship *pShip) {
   pShip->shipRect.x = (int)pShip->x;
   pShip->shipRect.y = (int)pShip->y;
-  pShip->shieldRect.x = ((int)pShip->x)-10; //not sure if this is more left or more right
+  if (pShip->facingLeft)
+  {
+    pShip->shieldRect.x = ((int)pShip->x)-17; //not sure if this is more left or more right
+  } 
+  else
+  {
+    pShip->shieldRect.x = ((int)pShip->x)-18;
+  } 
   pShip->shieldRect.y = ((int)pShip->y)-15; //adjusted where shield is placed, -15 is a bit up
 
   // BOUNDARY CHECK
@@ -195,10 +202,6 @@ void drawShip(Ship *pShip) {
   if (pShip->health >= 2) {
     SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
   }
-  /*if (s->health >= 2) {
-      SDL_RenderCopy(pShip->renderer, pShip->texture, NULL, &pShip->shipRect);
-  }*/
-  // SDL_RenderCopy(pShip->renderer, pShip->texture, NULL, &pShip->shipRect);
 }
 
 void resetShip(Ship *pShip) {

@@ -408,7 +408,7 @@ void handleOngoingState(Game *pGame) {
       }
       for (int i=0; i<pGame->nrOfEnemies_3; i++)
       {
-        if(isEnemy_3Active(pGame->pEnemies_3[i])){
+        if(isEnemy_3Active(pGame->pEnemies_3[i]) && pGame->map ==2){
           updateEnemy_3_OnClients(pGame->pEnemies_3[i], pGame->serverData.enemies_3[i]);
           drawEnemy_3(pGame->pEnemies_3[i]);
         }
