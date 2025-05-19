@@ -30,6 +30,4 @@ void playMusic(Mix_Music *pMusic, int loops) {
 void closeMusic(Mix_Music *pMusic) {
     Mix_HaltMusic();
     if (pMusic) Mix_FreeMusic(pMusic);
-    Mix_CloseAudio();
-    Mix_Quit();
 }
