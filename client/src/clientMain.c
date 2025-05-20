@@ -617,14 +617,47 @@ void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress,
   SDL_RenderPresent(pGame->pRenderer);
 }
 
+
 void handleGameOverState(Game *pGame) {
   Text *pGameOverText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "GAME OVER LIL BRO", WINDOW_WIDTH/2, 150);
-  drawText(pGameOverText);
   Text *pGameOverText2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "REPLAY?", WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
-  drawText(pGameOverText2);
-    SDL_RenderPresent(pGame->pRenderer);
-}
+  SDL_RenderPresent(pGame->pRenderer);
 
+  const SDL_Rect *pReplayRect = getTextRect(pGameOverText2);     //Hämta position för rect för Start-texten
+  SDL_Event event;
+  while (pGame->isRunning)
+  {
+      int x, y;
+      SDL_GetMouseState(&x,&y);
+      SDL_Point mousePoint = {x,y};        //Kolla position för musen
+      if (SDL_PointInRect(&mousePoint,pReplayRect))
+      {
+          setTextColor(pGameOverText2, 255, 100, 100, pGame->pFont, "REPLAY?");
+      }
+      else
+      {
+          setTextColor(pGameOverText2, 238, 168, 65, pGame->pFont, "REPLAY?");
+      }
+
+      SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255); // Clear with black
+      SDL_RenderClear(pGame->pRenderer);
+      drawText(pGameOverText);
+      drawText(pGameOverText2);
+      SDL_RenderPresent(pGame->pRenderer);
+      while (SDL_PollEvent(&event))
+      {
+          if (event.type == SDL_QUIT)
+          {
+              pGame->isRunning = false;
+          }
+          else if (SDL_PointInRect(&mousePoint, pReplayRect) && event.type == SDL_MOUSEBUTTONDOWN)
+          {
+              printf("I dunno how to reset the whole game for everyone yet.");  
+          }
+
+      }
+  }
+}
 void updateWithServerData(Game *pGame) {
   ServerData serverData; /////// test
   memcpy(&serverData, pGame->pPacket->data, sizeof(ServerData));
