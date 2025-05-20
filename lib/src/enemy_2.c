@@ -50,7 +50,7 @@ EnemyImage_2 *initiateEnemy_2(SDL_Renderer *pRenderer) {
 }
 
 Enemy_2 *createEnemy_2(EnemyImage_2 *pEnemyImage2, int window_width, int window_height) {
-  printf("creating enemy_2\n");
+  //printf("creating enemy_2\n");
   Enemy_2 *pEnemy2 = malloc(sizeof(struct enemy2));
   pEnemy2->pRenderer = pEnemyImage2->pRenderer;
   pEnemy2->pTexture = pEnemyImage2->pTexture;

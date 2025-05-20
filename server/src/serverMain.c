@@ -67,6 +67,8 @@ void spawnBoss(Game *pGame);
 void resetBoss(Game *pGame);
 void updateBoss(Game *pGame);
 void printPacketsData(Game *pGame);
+bool arePlayersDead(Game *pGame);
+void handleGameOverState(Game *pGame);
 
 int main(int argc, char **argv) {
   Game game = {0};
@@ -192,7 +194,7 @@ void run(Game *pGame) {
       handleLobbyState(pGame);
       break;
     case GAME_OVER:
-      pGame->state = START;
+      handleGameOverState(pGame);
       break;
     default:
       pGame->state = START;
@@ -237,7 +239,7 @@ void handleOngoingState(Game *pGame) {
   pGame->nrOfEnemies_1 = 0;
   pGame->nrOfEnemies_2 = 0;
   SDL_Rect emptyRect = {0, 0, 0, 0}, rectArray[MAX_PROJECTILES] = {0, 0, 0, 0};
-
+  pGame->map = 1;
   if (pGame->nrOfEnemies_3 == 0) {
     spawnBoss(pGame);
   }
@@ -271,7 +273,6 @@ void handleOngoingState(Game *pGame) {
         if (pGame->pShips[i]) {
           // if (isShooting(pGame->pShips[i]) ) {
           if (isCannonShooting(pGame->pShips[i])) {
-            printf("IN IS SHOOTING\n");
             handleCannonEvent(pGame->pCannons[i]);
             // setShoot(pGame->pShips[i], false);
           }
@@ -281,6 +282,7 @@ void handleOngoingState(Game *pGame) {
           updateCannon(pGame->pCannons[i], pGame->pShips[i]);
         }
       }
+      
       if (pGame->map == 2)
       {
         for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
@@ -359,7 +361,7 @@ void handleOngoingState(Game *pGame) {
           for (int k = 0; k < pGame->nrOfEnemies_1; k++) {
               SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies_1[k]);
               if (SDL_HasIntersection(&enemyRect, &bulletRect)) {
-                  printEnemyHealth(pGame->pEnemies_1[k]);
+                  //printEnemyHealth(pGame->pEnemies_1[k]);
                   damageEnemy(pGame->pEnemies_1[k], 1, k);
                   if (isEnemyActive(pGame->pEnemies_1[k]) == false) {
                       (pGame->killedEnemies)++;
@@ -374,7 +376,7 @@ void handleOngoingState(Game *pGame) {
           for (int k = 0; k < pGame->nrOfEnemies_2; k++) {
               SDL_Rect enemyRect2 = getRectEnemy_2(pGame->pEnemies_2[k]);
               if (SDL_HasIntersection(&enemyRect2, &bulletRect)) {
-                  printEnemy_2Health(pGame->pEnemies_2[k]);
+                  //printEnemy_2Health(pGame->pEnemies_2[k]);
                   damageEnemy_2(pGame->pEnemies_2[k], 1, k);
                   if (isEnemy_2Active(pGame->pEnemies_2[k]) == false) {
                       (pGame->killedEnemies)++;
@@ -389,7 +391,7 @@ void handleOngoingState(Game *pGame) {
           for (int k = 0; k < pGame->nrOfEnemies_3; k++) {
               SDL_Rect enemyRect3 = getRectEnemy_3(pGame->pEnemies_3[k]);
               if (SDL_HasIntersection(&enemyRect3, &bulletRect)) {
-                  printEnemy_3Health(pGame->pEnemies_3[k]);
+                  //printEnemy_3Health(pGame->pEnemies_3[k]);
                   damageEnemy_3(pGame->pEnemies_3[k], 1, k);
                   if (isEnemy_3Active(pGame->pEnemies_3[k]) == false) {
                       (pGame->killedEnemies)++;
@@ -402,7 +404,6 @@ void handleOngoingState(Game *pGame) {
               }
           }
       }
-
       SDL_RenderPresent(pGame->pRenderer);
       sendServerData(pGame);
       for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -471,10 +472,11 @@ void addClient(Game *pGame) {
   }
 }
 
-/*
 void handleGameOverState(Game *pGame) {
-
-}*/
+  Text *pGameOverText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "GAME OVER LIL BRO", WINDOW_WIDTH/2, 150);
+  drawText(pGameOverText);
+  SDL_RenderPresent(pGame->pRenderer);
+}
 
 void sendServerData(Game *pGame) {
   if (pGame->nrOfClients == 0)
@@ -492,6 +494,11 @@ void sendServerData(Game *pGame) {
   for(int i = 0; i < pGame->nrOfEnemies_3 && i < NROFBOSSES; i++)
       getEnemy_3_DataPackage(pGame->pEnemies_3[i], &pGame->serverData.enemies_3[i]);
   pGame->serverData.nrOfEnemies_3 = pGame->nrOfEnemies_3;
+  if (arePlayersDead(pGame) == true) //DOESNT WORK :(
+  {
+    pGame->state = GAME_OVER;
+    pGame->serverData.gState = pGame->state;
+  }
 
   for (int i = 0; i < MAX_PLAYERS; i++) {
     pGame->serverData.sDPlayerId = i;
@@ -500,6 +507,7 @@ void sendServerData(Game *pGame) {
     pGame->pPacket->address = pGame->clients[i];
     SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
   }
+  
 }
 
 // Call this func right after sending a packet for debugging!!! ADD MORE STUFF
@@ -673,4 +681,17 @@ void updateBoss(Game *pGame){
   if(isEnemy_3Active(pGame->pEnemies_3[0])){
     updateEnemy_3(pGame->pEnemies_3[0]);
   }
+}
+
+bool arePlayersDead(Game *pGame)
+{
+  for (int i = 0; i < pGame->nrOfClients; i++)
+  {
+    if (isPlayerDead(pGame->pShips[i]) == false)
+    { 
+      return false;
+    }
+  }
+  printf("ALL PLAYERS DEAD! \n");
+  return true;
 }

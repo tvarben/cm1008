@@ -298,7 +298,7 @@ int shipCollision(Ship *pShip, SDL_Rect rect) {
 
 void damageShip(Ship *pShip, int damage) {
   pShip->health -= damage;
-  printf("Ship health %d\n", pShip->health);
+  //printf("Ship health %d\n", pShip->health);
 }
 
 bool isPlayerDead(Ship *pShip) {
