@@ -125,7 +125,7 @@ int initiate(Game *pGame) {
       createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Start [1]",
                  WINDOW_WIDTH / 3, WINDOW_HEIGHT / 2 + 100);
   pGame->pGameName =
-      createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "SpaceShooter",
+      createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Solar Defence",
                  WINDOW_WIDTH / 2, WINDOW_HEIGHT / 4);
   pGame->pExitText =
       createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Exit [8]",
@@ -335,7 +335,7 @@ void handleOngoingState(Game *pGame) {
         }
         for (int j = 0; j < pGame->nrOfEnemies_2 && j < MAX_ENEMIES; j++) {
           if (shipCollision(pGame->pShips[i], getRectEnemy_2(pGame->pEnemies_2[j]))) {
-            damageEnemy_2(pGame->pEnemies_2[j], 2, j);
+            damageEnemy_2(pGame->pEnemies_2[j], 4, j);
             damageShip(pGame->pShips[i], 1);
             damageCannon(pGame->pCannons[i], 1);
             if (isPlayerDead(pGame->pShips[i])) {
