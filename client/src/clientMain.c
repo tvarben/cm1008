@@ -620,9 +620,9 @@ void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress,
 void handleGameOverState(Game *pGame) {
   Text *pGameOverText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "GAME OVER LIL BRO", WINDOW_WIDTH/2, 150);
   drawText(pGameOverText);
-  SDL_RenderPresent(pGame->pRenderer);
   Text *pGameOverText2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "REPLAY?", WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
   drawText(pGameOverText2);
+    SDL_RenderPresent(pGame->pRenderer);
 }
 
 void updateWithServerData(Game *pGame) {
