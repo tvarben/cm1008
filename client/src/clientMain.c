@@ -43,7 +43,7 @@ typedef struct {
   UDPpacket *pPacket;
   bool isRunning, isShooting, spacePressed;
   Stars *pStars;
-    SDL_Texture *pStartImage_1, *pStartImage_2, *pHardMapBackground, *pHardMapImage1, *pHardMapImage2;
+  SDL_Texture *pStartImage_1, *pStartImage_2, *pHardMapBackground, *pHardMapImage1, *pHardMapImage2;
   Text *pCountdownText;
   EnemyImage *pEnemy_1Image;
   Enemy *pEnemies_1[MAX_ENEMIES];
@@ -83,7 +83,7 @@ bool areTheyAllDead(Game *pGame);
 void updateGameTime(Game *pGame);
 int getTime(Game *pGame);
 void drawMap(Game *pGame);
-void drawMapTransitionScreen(SDL_Renderer *renderer);
+void drawMapTransitionScreen(SDL_Renderer *renderer, TTF_Font *pFont);
 ClientCommand getCurrentCommand(Game *pGame);
 
 int main(int argc, char **argv) {
@@ -144,7 +144,7 @@ int initiate(Game *pGame) {
       createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont, "Multiplayer",
                  WINDOW_WIDTH / 2, 450);
   pGame->pGameName =
-      createText(pGame->pRenderer, 255, 0, 0, pGame->pFont, "SpaceShooter",
+      createText(pGame->pRenderer, 255, 0, 0, pGame->pFont, "Solar Defence",
                  WINDOW_WIDTH / 2, WINDOW_HEIGHT / 8);
   pGame->pExitText = createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont,
                                 "Exit", WINDOW_WIDTH / 2, 570);
@@ -394,7 +394,7 @@ void handleOngoingState(Game *pGame) {
       {
         seenMapTransition = true;
         SDL_SetRenderDrawColor(pGame->pRenderer, 175, 0, 0, 255);
-        drawMapTransitionScreen(pGame->pRenderer);
+        drawMapTransitionScreen(pGame->pRenderer, pGame->pFont);
       } 
       /*for (int i = 0; i < MAX_PLAYERS; i++) {
         render_projectiles(pGame->pRenderer);
@@ -619,8 +619,8 @@ void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress,
 
 
 void handleGameOverState(Game *pGame) {
-  Text *pGameOverText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "GAME OVER LIL BRO", WINDOW_WIDTH/2, 150);
-  Text *pGameOverText2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "REPLAY?", WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
+  Text *pGameOverText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "GAME OVER", WINDOW_WIDTH/2, 150);
+  Text *pGameOverText2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Exit", WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
   SDL_RenderPresent(pGame->pRenderer);
 
   const SDL_Rect *pReplayRect = getTextRect(pGameOverText2);     //Hämta position för rect för Start-texten
@@ -632,11 +632,11 @@ void handleGameOverState(Game *pGame) {
       SDL_Point mousePoint = {x,y};        //Kolla position för musen
       if (SDL_PointInRect(&mousePoint,pReplayRect))
       {
-          setTextColor(pGameOverText2, 255, 100, 100, pGame->pFont, "REPLAY?");
+          setTextColor(pGameOverText2, 255, 100, 100, pGame->pFont, "Exit");
       }
       else
       {
-          setTextColor(pGameOverText2, 238, 168, 65, pGame->pFont, "REPLAY?");
+          setTextColor(pGameOverText2, 238, 168, 65, pGame->pFont, "Exit");
       }
 
       SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255); // Clear with black
@@ -941,8 +941,13 @@ void drawMap(Game *pGame)
     }
 }
 
-void drawMapTransitionScreen(SDL_Renderer *renderer) { //assumes a rendercolor is chosen before
-    SDL_RenderClear(renderer); //clear with said color
+void drawMapTransitionScreen(SDL_Renderer *renderer, TTF_Font *pFont) { //assumes a rendercolor is chosen before
+    Text *pChangeMapText = createText(renderer, 238, 168, 65, pFont, "Earth Defended!", WINDOW_WIDTH/2, 250);
+    Text *pChangeMapText2 = createText(renderer, 238, 168, 65, pFont, "Attack The Alien Planet!", WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+    drawText(pChangeMapText);
+    drawText(pChangeMapText2);
     SDL_RenderPresent(renderer); //draw whole screen
-    SDL_Delay(1000);     // Delay for like half a sec
+    SDL_Delay(4000);     // Delay for like a sec
 }

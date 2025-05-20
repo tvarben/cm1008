@@ -474,7 +474,7 @@ void addClient(Game *pGame) {
 
 void handleGameOverState(Game *pGame) {
   Text *pGameOverText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "GAME OVER LIL BRO", WINDOW_WIDTH/2, 150);
-  Text *pGameOverText2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "REPLAY?", WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
+  Text *pGameOverText2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Exit", WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
   SDL_RenderPresent(pGame->pRenderer);
 
   const SDL_Rect *pReplayRect = getTextRect(pGameOverText2);     //Hämta position för rect för Start-texten
@@ -486,11 +486,11 @@ void handleGameOverState(Game *pGame) {
       SDL_Point mousePoint = {x,y};        //Kolla position för musen
       if (SDL_PointInRect(&mousePoint,pReplayRect))
       {
-          setTextColor(pGameOverText2, 255, 100, 100, pGame->pFont, "REPLAY?");
+          setTextColor(pGameOverText2, 255, 100, 100, pGame->pFont, "Exit");
       }
       else
       {
-          setTextColor(pGameOverText2, 238, 168, 65, pGame->pFont, "REPLAY?");
+          setTextColor(pGameOverText2, 238, 168, 65, pGame->pFont, "Exit");
       }
 
       SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255); // Clear with black

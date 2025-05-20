@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#define MAX_PLAYERS 4
+#define MAX_PLAYERS 1
 #define WINDOW_WIDTH 1280 // 1160
 #define WINDOW_HEIGHT 720 // 700
 #define SERVER_PORT 60000
