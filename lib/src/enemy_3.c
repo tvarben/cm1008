@@ -80,16 +80,11 @@ static void getStartValues_3(Enemy_3 *pEnemy3) {
   pEnemy3->damage = 2;
   pEnemy3->health = 100;   // changed health
   float speed = 10;
-  if (startSpawnOnTheLeft == 1) {
+  if (1) {
     pEnemy3->x = pEnemy3->window_width - pEnemy3->rect.w; // spawn at right
     pEnemy3->y = pEnemy3->window_height / 2; //spawn at middle
     pEnemy3->vx = -speed; // rakt åt vänster
     pEnemy3->vy = -speed; // move up
-  } else {
-      pEnemy3->x = 0; // also spawn at left
-      pEnemy3->y = pEnemy3->window_height / 2; //spawn at middle
-      pEnemy3->vx = speed; // move right
-      pEnemy3->vy = speed; // move down
   }
 }
 

@@ -31,7 +31,7 @@ void update_projectiles(Uint32 delta_time) {
         if (projectiles[i].active) {
             projectiles[i].x += projectiles[i].vx * delta_time/10;
             projectiles[i].y += projectiles[i].vy * delta_time/10;
-            printf("active projectile %d\n", i);
+            //printf("active projectile %d\n", i);
 
             // Deactivate if off screen (based on wndiow size)
             if (projectiles[i].x < 0 || projectiles[i].x > WINDOW_WIDTH ||

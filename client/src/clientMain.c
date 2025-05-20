@@ -326,9 +326,8 @@ void handleOngoingState(Game *pGame) {
   bool seenMapTransition = false;
   int nextMapShowWhen = 10;
   while (pGame->isRunning && pGame->state == ONGOING) {
-    now = SDL_GetTicks();
-    delta = now - lastUpdate; // används bara på rad 253, men delta används inte
-                              // i update_projectiles
+  now = SDL_GetTicks();
+  delta = now - lastUpdate; // används bara på rad 253, men delta används inte
     while (SDLNet_UDP_Recv(pGame->pSocket, pGame->pPacket)) {
       updateWithServerData(pGame);
     }
@@ -340,13 +339,16 @@ void handleOngoingState(Game *pGame) {
         handleInput(&event, pGame);
       }
     }
-    /*if (delta>=tickInterval) {
-        lastUpdate=now;*/
+
     if (timeToUpdate(&lastUpdate, tickInterval)) {
       pGame->command = getCurrentCommand(pGame);
       applyShipCommand(pGame->pShips[pGame->shipId], pGame->command);
       if (pGame->command != pGame->lastCommand || pGame->isShooting || now - lastSend >= resendIntervall) { // Skicka endast om användare ändrar command ||
-        ClientData ccData = {.command = pGame->command, .isShooting = pGame->isShooting, .map = pGame->map};
+        ClientData ccData = {.command = pGame->command, .isShooting = pGame->isShooting};
+        if (seenMapTransition == true)
+        {
+          ccData.map = pGame->map;
+        }
         memcpy(pGame->pPacket->data, &ccData, sizeof(ClientData));
         pGame->pPacket->len = sizeof(ClientData);
         SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
@@ -387,7 +389,13 @@ void handleOngoingState(Game *pGame) {
       SDL_RenderClear(pGame->pRenderer);
       drawMap(pGame);
       if (pGame->pTimer) drawText(pGame->pTimer);
-      if (pGame->gameTime >= nextMapShowWhen) pGame->map = 2;
+      if (pGame->gameTime >= nextMapShowWhen) pGame->map = 2;  
+      if (seenMapTransition == false && pGame->gameTime >= nextMapShowWhen - 1)
+      {
+        seenMapTransition = true;
+        SDL_SetRenderDrawColor(pGame->pRenderer, 175, 0, 0, 255);
+        drawMapTransitionScreen(pGame->pRenderer);
+      } 
       /*for (int i = 0; i < MAX_PLAYERS; i++) {
         render_projectiles(pGame->pRenderer);
         drawShip(pGame->pShips[i]);
@@ -395,15 +403,17 @@ void handleOngoingState(Game *pGame) {
       }*/
       for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
         if (isEnemyActive(pGame->pEnemies_1[i])) {
-          updateEnemyOnClients(pGame->pEnemies_1[i],
-                               pGame->serverData.enemies_1[i]);
-          drawEnemy(pGame->pEnemies_1[i]);
+          updateEnemyOnClients(pGame->pEnemies_1[i],pGame->serverData.enemies_1[i]);
+          if (pGame->gameTime <= nextMapShowWhen -1)
+          {
+            drawEnemy(pGame->pEnemies_1[i]);
+          }        
         }
       }
       for (int i = 0; i < pGame->nrOfEnemies_2; i++) {
           if(isEnemy_2Active(pGame->pEnemies_2[i])) {
               updateEnemy_2_OnClients(pGame->pEnemies_2[i], pGame->serverData.enemies_2[i]);
-              drawEnemy_2(pGame->pEnemies_2[i]);
+               drawEnemy_2(pGame->pEnemies_2[i]);
           }
       }
       for (int i=0; i<pGame->nrOfEnemies_3; i++)
@@ -427,12 +437,6 @@ void handleOngoingState(Game *pGame) {
       for (int i = 0; i < MAX_PLAYERS; i++) {
         setShoot(pGame->pShips[i], false);
       }
-      if (seenMapTransition == false && pGame->gameTime >= nextMapShowWhen)
-      {
-        seenMapTransition = true;
-        SDL_SetRenderDrawColor(pGame->pRenderer, 175, 0, 0, 255);
-        drawMapTransitionScreen(pGame->pRenderer);
-      } 
     }
   }
 }
@@ -614,9 +618,11 @@ void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress,
 }
 
 void handleGameOverState(Game *pGame) {
-  while (pGame->isRunning && pGame->state == GAME_OVER) {
-    pGame->state = START;
-  }
+  Text *pGameOverText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "GAME OVER LIL BRO", WINDOW_WIDTH/2, 150);
+  drawText(pGameOverText);
+  SDL_RenderPresent(pGame->pRenderer);
+  Text *pGameOverText2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "REPLAY?", WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
+  drawText(pGameOverText2);
 }
 
 void updateWithServerData(Game *pGame) {
@@ -632,6 +638,7 @@ void updateWithServerData(Game *pGame) {
   pGame->nrOfEnemies_1 = serverData.nrOfEnemies_1;
   pGame->nrOfEnemies_2 = serverData.nrOfEnemies_2;
   pGame->nrOfEnemies_3 = serverData.nrOfEnemies_3;
+  pGame->state = serverData.gState;
   pGame->serverData = serverData;
 }
 
@@ -705,96 +712,6 @@ ClientCommand getCurrentCommand(Game *pGame) {
 
     return STOP_SHIP;
 }
-
-
-/*void handleInput(SDL_Event* pEvent, Game* pGame) {
-    ClientData cData;
-    cData.cDPlayerId = pGame->shipId;  //cDPlayerId not really needed. Server finds out which klient it is based on IP-address
-    SDL_Scancode key = pEvent->key.keysym.scancode;
-    if (pEvent->type == SDL_KEYDOWN || pEvent->type == SDL_KEYUP) {
-      SDL_Scancode key = pEvent->key.keysym.scancode;
-      // Skjut med space ned och upp kanske fixar bug med skott som försvinner
-      switch(key) {
-          case SDL_SCANCODE_UP:
-          case SDL_SCANCODE_W:
-              pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
-              break;
-          case SDL_SCANCODE_DOWN:
-          case SDL_SCANCODE_S:
-              pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
-              break;
-          case SDL_SCANCODE_LEFT:
-          case SDL_SCANCODE_A:
-              pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
-              break;
-          case SDL_SCANCODE_RIGHT:
-          case SDL_SCANCODE_D:
-              pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
-              break;
-          case SDL_SCANCODE_SPACE:
-              if (pEvent->type == SDL_KEYDOWN) {
-                  pGame->spacePressed = true;
-              } else if (pEvent->type == SDL_KEYUP) {
-                  if (pGame->spacePressed) {
-                      pGame->isShooting = true;
-                      pGame->spacePressed = false;
-                  }
-              }
-              break;
-          default:
-              pGame->command = STOP_SHIP;
-              break;
-      }
-    }else if(pEvent->type == SDL_MOUSEBUTTONDOWN){
-        if(pEvent->button.button == SDL_BUTTON_LEFT){
-          //pGame->isShooting = true;
-          pGame->spacePressed = true;
-        }
-    }else if (pEvent->type == SDL_MOUSEBUTTONUP){
-      if(pEvent->button.button == SDL_BUTTON_LEFT && pGame->spacePressed){
-        pGame->isShooting = true;
-        pGame->spacePressed = false;
-      }
-    }
-}*/
-    // if (pEvent->type == SDL_KEYDOWN || pEvent->type == SDL_KEYUP) {
-    //     switch(key) {
-    //         case SDL_SCANCODE_UP:
-    //             pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
-    //             /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_UP : STOP_SHIP;
-    //             applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
-    //             break;
-    //         case SDL_SCANCODE_DOWN:
-    //             pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
-    //            /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_DOWN : STOP_SHIP;
-    //             applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
-    //             break;
-    //         case SDL_SCANCODE_LEFT:
-    //             pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
-    //             /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_LEFT : STOP_SHIP;
-    //             applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
-    //             break;
-    //         case SDL_SCANCODE_RIGHT:
-    //             pGame->command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
-    //             /*cData.command = pEvent->type == SDL_KEYDOWN ? MOVE_RIGHT : STOP_SHIP;
-    //             applyShipCommand(pGame->pShips[pGame->shipId], cData.command);*/
-    //             break;
-    //         case SDL_SCANCODE_SPACE:
-    //             //pGame->command = pEvent->type == SDL_KEYDOWN ? SHOOT : STOP_SHOOT;
-    //             pGame->isShooting = true;
-    //             //cData.command = SHOOT;
-    //             //cData.isShooting = true;
-    //             //handleCannonEvent(pGame->pCannons[pGame->shipId]);
-    //             break;
-    //         default:
-    //             pGame->command = STOP_SHIP;
-    //             //cData.command = STOP_SHIP;
-    //             break;
-    //     }
-    // }
-    /*memcpy(pGame->pPacket->data, &cData, sizeof(ClientData));
-    pGame->pPacket->len = sizeof(ClientData);
-    SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);*/
 
 MainMenuChoice handleMainMenuOptions(Game *pGame) {
   int x, y;
@@ -993,5 +910,5 @@ void drawMap(Game *pGame)
 void drawMapTransitionScreen(SDL_Renderer *renderer) { //assumes a rendercolor is chosen before
     SDL_RenderClear(renderer); //clear with said color
     SDL_RenderPresent(renderer); //draw whole screen
-    SDL_Delay(500);     // Delay for like half a sec
+    SDL_Delay(1000);     // Delay for like half a sec
 }

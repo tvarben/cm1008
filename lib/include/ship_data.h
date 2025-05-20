@@ -43,9 +43,9 @@ typedef enum {
 
 typedef struct {
   int cDPlayerId, bulletToRemove, map; // cDPlayerId not really needed. Server finds out which klient
-                  // it is based on IP-address
   ClientCommand command;
   bool isShooting, isAlive;
+  GameState state;
 } ClientData;
 
 typedef struct {
