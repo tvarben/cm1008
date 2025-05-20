@@ -506,9 +506,9 @@ void handleGameOverState(Game *pGame) {
           }
           else if (SDL_PointInRect(&mousePoint, pReplayRect) && event.type == SDL_MOUSEBUTTONDOWN)
           {
-              printf("I dunno how to reset the whole game for everyone yet.");  
+              printf("I dunno how to reset the whole game for everyone yet.");
+              closeGame(pGame);  
           }
-
       }
   }
 }
