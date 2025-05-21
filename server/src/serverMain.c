@@ -39,11 +39,9 @@ typedef struct {
     EnemyImage_2 *pEnemy_2Image;
     Enemy *pEnemies_1[MAX_ENEMIES];
     Enemy_2 *pEnemies_2[MAX_ENEMIES];
-
     EnemyImage_3 *pEnemy_3Image;
     Enemy_3 *pEnemies_3[1];
     int nrOfEnemies_3, nrOfEnemiesToSpawn_3;
-
     int map;
 } Game;
 
@@ -163,6 +161,7 @@ int initiate(Game *pGame) {
     pGame->nrOfEnemies_1 = 0;
     pGame->nrOfEnemies_2 = 0;
     pGame->nrOfEnemies_3 = 0;
+    pGame->serverData.win = false;
 
     pGame->isRunning = true;
     pGame->state = START;
@@ -386,6 +385,9 @@ void handleOngoingState(Game *pGame) {
                         damageEnemy_3(pGame->pEnemies_3[k], 1, k);
                         if (isEnemy_3Active(pGame->pEnemies_3[k]) == false) {
                             (pGame->killedEnemies)++;
+                            pGame->state = GAME_OVER;
+                            pGame->serverData.gState = pGame->state;
+                            pGame->serverData.win = true;
                         }
                         removeProjectile(i);
                         rectArray[i] = emptyRect;
