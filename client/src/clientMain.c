@@ -4,18 +4,18 @@
 #include <SDL2/SDL_net.h>
 #include <time.h>
 
-#include "bullet.h"
-#include "cannon.h"
-#include "enemy_1.h"
-#include "enemy_2.h"
-#include "enemy_3.h"
-#include "menu.h"
-#include "ship.h"
-#include "ship_data.h"
-#include "sound.h"
-#include "stars.h"
-#include "text.h"
-#include "tick.h"
+#include "../../lib/include/bullet.h"
+#include "../../lib/include/cannon.h"
+#include "../../lib/include/enemy_1.h"
+#include "../../lib/include/enemy_2.h"
+#include "../../lib/include/enemy_3.h"
+#include "../../lib/include/menu.h"
+#include "../../lib/include/ship.h"
+#include "../../lib/include/ship_data.h"
+#include "../../lib/include/sound.h"
+#include "../../lib/include/stars.h"
+#include "../../lib/include/text.h"
+#include "../../lib/include/tick.h"
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 #define ASTEROIDPATH "../lib/resources/Asteroid.png"
@@ -34,15 +34,16 @@ typedef struct {
     GameState state;
     Mix_Music *pMusic;
     TTF_Font *pFont, *pSmallFont;
-    Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pTimer, *pMultiPlayerText, *pMenuText,
-        *pGameOverText, *pWaitingText;
+    Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pTimer, *pMultiPlayerText,
+        *pMenuText, *pGameOverText, *pWaitingText;
     ClientCommand command, lastCommand;
     UDPsocket pSocket;
     IPaddress serverAddress;
     UDPpacket *pPacket;
     bool isRunning, isShooting, spacePressed;
     Stars *pStars;
-    SDL_Texture *pStartImage_1, *pStartImage_2, *pHardMapBackground, *pHardMapImage1, *pHardMapImage2;
+    SDL_Texture *pStartImage_1, *pStartImage_2, *pHardMapBackground, *pHardMapImage1,
+        *pHardMapImage2;
     Text *pCountdownText;
     EnemyImage *pEnemy_1Image;
     Enemy *pEnemies_1[MAX_ENEMIES];
@@ -120,32 +121,35 @@ int initiate(Game *pGame) {
         printf("SDLNet_Init: %s\n", SDLNet_GetError());
         return 0;
     }
-    pGame->pWindow =
-        SDL_CreateWindow("Client", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+    pGame->pWindow = SDL_CreateWindow("Client", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                      WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     if (!pGame->pWindow) {
         printf("Window Error: %s\n", SDL_GetError());
         return 0;
     }
-    pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1,
+                                          SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!pGame->pRenderer) {
         printf("Renderer Error: %s\n", SDL_GetError());
         return 0;
     }
-    pGame->pFont = TTF_OpenFont("../lib/resources/arial.ttf", 100);
-    pGame->pSmallFont = TTF_OpenFont("../lib/resources/arial.ttf", 50);
+    pGame->pFont = TTF_OpenFont("../lib/resources/16bitFontVermin.ttf", 150);
+    pGame->pSmallFont = TTF_OpenFont("../lib/resources/16bitFontVermin.ttf", 75);
     if (!pGame->pFont || !pGame->pSmallFont) {
         printf("Error: %s\n", TTF_GetError());
         return 0;
     }
-    pGame->pSinglePlayerText =
-        createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont, "Singleplayer", WINDOW_WIDTH / 2, 330);
-    pGame->pMultiPlayerText =
-        createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont, "Multiplayer", WINDOW_WIDTH / 2, 450);
-    pGame->pGameName =
-        createText(pGame->pRenderer, 255, 0, 0, pGame->pFont, "SpaceShooter", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 8);
-    pGame->pExitText = createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont, "Exit", WINDOW_WIDTH / 2, 570);
-    pGame->pWaitingText = createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont,
-                                     "Waiting for other players to join...", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    pGame->pSinglePlayerText = createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont,
+                                          "Singleplayer", WINDOW_WIDTH / 2, 330);
+    pGame->pMultiPlayerText = createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont,
+                                         "Multiplayer", WINDOW_WIDTH / 2, 450);
+    pGame->pGameName = createText(pGame->pRenderer, 255, 0, 0, pGame->pFont, "SpaceShooter",
+                                  WINDOW_WIDTH / 2, WINDOW_HEIGHT / 8);
+    pGame->pExitText =
+        createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont, "Exit", WINDOW_WIDTH / 2, 570);
+    pGame->pWaitingText =
+        createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont,
+                   "Waiting for other players to join...", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
     if (!(pGame->pPacket = SDLNet_AllocPacket(5000))) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 0;
@@ -328,8 +332,8 @@ void handleOngoingState(Game *pGame) {
             if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
                 return;
-            } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP || event.type == SDL_MOUSEBUTTONDOWN ||
-                       event.type == SDL_MOUSEBUTTONUP) {
+            } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP ||
+                       event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
                 handleInput(&event, pGame);
             }
         }
@@ -346,7 +350,8 @@ void handleOngoingState(Game *pGame) {
                                                      // ändrar
                                                      // command
                                                      // ||
-                ClientData ccData = {.command = pGame->command, .isShooting = pGame->isShooting, .map = pGame->map};
+                ClientData ccData = {
+                    .command = pGame->command, .isShooting = pGame->isShooting, .map = pGame->map};
                 memcpy(pGame->pPacket->data, &ccData, sizeof(ClientData));
                 pGame->pPacket->len = sizeof(ClientData);
                 SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
@@ -379,16 +384,19 @@ void handleOngoingState(Game *pGame) {
                 }
             }
             for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
-                pGame->pEnemies_1[i] = createEnemyOnClient(pGame->pEnemy_1Image, WINDOW_WIDTH, WINDOW_HEIGHT,
-                                                           pGame->serverData.enemies_1[i]);
+                pGame->pEnemies_1[i] =
+                    createEnemyOnClient(pGame->pEnemy_1Image, WINDOW_WIDTH, WINDOW_HEIGHT,
+                                        pGame->serverData.enemies_1[i]);
             }
             for (int i = 0; i < pGame->nrOfEnemies_2; i++) {
-                pGame->pEnemies_2[i] = createEnemy_2_OnClients(pGame->pEnemy_2Image, WINDOW_WIDTH, WINDOW_HEIGHT,
-                                                               pGame->serverData.enemies_2[i]);
+                pGame->pEnemies_2[i] =
+                    createEnemy_2_OnClients(pGame->pEnemy_2Image, WINDOW_WIDTH, WINDOW_HEIGHT,
+                                            pGame->serverData.enemies_2[i]);
             }
             for (int i = 0; i < pGame->nrOfEnemies_3; i++) {
-                pGame->pEnemies_3[i] = createEnemy_3_OnClients(pGame->pEnemy_3Image, WINDOW_WIDTH, WINDOW_HEIGHT,
-                                                               pGame->serverData.enemies_3[i]);
+                pGame->pEnemies_3[i] =
+                    createEnemy_3_OnClients(pGame->pEnemy_3Image, WINDOW_WIDTH, WINDOW_HEIGHT,
+                                            pGame->serverData.enemies_3[i]);
             }
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
             SDL_RenderClear(pGame->pRenderer);
@@ -471,7 +479,8 @@ void handleLobbyState(Game *pGame) {
 
                     // Attempt to resolve the
                     // entered IP address
-                    if (SDLNet_ResolveHost(&(pGame->serverAddress), enteredIPAddress, SERVER_PORT) == 0) {
+                    if (SDLNet_ResolveHost(&(pGame->serverAddress), enteredIPAddress,
+                                           SERVER_PORT) == 0) {
                         printf("Resolved IP: %s\n", enteredIPAddress);
                         if (!socketOpened) {
                             if (!(pGame->pSocket = SDLNet_UDP_Open(0))) {
@@ -589,19 +598,24 @@ void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress, bool textFieldFo
                                                        "ENTER",
                                                        color);
     if (promptSurface1) {
-        SDL_Texture *promptTexture1 = SDL_CreateTextureFromSurface(pGame->pRenderer, promptSurface1);
-        SDL_Rect promptRect1 = {box.x - 150, box.y - 150, promptSurface1->w, promptSurface1->h}; // Position above
-                                                                                                 // the input box
+        SDL_Texture *promptTexture1 =
+            SDL_CreateTextureFromSurface(pGame->pRenderer, promptSurface1);
+        SDL_Rect promptRect1 = {box.x - 150, box.y - 150, promptSurface1->w,
+                                promptSurface1->h}; // Position above
+                                                    // the input box
         SDL_RenderCopy(pGame->pRenderer, promptTexture1, NULL, &promptRect1);
         SDL_FreeSurface(promptSurface1);
         SDL_DestroyTexture(promptTexture1);
     }
 
-    SDL_Surface *promptSurface2 = TTF_RenderText_Solid(pGame->pSmallFont, "Press ESCAPE to go to the MAIN MENU", color);
+    SDL_Surface *promptSurface2 =
+        TTF_RenderText_Solid(pGame->pSmallFont, "Press ESCAPE to go to the MAIN MENU", color);
     if (promptSurface2) {
-        SDL_Texture *promptTexture2 = SDL_CreateTextureFromSurface(pGame->pRenderer, promptSurface2);
-        SDL_Rect promptRect2 = {box.x - 150, box.y + 150, promptSurface2->w, promptSurface2->h}; // Position below
-                                                                                                 // the first line
+        SDL_Texture *promptTexture2 =
+            SDL_CreateTextureFromSurface(pGame->pRenderer, promptSurface2);
+        SDL_Rect promptRect2 = {box.x - 150, box.y + 150, promptSurface2->w,
+                                promptSurface2->h}; // Position below
+                                                    // the first line
         SDL_RenderCopy(pGame->pRenderer, promptTexture2, NULL, &promptRect2);
         SDL_FreeSurface(promptSurface2);
         SDL_DestroyTexture(promptTexture2);
@@ -640,7 +654,8 @@ void updateWithServerData(Game *pGame) {
     pGame->shipId = serverData.sDPlayerId; ////// test  Kontrollera
                                            /// varför vi gör detta
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        if (pGame->pShips[i]) updateShipsWithServerData(pGame->pShips[i], &serverData.ships[i], i, pGame->shipId);
+        if (pGame->pShips[i])
+            updateShipsWithServerData(pGame->pShips[i], &serverData.ships[i], i, pGame->shipId);
     }
     pGame->nrOfEnemies_1 = serverData.nrOfEnemies_1;
     pGame->nrOfEnemies_2 = serverData.nrOfEnemies_2;
@@ -699,7 +714,8 @@ void handleInput(SDL_Event *pEvent, Game *pGame) {
         }
     } else if (pEvent->type == SDL_MOUSEBUTTONDOWN && pEvent->button.button == SDL_BUTTON_LEFT) {
         pGame->spacePressed = true;
-    } else if (pEvent->type == SDL_MOUSEBUTTONUP && pEvent->button.button == SDL_BUTTON_LEFT && pGame->spacePressed) {
+    } else if (pEvent->type == SDL_MOUSEBUTTONUP && pEvent->button.button == SDL_BUTTON_LEFT &&
+               pGame->spacePressed) {
         pGame->isShooting = true;
         pGame->spacePressed = false;
     }
@@ -868,8 +884,8 @@ void showCountdown(Game *pGame) {
              "%d players have joined. Starting "
              "game in...",
              MAX_PLAYERS);
-    Text *pJoinText =
-        createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont, joinMsg, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 - 100);
+    Text *pJoinText = createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont, joinMsg,
+                                 WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 - 100);
     Uint32 lastTick = SDL_GetTicks();
 
     while (countdown > 0 && pGame->isRunning) {
@@ -887,8 +903,8 @@ void showCountdown(Game *pGame) {
 
             snprintf(buffer, sizeof(buffer), "%d", countdown);
             if (pGame->pCountdownText) destroyText(pGame->pCountdownText);
-            pGame->pCountdownText =
-                createText(pGame->pRenderer, 255, 255, 255, pGame->pFont, buffer, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+            pGame->pCountdownText = createText(pGame->pRenderer, 255, 255, 255, pGame->pFont,
+                                               buffer, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 
             SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
             SDL_RenderClear(pGame->pRenderer);
@@ -968,8 +984,8 @@ void updateGameTime(Game *pGame) {
         static char timerString[30];
         sprintf(timerString, "%d", getTime(pGame));
         if (pGame->pSmallFont) {
-            pGame->pTimer =
-                createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, timerString, WINDOW_WIDTH / 2, 50);
+            pGame->pTimer = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
+                                       timerString, WINDOW_WIDTH / 2, 50);
         }
     }
 }
