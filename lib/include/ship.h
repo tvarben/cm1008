@@ -7,20 +7,18 @@
 
 typedef struct ship Ship;
 
-Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth,
-                 int windowHeight);
+Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth, int windowHeight);
 void updateShipOnClients(Ship *pShip, int shipId, int myShipId); // NEW
 void updateShipOnServer(Ship *pShip);                            // NEW
 void stayInWindow(Ship *pShip);
 void drawShip(Ship *s);
-void resetShip(Ship *s);
+void resetShip(Ship *s, int playerId);
 // void handleShipEvent(Ship* s, SDL_Event* event);
 void updateShipVelocity(Ship *s);
 void destroyShip(Ship *s);
 void applyShipCommand(Ship *s, ClientCommand c);
 void getShipDataPackage(Ship *pShip, ShipData *pShipData);
-void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId,
-                               int myShipId);
+void updateShipsWithServerData(Ship *pShip, ShipData *pShipData, int shipId, int myShipId);
 // void updateShipsWithServerData(Ship *pShips[MAX_PLAYERS], ShipData
 // pShipData[MAX_PLAYERS]);
 int getShipX(Ship *pShip);
