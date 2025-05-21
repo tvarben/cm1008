@@ -1,5 +1,5 @@
-#include "enemy_1.h"
-#include "ship_data.h"
+#include "../include/enemy_1.h"
+#include "../include/ship_data.h"
 #include <SDL2/SDL_image.h>
 #include <stdbool.h>
 #include <stdio.h>
