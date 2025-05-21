@@ -143,7 +143,7 @@ int initiate(Game *pGame) {
                                           "Singleplayer", WINDOW_WIDTH / 2, 330);
     pGame->pMultiPlayerText = createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont,
                                          "Multiplayer", WINDOW_WIDTH / 2, 450);
-    pGame->pGameName = createText(pGame->pRenderer, 255, 0, 0, pGame->pFont, "SpaceShooter",
+    pGame->pGameName = createText(pGame->pRenderer, 255, 0, 0, pGame->pFont, "Solar Defence",
                                   WINDOW_WIDTH / 2, WINDOW_HEIGHT / 8);
     pGame->pExitText =
         createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont, "Exit", WINDOW_WIDTH / 2, 570);
