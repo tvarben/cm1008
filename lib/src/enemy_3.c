@@ -79,7 +79,7 @@ static void getStartValues_3(Enemy_3 *pEnemy3) {
     pEnemy3->rectHitbox.w = pEnemy3->rect.w - 50;
     pEnemy3->rectHitbox.h = pEnemy3->rect.h - 50;
     pEnemy3->damage = 2;
-    pEnemy3->health = 100; // changed health
+    pEnemy3->health = 100; // Change health
     float speed = 10;
     if (1) {
         pEnemy3->x = pEnemy3->window_width - pEnemy3->rect.w; // spawn at right

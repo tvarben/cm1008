@@ -40,7 +40,7 @@ typedef struct {
     UDPsocket pSocket;
     IPaddress serverAddress;
     UDPpacket *pPacket;
-    bool isRunning, isShooting, spacePressed;
+    bool isRunning, isShooting, spacePressed, win;
     Stars *pStars;
     SDL_Texture *pStartImage_1, *pStartImage_2, *pHardMapBackground, *pHardMapImage1,
         *pHardMapImage2;
@@ -607,32 +607,38 @@ void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress, bool textFieldFo
 void handleGameOverState(Game *pGame) {
     Text *pGameOverText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "GAME OVER",
                                      WINDOW_WIDTH / 2, 150);
-    Text *pGameOverText2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
-                                      "MAIN MENU", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
-    SDL_RenderPresent(pGame->pRenderer);
+    Text *pGameOverWinText =
+        createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "YOU WON!", WINDOW_WIDTH / 2, 150);
 
-    const SDL_Rect *pReplayRect =
-        getTextRect(pGameOverText2); // Hämta position för rect för Start-texten
+    Text *pGameOverMainMenuText = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
+                                             "MAIN MENU", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    SDL_RenderPresent(pGame->pRenderer);
+    const SDL_Rect *pGameOverMainMenuRect =
+        getTextRect(pGameOverMainMenuText); // Hämta position för rect för Start-texten
     SDL_Event event;
     while (pGame->isRunning) {
         int x, y;
         SDL_GetMouseState(&x, &y);
         SDL_Point mousePoint = {x, y}; // Kolla position för musen
-        if (SDL_PointInRect(&mousePoint, pReplayRect)) {
-            setTextColor(pGameOverText2, 255, 100, 100, pGame->pSmallFont, "MAIN MENU");
+        if (SDL_PointInRect(&mousePoint, pGameOverMainMenuRect)) {
+            setTextColor(pGameOverMainMenuText, 255, 100, 100, pGame->pSmallFont, "MAIN MENU");
         } else {
-            setTextColor(pGameOverText2, 238, 168, 65, pGame->pSmallFont, "MAIN MENU");
+            setTextColor(pGameOverMainMenuText, 238, 168, 65, pGame->pSmallFont, "MAIN MENU");
         }
 
         SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255); // Clear with black
         SDL_RenderClear(pGame->pRenderer);
-        drawText(pGameOverText);
-        drawText(pGameOverText2);
+        if (pGame->win) {
+            drawText(pGameOverWinText);
+        } else {
+            drawText(pGameOverText);
+        }
+        drawText(pGameOverMainMenuText);
         SDL_RenderPresent(pGame->pRenderer);
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
-            } else if (SDL_PointInRect(&mousePoint, pReplayRect) &&
+            } else if (SDL_PointInRect(&mousePoint, pGameOverMainMenuRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN) {
                 printf("I dunno how to reset the whole game for everyone yet.");
                 // closeGame(pGame);
@@ -660,6 +666,7 @@ void updateWithServerData(Game *pGame) {
     pGame->nrOfEnemies_3 = serverData.nrOfEnemies_3;
     pGame->state = serverData.gState;
     pGame->serverData = serverData;
+    pGame->win = serverData.win;
 }
 
 bool connectToServer(Game *pGame) {
@@ -919,7 +926,7 @@ void drawMapTransitionScreen(SDL_Renderer *renderer,
     drawText(pChangeMapText);
     drawText(pChangeMapText2);
     SDL_RenderPresent(renderer); // draw whole screen
-    SDL_Delay(4000);             // Delay for like a sec
+    SDL_Delay(3000);             // Delay for like a sec
 }
 
 void resetGameState(Game *pGame) {

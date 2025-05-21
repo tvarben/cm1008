@@ -71,9 +71,9 @@ typedef struct {
 
 typedef struct {
   GameState gState;
+  bool win;
   int sDPlayerId;
   ShipData ships[MAX_PLAYERS];
-  // bool isShooting;
   int nrOfEnemies_1, nrOfEnemiesToSpawn_1;
   int nrOfEnemies_2, nrOfEnemiesToSpawn_2;
   int nrOfEnemies_3, nrOfEnemiesToSpawn_3;
