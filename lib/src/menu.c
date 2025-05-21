@@ -1,9 +1,6 @@
 #include "../include/ship.h"
 #include "../include/ship_data.h"
 #include "../include/text.h"
-#include "ship.h"
-#include "ship_data.h"
-#include "text.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include <stdbool.h>
