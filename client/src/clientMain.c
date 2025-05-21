@@ -85,6 +85,7 @@ int getTime(Game *pGame);
 void drawMap(Game *pGame);
 void drawMapTransitionScreen(SDL_Renderer *renderer, TTF_Font *pFont);
 ClientCommand getCurrentCommand(Game *pGame);
+void resetGameState(Game *pGame);
 
 int main(int argc, char **argv) {
     Game game = {0};
@@ -606,8 +607,8 @@ void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress, bool textFieldFo
 void handleGameOverState(Game *pGame) {
     Text *pGameOverText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "GAME OVER",
                                      WINDOW_WIDTH / 2, 150);
-    Text *pGameOverText2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Exit",
-                                      WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    Text *pGameOverText2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
+                                      "MAIN MENU", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
     SDL_RenderPresent(pGame->pRenderer);
 
     const SDL_Rect *pReplayRect =
@@ -618,9 +619,9 @@ void handleGameOverState(Game *pGame) {
         SDL_GetMouseState(&x, &y);
         SDL_Point mousePoint = {x, y}; // Kolla position för musen
         if (SDL_PointInRect(&mousePoint, pReplayRect)) {
-            setTextColor(pGameOverText2, 255, 100, 100, pGame->pFont, "Exit");
+            setTextColor(pGameOverText2, 255, 100, 100, pGame->pSmallFont, "MAIN MENU");
         } else {
-            setTextColor(pGameOverText2, 238, 168, 65, pGame->pFont, "Exit");
+            setTextColor(pGameOverText2, 238, 168, 65, pGame->pSmallFont, "MAIN MENU");
         }
 
         SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255); // Clear with black
@@ -634,7 +635,14 @@ void handleGameOverState(Game *pGame) {
             } else if (SDL_PointInRect(&mousePoint, pReplayRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN) {
                 printf("I dunno how to reset the whole game for everyone yet.");
-                closeGame(pGame);
+                // closeGame(pGame);
+                memset(pGame->keyHeld, 0,
+                       sizeof(pGame->keyHeld)); // optional: zero client key state too
+                pGame->command = STOP_SHIP;
+                pGame->lastCommand = STOP_SHIP;
+                resetGameState(pGame);
+                pGame->state = START;
+                return;
             }
         }
     }
@@ -823,9 +831,18 @@ void closeGame(Game *pGame) {
     if (pGame->pMultiPlayerText) destroyText(pGame->pMultiPlayerText);
     if (pGame->pExitText) destroyText(pGame->pExitText);
     if (pGame->pWaitingText) destroyText(pGame->pWaitingText);
+    if (pGame->pPauseText) destroyText(pGame->pPauseText);
+    if (pGame->pTimer) destroyText(pGame->pTimer);
+    if (pGame->pMenuText) destroyText(pGame->pMenuText);
+    if (pGame->pGameOverText) destroyText(pGame->pGameOverText);
+    if (pGame->pCountdownText) destroyText(pGame->pCountdownText);
+
     if (pGame->pStars) destroyStars(pGame->pStars);
     if (pGame->pStartImage_1) SDL_DestroyTexture(pGame->pStartImage_1);
     if (pGame->pStartImage_2) SDL_DestroyTexture(pGame->pStartImage_2);
+    if (pGame->pHardMapBackground) SDL_DestroyTexture(pGame->pHardMapBackground);
+    if (pGame->pHardMapImage1) SDL_DestroyTexture(pGame->pHardMapImage1);
+    if (pGame->pHardMapImage2) SDL_DestroyTexture(pGame->pHardMapImage2);
 
     if (pGame->pFont) TTF_CloseFont(pGame->pFont);
     if (pGame->pSmallFont) TTF_CloseFont(pGame->pSmallFont);
@@ -903,4 +920,32 @@ void drawMapTransitionScreen(SDL_Renderer *renderer,
     drawText(pChangeMapText2);
     SDL_RenderPresent(renderer); // draw whole screen
     SDL_Delay(4000);             // Delay for like a sec
+}
+
+void resetGameState(Game *pGame) {
+    // Reset player ships and cannons
+    for (int i = 0; i < MAX_PLAYERS; i++)
+        if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
+    for (int i = 0; i < MAX_PLAYERS; i++)                          //
+        if (pGame->pCannons[i]) destroyCannon(pGame->pCannons[i]); //
+    // if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        if (pGame->pShips[i]) {
+            pGame->pShips[i] = createShip(i, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+            applyShipCommand(pGame->pShips[i], STOP_SHIP);
+            resetHealth(pGame->pShips[i]);
+        }
+        if (pGame->pCannons[i]) {
+            pGame->pCannons[i] = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+            resetCannon(pGame->pCannons[i]);
+            resetCannonHealth(pGame->pCannons[i]);
+        }
+        if (!pGame->pShips[i] || !pGame->pCannons[i]) {
+            printf("Error: %s\n", SDL_GetError());
+            return;
+        }
+    }
+    // Reset counts and state
+    pGame->map = 1;
+    resetAllBullets();
 }
