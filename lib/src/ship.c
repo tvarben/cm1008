@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SPEED 3
+#define SPEED 5
 
 struct ship {
     float x, y, vx, vy, xStart, yStart, targetX,
@@ -197,10 +197,15 @@ void drawShip(Ship *pShip) {
     }
 }
 
-void resetShip(Ship *pShip) {
+void resetShip(Ship *pShip, int playerId) {
+    pShip->isAlive = true;
     pShip->vx = 0;
     pShip->vy = 0;
     pShip->keyRight = pShip->keyLeft = pShip->keyDown = pShip->keyUp = false;
+    pShip->shipRect.w /= 4;
+    pShip->shipRect.h /= 4;
+    pShip->xStart = pShip->x = pShip->shipRect.x = WINDOW_HEIGHT / 2 - pShip->shipRect.h / 2;
+    pShip->yStart = pShip->y = pShip->shipRect.y = (playerId * 100) + 50;
 }
 
 void destroyShip(Ship *pShip) {

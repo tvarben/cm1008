@@ -69,6 +69,7 @@ void updateBoss(Game *pGame);
 void printPacketsData(Game *pGame);
 bool arePlayersDead(Game *pGame);
 void handleGameOverState(Game *pGame);
+void resetGameState(Game *pGame);
 
 int main(int argc, char **argv) {
     Game game = {0};
@@ -170,7 +171,6 @@ int initiate(Game *pGame) {
 }
 
 void run(Game *pGame) {
-    printf("Server is listening on port %hu...\n", SERVER_PORT);
     pGame->nrOfEnemiesToSpawn_1 = WAVE_1_EASY_MAP;
     pGame->nrOfEnemiesToSpawn_2 = WAVE_1_EASY_MAP;
     pGame->nrOfEnemiesToSpawn_3 = NROFBOSSES;
@@ -407,6 +407,7 @@ void handleOngoingState(Game *pGame) {
 
 void handleLobbyState(Game *pGame) {
     SDL_Event event;
+    printf("Server is listening on port %hu...\n", SERVER_PORT);
     while (pGame->isRunning && pGame->state == LOBBY) {
         if (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -465,35 +466,37 @@ void addClient(Game *pGame) {
 void handleGameOverState(Game *pGame) {
     Text *pGameOverText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
                                      "GAME OVER LIL BRO", WINDOW_WIDTH / 2, 150);
-    Text *pGameOverText2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Exit",
-                                      WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    Text *pRestartServer = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
+                                      "RESTART SERVER", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
     SDL_RenderPresent(pGame->pRenderer);
 
-    const SDL_Rect *pReplayRect =
-        getTextRect(pGameOverText2); // Hämta position för rect för Start-texten
+    const SDL_Rect *pRestartRect =
+        getTextRect(pRestartServer); // Hämta position för rect för Start-texten
     SDL_Event event;
     while (pGame->isRunning) {
         int x, y;
         SDL_GetMouseState(&x, &y);
         SDL_Point mousePoint = {x, y}; // Kolla position för musen
-        if (SDL_PointInRect(&mousePoint, pReplayRect)) {
-            setTextColor(pGameOverText2, 255, 100, 100, pGame->pFont, "Exit");
+        if (SDL_PointInRect(&mousePoint, pRestartRect)) {
+            setTextColor(pRestartServer, 255, 100, 100, pGame->pFont, "RESTART SERVER");
         } else {
-            setTextColor(pGameOverText2, 238, 168, 65, pGame->pFont, "Exit");
+            setTextColor(pRestartServer, 238, 168, 65, pGame->pFont, "RESTART SERVER");
         }
 
         SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255); // Clear with black
         SDL_RenderClear(pGame->pRenderer);
         drawText(pGameOverText);
-        drawText(pGameOverText2);
+        drawText(pRestartServer);
         SDL_RenderPresent(pGame->pRenderer);
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
-            } else if (SDL_PointInRect(&mousePoint, pReplayRect) &&
+            } else if (SDL_PointInRect(&mousePoint, pRestartRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN) {
-                printf("I dunno how to reset the whole game for everyone yet.");
-                closeGame(pGame);
+                // closeGame(pGame);
+                resetGameState(pGame);
+                pGame->state = LOBBY;
+                run(pGame);
             }
         }
     }
@@ -581,6 +584,8 @@ int getClientIndex(Game *pGame, IPaddress *clientAddr) {
 void closeGame(Game *pGame) {
     for (int i = 0; i < MAX_PLAYERS; i++)
         if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
+    for (int i = 0; i < MAX_PLAYERS; i++)                          //
+        if (pGame->pCannons[i]) destroyCannon(pGame->pCannons[i]); //
     if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
     printf("Renderer destroyed\n");
     if (pGame->pWindow) SDL_DestroyWindow(pGame->pWindow);
@@ -695,4 +700,64 @@ bool arePlayersDead(Game *pGame) {
     }
     printf("ALL PLAYERS DEAD! \n");
     return true;
+}
+
+void resetGameState(Game *pGame) {
+    // Reset player ships and cannons
+    for (int i = 0; i < MAX_PLAYERS; i++)
+        if (pGame->pShips[i]) destroyShip(pGame->pShips[i]);
+    for (int i = 0; i < MAX_PLAYERS; i++)                          //
+        if (pGame->pCannons[i]) destroyCannon(pGame->pCannons[i]); //
+    // if (pGame->pRenderer) SDL_DestroyRenderer(pGame->pRenderer);
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        if (pGame->pShips[i]) {
+            pGame->pShips[i] = createShip(i, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+            applyShipCommand(pGame->pShips[i], STOP_SHIP);
+            resetHealth(pGame->pShips[i]);
+        }
+        if (pGame->pCannons[i]) {
+            pGame->pCannons[i] = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+            resetCannon(pGame->pCannons[i]);
+            resetCannonHealth(pGame->pCannons[i]);
+        }
+        if (!pGame->pShips[i] || !pGame->pCannons[i]) {
+            printf("Error: %s\n", SDL_GetError());
+            return;
+        }
+    }
+
+    // Clear enemies
+    for (int i = 0; i < MAX_ENEMIES; i++) {
+        if (pGame->pEnemies_1[i]) {
+            destroyEnemy_1(pGame->pEnemies_1[i]);
+            pGame->pEnemies_1[i] = NULL;
+        }
+        if (pGame->pEnemies_2[i]) {
+            destroyEnemy_2(pGame->pEnemies_2[i]);
+            pGame->pEnemies_2[i] = NULL;
+        }
+    }
+    for (int i = 0; i < NROFBOSSES; i++) {
+        if (pGame->pEnemies_3[i]) {
+            destroyEnemy_3(pGame->pEnemies_3[i]);
+            pGame->pEnemies_3[i] = NULL;
+        }
+    }
+
+    // Reset counts and state
+    pGame->nrOfEnemies_1 = 0;
+    pGame->nrOfEnemiesToSpawn_1 = WAVE_1_EASY_MAP;
+    pGame->nrOfEnemies_2 = 0;
+    pGame->nrOfEnemiesToSpawn_2 = WAVE_1_EASY_MAP;
+    pGame->nrOfEnemies_3 = 0;
+    pGame->nrOfEnemiesToSpawn_3 = NROFBOSSES;
+    pGame->nrOfClients = 0;
+    pGame->killedEnemies = 0;
+    pGame->map = 1;
+
+    // Clear clients array
+    memset(pGame->clients, 0, sizeof(pGame->clients));
+
+    // Reset projectiles
+    resetAllBullets();
 }
