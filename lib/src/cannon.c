@@ -10,85 +10,82 @@
 #include <stdlib.h>
 
 struct Cannon {
-  int dy, dx;
-  int windowWidth, windowHeight, health;
-  SDL_Renderer *renderer;
-  SDL_Texture *texture;
-  SDL_Rect rect;
-  bool lastFacedLeft;
-  bool spacebar, moveLeftQ, moveRightE, moveDownN; // keys decide direction of bullet
+    int dy, dx;
+    int windowWidth, windowHeight, health;
+    SDL_Renderer *renderer;
+    SDL_Texture *texture;
+    SDL_Rect rect;
+    bool lastFacedLeft;
+    bool spacebar, moveLeftQ, moveRightE, moveDownN; // keys decide direction of bullet
 };
 
-Cannon *createCannon(SDL_Renderer *renderer, int windowWidth,
-                     int windowHeight) {
-  Cannon *c = malloc(sizeof(Cannon));
-  if (!c)
-    return NULL;
+Cannon *createCannon(SDL_Renderer *renderer, int windowWidth, int windowHeight) {
+    Cannon *c = malloc(sizeof(Cannon));
+    if (!c) return NULL;
 
-  c->windowWidth = windowWidth;
-  c->windowHeight = windowHeight;
-  c->renderer = renderer;
-  c->dy = 0; // direction cannon shoots when press space at start of the game
-  c->dx = 400;
-  c->lastFacedLeft = false;
-  c->health = 2;
-  SDL_Surface *surface = IMG_Load("../lib/resources/ship_cannon.png");
-  if (!surface) {
-    printf("Error loading Cannon.png: %s\n", IMG_GetError());
-    free(c);
-    return NULL;
-  }
+    c->windowWidth = windowWidth;
+    c->windowHeight = windowHeight;
+    c->renderer = renderer;
+    c->dy = 0; // direction cannon shoots when press space at start of the game
+    c->dx = 400;
+    c->lastFacedLeft = false;
+    c->health = 2;
+    SDL_Surface *surface = IMG_Load("../lib/resources/ship_cannon.png");
+    if (!surface) {
+        printf("Error loading Cannon.png: %s\n", IMG_GetError());
+        free(c);
+        return NULL;
+    }
 
-  c->texture = SDL_CreateTextureFromSurface(renderer, surface);
-  SDL_FreeSurface(surface);
+    c->texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
 
-  if (!c->texture) {
-    printf("Error creating texture: %s\n", SDL_GetError());
-    free(c);
-    return NULL;
-  }
+    if (!c->texture) {
+        printf("Error creating texture: %s\n", SDL_GetError());
+        free(c);
+        return NULL;
+    }
 
-  SDL_QueryTexture(c->texture, NULL, NULL, &c->rect.w, &c->rect.h);
-  c->rect.w /= 2; // width of image
-  c->rect.h /= 2; // height of image
+    SDL_QueryTexture(c->texture, NULL, NULL, &c->rect.w, &c->rect.h);
+    c->rect.w /= 2; // width of image
+    c->rect.h /= 2; // height of image
 
-  /*c->x = x - c->rect.w / 2;*/
-  /*c->y = y - c->rect.h / 2;*/
-  return c;
+    /*c->x = x - c->rect.w / 2;*/
+    /*c->y = y - c->rect.h / 2;*/
+    return c;
 }
 
 void drawCannon(Cannon *c) {
-  SDL_RendererFlip flip = c->lastFacedLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-  if (c->health <= 0) {
-    return;
-  }
-  SDL_RenderCopyEx(c->renderer, c->texture, NULL, &c->rect, 0, NULL, flip);
+    SDL_RendererFlip flip = c->lastFacedLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+    if (c->health <= 0) {
+        return;
+    }
+    SDL_RenderCopyEx(c->renderer, c->texture, NULL, &c->rect, 0, NULL, flip);
 }
 
 void destroyCannon(Cannon *c) {
-  if (c) {
-    if (c->texture)
-      SDL_DestroyTexture(c->texture);
-    free(c);
-  }
+    if (c) {
+        if (c->texture) SDL_DestroyTexture(c->texture);
+        free(c);
+    }
 }
 
 void updateCannon(Cannon *pCannon, Ship *pShip) {
-  double cannonLocationX = 28;
-  double cannonLocationY = 15;
+    double cannonLocationX = 28;
+    double cannonLocationY = 15;
 
-  pCannon->rect.y = getShipY(pShip) + cannonLocationY;
-  pCannon->rect.x = getShipX(pShip) + cannonLocationX;
+    pCannon->rect.y = getShipY(pShip) + cannonLocationY;
+    pCannon->rect.x = getShipX(pShip) + cannonLocationX;
 
-  if (isLeft(pShip)) {
-    pCannon->lastFacedLeft = true;
-    pCannon->dx = -100;
-    pCannon->dy = 0;
-  } else {
-    pCannon->lastFacedLeft = false;
-    pCannon->dx = 100;
-    pCannon->dy = 0;
-  }
+    if (isLeft(pShip)) {
+        pCannon->lastFacedLeft = true;
+        pCannon->dx = -100;
+        pCannon->dy = 0;
+    } else {
+        pCannon->lastFacedLeft = false;
+        pCannon->dx = 100;
+        pCannon->dy = 0;
+    }
 }
 
 void handleCannonEvent(Cannon *cannon) {
@@ -100,14 +97,14 @@ void handleCannonEvent(Cannon *cannon) {
 }
 
 void resetCannon(Cannon *c) {
-  c->spacebar = false;
-  c->moveDownN = false;
-  c->moveLeftQ = false;
-  c->moveRightE = false;
+    c->spacebar = false;
+    c->moveDownN = false;
+    c->moveLeftQ = false;
+    c->moveRightE = false;
 }
-void damageCannon(Cannon *pCannon, int damage){
+void damageCannon(Cannon *pCannon, int damage) {
     pCannon->health -= damage;
 }
-void resetCannonHealth(Cannon *pCannon){
+void resetCannonHealth(Cannon *pCannon) {
     pCannon->health = 2;
 }
