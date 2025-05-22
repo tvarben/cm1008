@@ -625,11 +625,14 @@ void handleGameOverState(Game *pGame) {
             } else if (SDL_PointInRect(&mousePoint, pRestartRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN) {
                 printf("I dunno how to reset the whole game for everyone yet.");
-                pGame->isRunning = false;
                 // closeGame(pGame);
+                printf("is running false \n");
                 resetGameState(pGame);
-                pGame->state = LOBBY;
+                pGame->state = START;
+                pGame->serverData.gState = pGame->state;
+                printf("state change \n");
                 run(pGame);
+                printf("run again \n ");
             }
         }
     }
@@ -881,14 +884,16 @@ void resetGameState(Game *pGame) {
     pGame->nrOfEnemies_3 = 0;
     pGame->nrOfEnemiesToSpawn_3 = NROFBOSSES;
     pGame->nrOfClients = 0;
+    pGame->NrOfChosenPlayers = 0;
     pGame->killedEnemies = 0;
     pGame->map = 1;
-
+    printf("here \n");
     // Clear clients array
     memset(pGame->clients, 0, sizeof(pGame->clients));
 
     // Reset projectiles
     resetAllBullets();
+    printf("here \n");
 }
 
 int getTime(Game *pGame) {
