@@ -13,75 +13,76 @@
 #define NROFBOSSES 1
 
 typedef enum {
-  START,
-  ONGOING,
-  GAME_OVER,
-  LOBBY,
+    START,
+    ONGOING,
+    GAME_OVER,
+    LOBBY,
 } GameState;
 
 typedef enum {
-  MOVE_UP,
-  MOVE_DOWN,
-  MOVE_LEFT,
-  MOVE_RIGHT,
-  MOVE_UP_LEFT,
-  MOVE_UP_RIGHT,
-  MOVE_DOWN_LEFT,
-  MOVE_DOWN_RIGHT,
-  STOP_SHIP,
-  SHOOT,
-  STOP_SHOOT,
-  QUIT
+    MOVE_UP,
+    MOVE_DOWN,
+    MOVE_LEFT,
+    MOVE_RIGHT,
+    MOVE_UP_LEFT,
+    MOVE_UP_RIGHT,
+    MOVE_DOWN_LEFT,
+    MOVE_DOWN_RIGHT,
+    STOP_SHIP,
+    SHOOT,
+    STOP_SHOOT,
+    QUIT
 } ClientCommand;
 
 typedef enum {
-  MAINMENU_NONE,
-  MAINMENU_SINGLEPLAYER,
-  MAINMENU_MULTIPLAYER,
-  MAINMENU_EXIT
+    MAINMENU_NONE,
+    MAINMENU_SINGLEPLAYER,
+    MAINMENU_MULTIPLAYER,
+    MAINMENU_EXIT
 } MainMenuChoice;
 
 typedef struct {
-  int cDPlayerId, bulletToRemove, map; // cDPlayerId not really needed. Server finds out which klient
-  ClientCommand command;
-  bool isShooting, isAlive;
-  GameState state;
+    int cDPlayerId, bulletToRemove,
+        map; // cDPlayerId not really needed. Server finds out which klient
+    ClientCommand command;
+    bool isShooting, isAlive;
+    GameState state;
   int nrOfPlayers; //decided by server
 } ClientData;
 
 typedef struct {
-  float x, y, vx, vy;
-  int health, bulletToRemove; // test
-  bool facingLeft, isShooting, isAlive;
+    float x, y, vx, vy;
+    int health, bulletToRemove; // test
+    bool facingLeft, isShooting, isAlive;
 } ShipData;
 
 typedef struct {
-  float x, y;
-  bool active;
+    float x, y;
+    bool active;
 } Enemy_1_Data;
 
 typedef struct {
-  float x, y;
-  bool active;
+    float x, y;
+    bool active;
 } Enemy_2_Data;
 
 typedef struct {
-  float x, y;
-  bool active;
+    float x, y;
+    bool active;
 } Enemy_3_Data;
 
 typedef struct {
-  GameState gState;
-  bool win;
-  int sDPlayerId;
-  ShipData ships[MAX_PLAYERS];
-  int nrOfEnemies_1, nrOfEnemiesToSpawn_1;
-  int nrOfEnemies_2, nrOfEnemiesToSpawn_2;
-  int nrOfEnemies_3, nrOfEnemiesToSpawn_3;
-  Enemy_1_Data enemies_1[MAX_ENEMIES];
-  Enemy_2_Data enemies_2[MAX_ENEMIES];
-  Enemy_3_Data enemies_3[MAX_ENEMIES];
-  int map;
+    GameState gState;
+    bool win;
+    int sDPlayerId;
+    ShipData ships[MAX_PLAYERS];
+    int nrOfEnemies_1, nrOfEnemiesToSpawn_1;
+    int nrOfEnemies_2, nrOfEnemiesToSpawn_2;
+    int nrOfEnemies_3, nrOfEnemiesToSpawn_3;
+    Enemy_1_Data enemies_1[MAX_ENEMIES];
+    Enemy_2_Data enemies_2[MAX_ENEMIES];
+    Enemy_3_Data enemies_3[MAX_ENEMIES];
+    int map;
   int nrOfPlayers;
 } ServerData;
 
