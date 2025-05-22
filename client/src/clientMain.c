@@ -132,8 +132,8 @@ int initiate(Game *pGame) {
         printf("Renderer Error: %s\n", SDL_GetError());
         return 0;
     }
-    pGame->pFont = TTF_OpenFont("../lib/resources/arial.ttf", 100);
-    pGame->pSmallFont = TTF_OpenFont("../lib/resources/arial.ttf", 50);
+    pGame->pFont = TTF_OpenFont("../lib/resources/vermin.ttf", 100);
+    pGame->pSmallFont = TTF_OpenFont("../lib/resources/vermin.ttf", 50);
     if (!pGame->pFont || !pGame->pSmallFont) {
         printf("Error: %s\n", TTF_GetError());
         return 0;
