@@ -27,7 +27,7 @@ typedef struct {
     GameState state;
     Mix_Music *pMusic;
     TTF_Font *pFont;
-    Text *pStartText, *pGameName, *pExitText, *pLobbyText;
+    Text *pStartText, *pGameName, *pExitText, *pLobbyText, *pTimer;
     ClientCommand command;
     IPaddress clients[MAX_PLAYERS];
     UDPsocket pSocket;
@@ -46,6 +46,8 @@ typedef struct {
     int map;
     bool showModifierMenu;
     int NrOfChosenPlayers;
+    int startTime;
+    int gameTime;
 } Game;
 
 int initiate(Game *pGame);
@@ -71,6 +73,8 @@ void printPacketsData(Game *pGame);
 bool arePlayersDead(Game *pGame);
 void handleGameOverState(Game *pGame);
 void resetGameState(Game *pGame);
+void updateGameTime(Game *pGame);
+int getTime(Game *pGame);
 
 int main(int argc, char **argv) {
     Game game = {0};
@@ -372,6 +376,8 @@ void handleOngoingState(Game *pGame) {
     pGame->nrOfEnemies_2 = 0;
     SDL_Rect emptyRect = {0, 0, 0, 0}, rectArray[MAX_PROJECTILES] = {0, 0, 0, 0};
     pGame->map = 1;
+    pGame->startTime = SDL_GetTicks64();
+    pGame->gameTime = -2; // i dont know why
     if (pGame->nrOfEnemies_3 == 0) {
         spawnBoss(pGame);
     }
@@ -413,7 +419,11 @@ void handleOngoingState(Game *pGame) {
                     updateCannon(pGame->pCannons[i], pGame->pShips[i]);
                 }
             }
-
+            updateGameTime(pGame);
+            if (pGame->gameTime == 30)
+            {
+                SDL_Delay(1000);
+            }
             if (pGame->map == 2) {
                 for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
                     damageEnemy(pGame->pEnemies_1[i], 100, i);
@@ -435,6 +445,7 @@ void handleOngoingState(Game *pGame) {
             }
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
             SDL_RenderClear(pGame->pRenderer);
+            if (pGame->pTimer) drawText(pGame->pTimer);
             for (int i = 0; i < pGame->NrOfChosenPlayers; i++) {
                 render_projectiles(pGame->pRenderer);
                 drawShip(pGame->pShips[i]);
@@ -901,4 +912,21 @@ void resetGameState(Game *pGame) {
 
     // Reset projectiles
     resetAllBullets();
+}
+
+int getTime(Game *pGame) {
+    return (SDL_GetTicks64() - pGame->startTime) / 1000;
+}
+
+void updateGameTime(Game *pGame) {
+    if (getTime(pGame) > pGame->gameTime && pGame->state == ONGOING) {
+        (pGame->gameTime)++;
+        if (pGame->pTimer) destroyText(pGame->pTimer);
+        static char timerString[30];
+        sprintf(timerString, "%d", getTime(pGame));
+        if (pGame->pFont) {
+            pGame->pTimer = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
+                                       timerString, WINDOW_WIDTH / 2, 50);
+        }
+    }
 }
