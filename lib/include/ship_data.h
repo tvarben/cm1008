@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#define MAX_PLAYERS 2
+#define MAX_PLAYERS 4
 #define WINDOW_WIDTH 1280 // 1160
 #define WINDOW_HEIGHT 720 // 700
 #define SERVER_PORT 60000
@@ -47,6 +47,7 @@ typedef struct {
     ClientCommand command;
     bool isShooting, isAlive;
     GameState state;
+  int nrOfPlayers; //decided by server
 } ClientData;
 
 typedef struct {
@@ -82,6 +83,7 @@ typedef struct {
     Enemy_2_Data enemies_2[MAX_ENEMIES];
     Enemy_3_Data enemies_3[MAX_ENEMIES];
     int map;
+  int nrOfPlayers;
 } ServerData;
 
 #endif
