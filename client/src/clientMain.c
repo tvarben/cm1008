@@ -62,6 +62,8 @@ typedef struct {
     int startTime; // in ms
 
     bool keyHeld[SDL_NUM_SCANCODES]; // track all key states for smooth movement!
+
+    int nrOfplayers;
 } Game;
 
 int initiate(Game *pGame);
@@ -232,6 +234,9 @@ int initiate(Game *pGame) {
     pGame->nrOfEnemies_2 = 0;
     pGame->pEnemy_3Image = initiateEnemy_3(pGame->pRenderer);
     pGame->nrOfEnemies_3 = 0;
+    pGame->map = 1;
+    printf("map = %d \n", pGame->map);
+
 
     memset(pGame->keyHeld, 0, sizeof(pGame->keyHeld));
 
@@ -310,9 +315,9 @@ void handleOngoingState(Game *pGame) {
     pGame->lastCommand = STOP_SHIP;
     pGame->startTime = SDL_GetTicks64();
     pGame->gameTime = -1; // i dont know why
-    pGame->map = 1;
     bool seenMapTransition = false;
-    int nextMapShowWhen = 10;
+    int nextMapShowWhen = 30;
+    printf("map = %d \n", pGame->map);
     while (pGame->isRunning && pGame->state == ONGOING) {
         now = SDL_GetTicks();
         delta = now - lastUpdate; // används bara på rad 253, men delta används inte
@@ -352,7 +357,7 @@ void handleOngoingState(Game *pGame) {
             //     //pGame->isShooting = false;
             // }
             // Använder vi ens prediction?
-            for (int i = 0; i < MAX_PLAYERS; i++) {
+            for (int i = 0; i < pGame->nrOfplayers; i++) {
                 if (pGame->pShips[i]) {
                     removeProjectile(getBulletToRemove(pGame->pShips[i]));
                     update_projectiles(delta);
@@ -414,7 +419,7 @@ void handleOngoingState(Game *pGame) {
                     drawEnemy_3(pGame->pEnemies_3[i]);
                 }
             }
-            for (int i = 0; i < MAX_PLAYERS; i++) {
+            for (int i = 0; i < pGame->nrOfplayers; i++) {
                 if (!clientAliveControll(pGame->pShips[i])) {
                     damageCannon(pGame->pCannons[i], 2);
                     damageShip(pGame->pShips[i], 2);
@@ -425,7 +430,7 @@ void handleOngoingState(Game *pGame) {
             }
             SDL_RenderPresent(pGame->pRenderer);
             pGame->isShooting = false;
-            for (int i = 0; i < MAX_PLAYERS; i++) {
+            for (int i = 0; i < pGame->nrOfplayers; i++) {
                 setShoot(pGame->pShips[i], false);
             }
         }
@@ -643,7 +648,8 @@ void updateWithServerData(Game *pGame) {
     ServerData serverData; /////// test
     memcpy(&serverData, pGame->pPacket->data, sizeof(ServerData));
     pGame->shipId = serverData.sDPlayerId; ////// test  Kontrollera varför vi gör detta
-    for (int i = 0; i < MAX_PLAYERS; i++) {
+    pGame->nrOfplayers = serverData.nrOfPlayers;
+    for (int i = 0; i < pGame->nrOfplayers; i++) {
         if (pGame->pShips[i])
             updateShipsWithServerData(pGame->pShips[i], &serverData.ships[i], i, pGame->shipId);
     }

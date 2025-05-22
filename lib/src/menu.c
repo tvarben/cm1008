@@ -53,3 +53,28 @@ char *enterIPAddress(SDL_Renderer *renderer, TTF_Font *font) {
     SDL_StopTextInput();
     return ip;
 }
+
+
+void drawModifierMenu(SDL_Renderer *pRenderer, TTF_Font *pFont){
+    int menuWidth = 900;
+    int menuHeight = 500;
+    int x = (WINDOW_WIDTH - menuWidth) / 2;
+    int y = (WINDOW_HEIGHT - menuHeight) / 2 ;
+
+    SDL_Rect box = {x, y, menuWidth, menuHeight};
+    SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
+    SDL_RenderFillRect(pRenderer, &box); 
+    SDL_SetRenderDrawColor(pRenderer, 238, 168, 65, 255);
+    SDL_RenderDrawRect(pRenderer, &box);
+
+    int innerWidth = menuWidth / 3 + 50;
+    int innerHeight = menuHeight / 5;
+    int innerX = x + (menuWidth - innerWidth) / 2;
+    int innerY = y + (menuHeight - innerHeight) / 2 + 135;
+
+    SDL_Rect innerBox = {innerX, innerY, innerWidth, innerHeight};
+    SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);  //
+    SDL_RenderFillRect(pRenderer, &innerBox);
+    SDL_SetRenderDrawColor(pRenderer, 238, 168, 65, 255); 
+    SDL_RenderDrawRect(pRenderer, &innerBox);
+}
