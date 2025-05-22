@@ -9,12 +9,13 @@
 #include "enemy_1.h"
 #include "enemy_2.h"
 #include "enemy_3.h"
+#include "menu.h"
 #include "ship.h"
 #include "ship_data.h"
 #include "sound.h"
 #include "text.h"
 #include "tick.h"
-#include "menu.h"
+
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
@@ -202,135 +203,104 @@ void run(Game *pGame) {
     }
 }
 
-void handleStartState(Game *pGame) { //i will put all the text into the game struct later on for cleanup
+void handleStartState(
+    Game *pGame) { // i will put all the text into the game struct later on for cleanup
     SDL_Event event;
     int x, y;
     const SDL_Rect *startRect = getTextRect(pGame->pStartText);
     const SDL_Rect *exitRect = getTextRect(pGame->pExitText);
     pGame->NrOfChosenPlayers = 0;
-    Text *pPlayText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,"START", WINDOW_WIDTH / 2, WINDOW_HEIGHT-225);
+    Text *pPlayText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "START",
+                                 WINDOW_WIDTH / 2, WINDOW_HEIGHT - 225);
     const SDL_Rect *pPlayRect = getTextRect(pPlayText);
-    Text *pEasierText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,"+", WINDOW_WIDTH / 2 + 225, WINDOW_HEIGHT-225);
+    Text *pEasierText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "+",
+                                   WINDOW_WIDTH / 2 + 225, WINDOW_HEIGHT - 225);
     const SDL_Rect *pEasierRect = getTextRect(pEasierText);
-    Text *pHarderText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,"-", WINDOW_WIDTH / 2 - 225, WINDOW_HEIGHT-225);
+    Text *pHarderText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "-",
+                                   WINDOW_WIDTH / 2 - 225, WINDOW_HEIGHT - 225);
     const SDL_Rect *pHarderRect = getTextRect(pHarderText);
-    Text *onePlayer = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,"1", 300, WINDOW_HEIGHT-500);
+    Text *onePlayer =
+        createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "1", 300, WINDOW_HEIGHT - 500);
     const SDL_Rect *pOnePlayerRect = getTextRect(onePlayer);
-    Text *twoPlayer = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,"2", 525, WINDOW_HEIGHT-500);
+    Text *twoPlayer =
+        createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "2", 525, WINDOW_HEIGHT - 500);
     const SDL_Rect *pTwoPlayerRect = getTextRect(twoPlayer);
-    Text *threePlayer = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,"3", 750, WINDOW_HEIGHT-500);
+    Text *threePlayer =
+        createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "3", 750, WINDOW_HEIGHT - 500);
     const SDL_Rect *pThreePlayerRect = getTextRect(threePlayer);
-    Text *fourPlayer = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,"4", 975, WINDOW_HEIGHT-500);
+    Text *fourPlayer =
+        createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "4", 975, WINDOW_HEIGHT - 500);
     const SDL_Rect *pFourPlayerRect = getTextRect(fourPlayer);
     while (pGame->isRunning && pGame->state == START) {
         SDL_GetMouseState(&x, &y);
         SDL_Point mousePoint = {x, y};
-        if (SDL_PointInRect(&mousePoint, startRect) && pGame->showModifierMenu == false)
-        {
+        if (SDL_PointInRect(&mousePoint, startRect) && pGame->showModifierMenu == false) {
             setTextColor(pGame->pStartText, 255, 100, 100, pGame->pFont, "START");
-        }
-        else 
-        {
+        } else {
             setTextColor(pGame->pStartText, 238, 168, 65, pGame->pFont, "START");
         }
-        if (SDL_PointInRect(&mousePoint, exitRect) && pGame->showModifierMenu == false)
-        {
+        if (SDL_PointInRect(&mousePoint, exitRect) && pGame->showModifierMenu == false) {
             setTextColor(pGame->pExitText, 255, 100, 100, pGame->pFont, "EXIT");
-        }
-        else 
-        {
+        } else {
             setTextColor(pGame->pExitText, 238, 168, 65, pGame->pFont, "EXIT");
         }
-        if (SDL_PointInRect(&mousePoint, pPlayRect) && pGame->showModifierMenu == true)
-        {
+        if (SDL_PointInRect(&mousePoint, pPlayRect) && pGame->showModifierMenu == true) {
             setTextColor(pPlayText, 255, 100, 100, pGame->pFont, "START");
-        }
-        else 
-        {
+        } else {
             setTextColor(pPlayText, 238, 168, 65, pGame->pFont, "START");
         }
-        if (SDL_PointInRect(&mousePoint, pEasierRect) && pGame->showModifierMenu == true)
-        {
+        if (SDL_PointInRect(&mousePoint, pEasierRect) && pGame->showModifierMenu == true) {
             setTextColor(pEasierText, 255, 100, 100, pGame->pFont, "+");
-        }
-        else 
-        {
+        } else {
             setTextColor(pEasierText, 238, 168, 65, pGame->pFont, "+");
         }
-        if (SDL_PointInRect(&mousePoint, pHarderRect) && pGame->showModifierMenu == true)
-        {
+        if (SDL_PointInRect(&mousePoint, pHarderRect) && pGame->showModifierMenu == true) {
             setTextColor(pHarderText, 255, 100, 100, pGame->pFont, "-");
-        }
-        else 
-        {
+        } else {
             setTextColor(pHarderText, 238, 168, 65, pGame->pFont, "-");
         }
-        if (SDL_PointInRect(&mousePoint, pOnePlayerRect) && pGame->showModifierMenu == true)
-        {
+        if (SDL_PointInRect(&mousePoint, pOnePlayerRect) && pGame->showModifierMenu == true) {
             setTextColor(onePlayer, 255, 100, 100, pGame->pFont, "1");
-        }
-        else 
-        {
-            if (pGame->NrOfChosenPlayers == 1)
-            {
+        } else {
+            if (pGame->NrOfChosenPlayers == 1) {
                 setTextColor(onePlayer, 0, 200, 0, pGame->pFont, "1");
-            }
-            else
-            {
+            } else {
                 setTextColor(onePlayer, 238, 168, 65, pGame->pFont, "1");
-            }           
-        }
-        if (SDL_PointInRect(&mousePoint, pTwoPlayerRect) && pGame->showModifierMenu == true)
-        {
-            setTextColor(twoPlayer, 255, 100, 100, pGame->pFont, "2");
-        }
-        else 
-        {
-            if (pGame->NrOfChosenPlayers == 2)
-            {
-                setTextColor(twoPlayer, 0, 200, 0, pGame->pFont, "2");
             }
-            else
-            {
+        }
+        if (SDL_PointInRect(&mousePoint, pTwoPlayerRect) && pGame->showModifierMenu == true) {
+            setTextColor(twoPlayer, 255, 100, 100, pGame->pFont, "2");
+        } else {
+            if (pGame->NrOfChosenPlayers == 2) {
+                setTextColor(twoPlayer, 0, 200, 0, pGame->pFont, "2");
+            } else {
                 setTextColor(twoPlayer, 238, 168, 65, pGame->pFont, "2");
             }
         }
-        if (SDL_PointInRect(&mousePoint, pThreePlayerRect) && pGame->showModifierMenu == true)
-        {
+        if (SDL_PointInRect(&mousePoint, pThreePlayerRect) && pGame->showModifierMenu == true) {
             setTextColor(threePlayer, 255, 100, 100, pGame->pFont, "3");
-        }
-        else 
-        {
-            if (pGame->NrOfChosenPlayers == 3)
-            {
+        } else {
+            if (pGame->NrOfChosenPlayers == 3) {
                 setTextColor(threePlayer, 0, 200, 0, pGame->pFont, "3");
-            }
-            else
-            {
+            } else {
                 setTextColor(threePlayer, 238, 168, 65, pGame->pFont, "3");
-            }        
-        }
-        if (SDL_PointInRect(&mousePoint, pFourPlayerRect) && pGame->showModifierMenu == true)
-        {
-            setTextColor(fourPlayer, 255, 100, 100, pGame->pFont, "4");
-        }
-        else 
-        {
-            if (pGame->NrOfChosenPlayers == 4)
-            {
-                setTextColor(fourPlayer, 0, 200, 0, pGame->pFont, "4");
             }
-            else
-            {
+        }
+        if (SDL_PointInRect(&mousePoint, pFourPlayerRect) && pGame->showModifierMenu == true) {
+            setTextColor(fourPlayer, 255, 100, 100, pGame->pFont, "4");
+        } else {
+            if (pGame->NrOfChosenPlayers == 4) {
+                setTextColor(fourPlayer, 0, 200, 0, pGame->pFont, "4");
+            } else {
                 setTextColor(fourPlayer, 238, 168, 65, pGame->pFont, "4");
-            }      
+            }
         }
         SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
         SDL_RenderClear(pGame->pRenderer);
         drawText(pGame->pGameName);
         drawText(pGame->pStartText);
         drawText(pGame->pExitText);
-        if (pGame->showModifierMenu == true){
+        if (pGame->showModifierMenu == true) {
             drawModifierMenu(pGame->pRenderer, pGame->pFont);
             drawText(pPlayText);
             drawText(pEasierText);
@@ -339,27 +309,35 @@ void handleStartState(Game *pGame) { //i will put all the text into the game str
             drawText(twoPlayer);
             drawText(threePlayer);
             drawText(fourPlayer);
-        }        
+        }
         SDL_RenderPresent(pGame->pRenderer);
 
         if (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT){
+            if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
-            } else if (SDL_PointInRect(&mousePoint, startRect) && event.type == SDL_MOUSEBUTTONDOWN && pGame->showModifierMenu == false) {
+            } else if (SDL_PointInRect(&mousePoint, startRect) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showModifierMenu == false) {
                 pGame->showModifierMenu = true;
-            } else if (SDL_PointInRect(&mousePoint, pPlayRect) && event.type == SDL_MOUSEBUTTONDOWN && pGame->showModifierMenu == true) {
+            } else if (SDL_PointInRect(&mousePoint, pPlayRect) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showModifierMenu == true) {
                 pGame->state = LOBBY;
-            } else if (SDL_PointInRect(&mousePoint, exitRect) && event.type == SDL_MOUSEBUTTONDOWN) {  
+            } else if (SDL_PointInRect(&mousePoint, exitRect) &&
+                       event.type == SDL_MOUSEBUTTONDOWN) {
                 pGame->isRunning = false;
-            } else if (SDL_PointInRect(&mousePoint, pOnePlayerRect) && event.type == SDL_MOUSEBUTTONDOWN) {  
+            } else if (SDL_PointInRect(&mousePoint, pOnePlayerRect) &&
+                       event.type == SDL_MOUSEBUTTONDOWN) {
                 pGame->NrOfChosenPlayers = 1;
-            } else if (SDL_PointInRect(&mousePoint, pTwoPlayerRect) && event.type == SDL_MOUSEBUTTONDOWN) {  
+            } else if (SDL_PointInRect(&mousePoint, pTwoPlayerRect) &&
+                       event.type == SDL_MOUSEBUTTONDOWN) {
                 pGame->NrOfChosenPlayers = 2;
-            } else if (SDL_PointInRect(&mousePoint, pThreePlayerRect) && event.type == SDL_MOUSEBUTTONDOWN) { 
+            } else if (SDL_PointInRect(&mousePoint, pThreePlayerRect) &&
+                       event.type == SDL_MOUSEBUTTONDOWN) {
                 pGame->NrOfChosenPlayers = 3;
-            } else if (SDL_PointInRect(&mousePoint, pFourPlayerRect) && event.type == SDL_MOUSEBUTTONDOWN) { 
+            } else if (SDL_PointInRect(&mousePoint, pFourPlayerRect) &&
+                       event.type == SDL_MOUSEBUTTONDOWN) {
                 pGame->NrOfChosenPlayers = 4;
-            } else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+            } else if (event.type == SDL_KEYDOWN &&
+                       event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
                 pGame->showModifierMenu = false;
             }
         }
@@ -420,9 +398,8 @@ void handleOngoingState(Game *pGame) {
                 }
             }
             updateGameTime(pGame);
-            if (pGame->gameTime == 30)
-            {
-                SDL_Delay(1000);
+            if (pGame->gameTime == 30) {
+                SDL_Delay(3000);
             }
             if (pGame->map == 2) {
                 for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
@@ -430,12 +407,12 @@ void handleOngoingState(Game *pGame) {
                 }
             }
 
-            if (pGame->map == 0) updateEnemies_1(pGame, &pGame->nrOfEnemiesToSpawn_1);
-            else if (pGame->map == 2)
-            {
+            if (pGame->map == 0)
+                updateEnemies_1(pGame, &pGame->nrOfEnemiesToSpawn_1);
+            else if (pGame->map == 2) {
                 updateEnemies_2(pGame, &pGame->nrOfEnemiesToSpawn_2);
                 updateEnemy_3(pGame->pEnemies_3[0]);
-            } 
+            }
             printf("map: %d \n ", pGame->map);
             for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
                 updateEnemy(pGame->pEnemies_1[i]); // localy
@@ -925,8 +902,8 @@ void updateGameTime(Game *pGame) {
         static char timerString[30];
         sprintf(timerString, "%d", getTime(pGame));
         if (pGame->pFont) {
-            pGame->pTimer = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
-                                       timerString, WINDOW_WIDTH / 2, 50);
+            pGame->pTimer = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, timerString,
+                                       WINDOW_WIDTH / 2, 50);
         }
     }
 }
