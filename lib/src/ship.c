@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SPEED 5
+#define SPEED 4
 
 struct ship {
     float x, y, vx, vy, xStart, yStart, targetX,
