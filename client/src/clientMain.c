@@ -787,7 +787,7 @@ void showCountdown(Game *pGame) {
     char buffer[16];
     char joinMsg[64];
 
-    snprintf(joinMsg, sizeof(joinMsg), "%d players have joined. Starting game in...", MAX_PLAYERS);
+    snprintf(joinMsg, sizeof(joinMsg), "players have joined. Starting game in...");
     Text *pJoinText = createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont, joinMsg,
                                  WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 - 100);
     Uint32 lastTick = SDL_GetTicks();

@@ -6,11 +6,13 @@
 #define MAX_PLAYERS 4
 #define WINDOW_WIDTH 1280 // 1160
 #define WINDOW_HEIGHT 720 // 700
-#define SERVER_PORT 60000
+#define SERVER_PORT 50000
 #define COUNTDOWN 1
 #define MAX_ENEMIES 100
 #define WAVE_1_EASY_MAP 4
 #define NROFBOSSES 1
+#define REGULAR_DMG_GIVEN 10
+#define REGULAR_DMG_TAKEN 10
 
 typedef enum {
     START,
