@@ -106,5 +106,5 @@ void damageCannon(Cannon *pCannon, int damage) {
     pCannon->health -= damage;
 }
 void resetCannonHealth(Cannon *pCannon) {
-    pCannon->health = 2;
+    pCannon->health = 100;
 }

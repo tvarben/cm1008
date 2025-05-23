@@ -81,7 +81,7 @@ static void getStartValues_2(Enemy_2 *pEnemy2) {
     pEnemy2->rectHitbox.w = pEnemy2->rect.w - 50;
     pEnemy2->rectHitbox.h = pEnemy2->rect.h - 50;
     pEnemy2->damage = 1;
-    pEnemy2->health = 4; // changed health
+    pEnemy2->health = 50; // changed health
     // float speed = rand() % (50 - 15 + 1) + 15;
     float speed = rand() % (15 - 10 + 1) + 10;
     if (startSpawnOnTheLeft == 1) {
@@ -105,7 +105,7 @@ static void getStartValuesFromServer_2(Enemy_2 *pEnemy, Enemy_2_Data enemyData) 
     pEnemy->rectHitbox.w = pEnemy->rect.w - 50;
     pEnemy->rectHitbox.h = pEnemy->rect.h - 50;
     pEnemy->damage = 1;
-    pEnemy->health = 4;
+    pEnemy->health = 50;
     pEnemy->x = enemyData.x;
     pEnemy->y = enemyData.y;
     pEnemy->active = enemyData.active;

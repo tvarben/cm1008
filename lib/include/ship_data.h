@@ -12,7 +12,7 @@
 #define WAVE_1_EASY_MAP 4
 #define NROFBOSSES 1
 #define REGULAR_DMG_GIVEN 10
-#define REGULAR_DMG_TAKEN 10
+#define REGULAR_DMG_TAKEN 20
 
 typedef enum {
     START,

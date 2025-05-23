@@ -80,7 +80,7 @@ static void getStartValuesFromServer(Enemy *pEnemy, Enemy_1_Data enemyData) {
     pEnemy->rectHitbox.w = pEnemy->rect.w - 20;
     pEnemy->rectHitbox.h = pEnemy->rect.h - 10;
     pEnemy->damage = 1;
-    pEnemy->health = 2;
+    pEnemy->health = 30;
     pEnemy->x = enemyData.x;
     pEnemy->y = enemyData.y;
     pEnemy->active = enemyData.active;
@@ -93,7 +93,7 @@ static void getStartValues(Enemy *pEnemy) {
     pEnemy->rectHitbox.w = pEnemy->rect.w - 20;
     pEnemy->rectHitbox.h = pEnemy->rect.h - 10;
     pEnemy->damage = 1;
-    pEnemy->health = 2;
+    pEnemy->health = 30;
     float speed = rand() % 4 + 3;
     // float speed = INITIALSPEED;
     if (startSpawnOnTheLeft) {
