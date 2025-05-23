@@ -61,7 +61,9 @@ Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth, int wind
     pShip->targetX = pShip->xStart;
     pShip->targetY = pShip->yStart;
 
-    SDL_Surface *surface2 = IMG_Load("../lib/resources/shield.png");
+    char imagePath2[64];
+    sprintf(imagePath2, "../lib/resources/shield%d.png", playerId);
+    SDL_Surface *surface2 = IMG_Load(imagePath2);
     if (!surface) {
         printf("Error loading shield.png: %s\n", IMG_GetError());
         free(pShip);
@@ -191,6 +193,7 @@ void drawShip(Ship *pShip) {
         return;
     }
     SDL_RenderCopyEx(pShip->renderer, pShip->texture, NULL, &pShip->shipRect, 0, NULL, flip);
+
     if (pShip->health == 100) {
         SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
     }
