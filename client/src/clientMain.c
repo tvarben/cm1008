@@ -156,7 +156,8 @@ int initiate(Game *pGame) {
     }
     for (int i = 0; i < MAX_PLAYERS; i++) {
         pGame->pShips[i] = createShip(i, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
-        pGame->pCannons[i] = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+        pGame->pCannons[i] =
+            createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->pShips[i]);
     }
     pGame->nrOfShips = MAX_PLAYERS;
     for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -237,7 +238,6 @@ int initiate(Game *pGame) {
     pGame->nrOfEnemies_3 = 0;
     pGame->map = 1;
     printf("map = %d \n", pGame->map);
-
 
     memset(pGame->keyHeld, 0, sizeof(pGame->keyHeld));
 
@@ -949,7 +949,8 @@ void resetGameState(Game *pGame) {
             resetHealth(pGame->pShips[i]);
         }
         if (pGame->pCannons[i]) {
-            pGame->pCannons[i] = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+            pGame->pCannons[i] =
+                createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->pShips[i]);
             resetCannon(pGame->pCannons[i]);
             resetCannonHealth(pGame->pCannons[i]);
         }

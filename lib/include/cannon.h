@@ -6,7 +6,7 @@
 
 typedef struct Cannon Cannon;
 
-Cannon *createCannon(SDL_Renderer *renderer, int windowWidth, int windowHeight);
+Cannon *createCannon(SDL_Renderer *renderer, int windowWidth, int windowHeight, Ship *pShip);
 void drawCannon(Cannon *s);
 void destroyCannon(Cannon *s);
 void updateCannon(Cannon *pCannon, Ship *pShip);

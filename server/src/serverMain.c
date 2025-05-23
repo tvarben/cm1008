@@ -13,9 +13,9 @@
 #include "ship.h"
 #include "ship_data.h"
 #include "sound.h"
+#include "stars.h"
 #include "text.h"
 #include "tick.h"
-#include "stars.h"
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
@@ -29,8 +29,8 @@ typedef struct {
     Mix_Music *pMusic;
     TTF_Font *pFont, *pSmallFont;
     Text *pStartText, *pGameName, *pExitText, *pLobbyText, *pTimer, *pOne, *pTwo, *pThree, *pFour,
-    *pHardModifiers, *pEasyModifiers, *pEasyMod1, *pEasyMod2, *pEasyMod3, *phardMod1, *phardMod2, *phardMod3,
-    *pScoreMod;
+        *pHardModifiers, *pEasyModifiers, *pEasyMod1, *pEasyMod2, *pEasyMod3, *phardMod1,
+        *phardMod2, *phardMod3, *pScoreMod;
     ClientCommand command;
     IPaddress clients[MAX_PLAYERS];
     UDPsocket pSocket;
@@ -136,26 +136,40 @@ int initiate(Game *pGame) {
         printf("Error: %s\n", TTF_GetError());
         return 0;
     }
-    // pGame->pStartText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Start", WINDOW_WIDTH / 3, WINDOW_HEIGHT / 2 + 100);
+    // pGame->pStartText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Start",
+    // WINDOW_WIDTH / 3, WINDOW_HEIGHT / 2 + 100);
     pGame->pGameName = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Solar Defence",
-                                  WINDOW_WIDTH / 2, WINDOW_HEIGHT / 4 - 50 );
+                                  WINDOW_WIDTH / 2, WINDOW_HEIGHT / 4 - 50);
     pGame->pExitText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Exit",
                                   WINDOW_WIDTH / 2, WINDOW_HEIGHT - 75);
     pGame->pLobbyText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
                                    "Waiting on clients...", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
-    pGame->pStartText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "START", WINDOW_WIDTH / 2, WINDOW_HEIGHT - 270);
-    pGame->pHardModifiers = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "+", WINDOW_WIDTH / 2 + 225, WINDOW_HEIGHT - 270);
-    pGame->pEasyModifiers = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "-", WINDOW_WIDTH / 2 - 225, WINDOW_HEIGHT - 270);
-    pGame->pOne = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "1", 300, WINDOW_HEIGHT - 450);
-    pGame->pTwo = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "2", 525, WINDOW_HEIGHT - 450);
-    pGame->pThree = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "3", 750, WINDOW_HEIGHT - 450);
-    pGame->pFour = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "4", 975, WINDOW_HEIGHT - 450);
-    pGame->phardMod1 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "2X ENEMIES", WINDOW_WIDTH - 145, WINDOW_HEIGHT - 550);
-    pGame->phardMod2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "0.5X DAMAGE GIVEN", WINDOW_WIDTH -145, WINDOW_HEIGHT - 400);
-    pGame->phardMod3 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "2X DAMAGE TAKEN", WINDOW_WIDTH -145, WINDOW_HEIGHT - 250);
-    pGame->pEasyMod1 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "0.5X ENEMIES", 155, WINDOW_HEIGHT - 550);
-    pGame->pEasyMod2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "2X DAMAGE GIVEN", 155, WINDOW_HEIGHT - 400);
-    pGame->pEasyMod3 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "0.5X DAMAGE TAKEN", 155, WINDOW_HEIGHT - 250);
+    pGame->pStartText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "START",
+                                   WINDOW_WIDTH / 2, WINDOW_HEIGHT - 270);
+    pGame->pHardModifiers = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "+",
+                                       WINDOW_WIDTH / 2 + 225, WINDOW_HEIGHT - 270);
+    pGame->pEasyModifiers = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "-",
+                                       WINDOW_WIDTH / 2 - 225, WINDOW_HEIGHT - 270);
+    pGame->pOne =
+        createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "1", 300, WINDOW_HEIGHT - 450);
+    pGame->pTwo =
+        createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "2", 525, WINDOW_HEIGHT - 450);
+    pGame->pThree =
+        createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "3", 750, WINDOW_HEIGHT - 450);
+    pGame->pFour =
+        createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "4", 975, WINDOW_HEIGHT - 450);
+    pGame->phardMod1 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "2X ENEMIES",
+                                  WINDOW_WIDTH - 145, WINDOW_HEIGHT - 550);
+    pGame->phardMod2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
+                                  "0.5X DAMAGE GIVEN", WINDOW_WIDTH - 145, WINDOW_HEIGHT - 400);
+    pGame->phardMod3 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
+                                  "2X DAMAGE TAKEN", WINDOW_WIDTH - 145, WINDOW_HEIGHT - 250);
+    pGame->pEasyMod1 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "0.5X ENEMIES",
+                                  155, WINDOW_HEIGHT - 550);
+    pGame->pEasyMod2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
+                                  "2X DAMAGE GIVEN", 155, WINDOW_HEIGHT - 400);
+    pGame->pEasyMod3 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
+                                  "0.5X DAMAGE TAKEN", 155, WINDOW_HEIGHT - 250);
     pGame->pStars = createStars(WINDOW_WIDTH * WINDOW_HEIGHT / 10000, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     if (!pGame->pFont) {
@@ -173,7 +187,8 @@ int initiate(Game *pGame) {
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
         pGame->pShips[i] = createShip(i, pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
-        pGame->pCannons[i] = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+        pGame->pCannons[i] =
+            createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->pShips[i]);
     }
     pGame->nrOfShips = MAX_PLAYERS;
     for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -200,7 +215,7 @@ int initiate(Game *pGame) {
     pGame->state = START;
     pGame->nrOfEasyMods = 0;
     pGame->nrOfHardMods = 0;
-    for (int i = 0; i < 3; i++){
+    for (int i = 0; i < 3; i++) {
         pGame->easyMods[i] = 0;
         pGame->hardMods[i] = 0;
     }
@@ -256,8 +271,8 @@ void handleStartState(
     while (pGame->isRunning && pGame->state == START) {
         SDL_GetMouseState(&x, &y);
         SDL_Point mousePoint = {x, y};
-        updateScoreMod(pGame);        
-        if (SDL_PointInRect(&mousePoint, startRect) ) {
+        updateScoreMod(pGame);
+        if (SDL_PointInRect(&mousePoint, startRect)) {
             setTextColor(pGame->pStartText, 255, 100, 100, pGame->pFont, "START");
         } else {
             setTextColor(pGame->pStartText, 238, 168, 65, pGame->pFont, "START");
@@ -337,7 +352,8 @@ void handleStartState(
             if (pGame->easyMods[2] == 1) {
                 setTextColor(pGame->pEasyMod3, 0, 200, 0, pGame->pSmallFont, "0.5X DAMAGE TAKEN");
             } else {
-                setTextColor(pGame->pEasyMod3, 238, 168, 65, pGame->pSmallFont, "0.5X DAMAGE TAKEN");
+                setTextColor(pGame->pEasyMod3, 238, 168, 65, pGame->pSmallFont,
+                             "0.5X DAMAGE TAKEN");
             }
         }
         if (SDL_PointInRect(&mousePoint, hardModRect1)) {
@@ -355,7 +371,8 @@ void handleStartState(
             if (pGame->hardMods[1] == 1) {
                 setTextColor(pGame->phardMod2, 0, 200, 0, pGame->pSmallFont, "0.5X DAMAGE GIVEN");
             } else {
-                setTextColor(pGame->phardMod2, 238, 168, 65, pGame->pSmallFont, "0.5X DAMAGE GIVEN");
+                setTextColor(pGame->phardMod2, 238, 168, 65, pGame->pSmallFont,
+                             "0.5X DAMAGE GIVEN");
             }
         }
         if (SDL_PointInRect(&mousePoint, hardModRect3)) {
@@ -383,15 +400,13 @@ void handleStartState(
         drawText(pGame->pTwo);
         drawText(pGame->pThree);
         drawText(pGame->pFour);
-        if (pGame->showEasyMods == true) 
-        {
+        if (pGame->showEasyMods == true) {
             DrawModifiersToMakeGameEasier(pGame->pRenderer, pGame->pFont);
             drawText(pGame->pEasyMod1);
             drawText(pGame->pEasyMod2);
             drawText(pGame->pEasyMod3);
         }
-        if (pGame->showHardMods == true)
-        {
+        if (pGame->showHardMods == true) {
             DrawModifiersToMakeGameHarder(pGame->pRenderer, pGame->pFont);
             drawText(pGame->phardMod1);
             drawText(pGame->phardMod2);
@@ -402,23 +417,19 @@ void handleStartState(
         if (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
-            }
-            else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+            } else if (event.type == SDL_KEYDOWN &&
+                       event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
                 pGame->showEasyMods = false;
                 pGame->showHardMods = false;
-            }
-            else if (SDL_PointInRect(&mousePoint, startRect) &&
+            } else if (SDL_PointInRect(&mousePoint, startRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN && pGame->NrOfChosenPlayers > 0) {
                 pGame->state = LOBBY;
             } else if (SDL_PointInRect(&mousePoint, exitRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN) {
                 pGame->isRunning = false;
-            } else if (SDL_PointInRect(&mousePoint, oneRect) &&
-                       event.type == SDL_MOUSEBUTTONDOWN) {
+            } else if (SDL_PointInRect(&mousePoint, oneRect) && event.type == SDL_MOUSEBUTTONDOWN) {
                 pGame->NrOfChosenPlayers = 1;
-            }  
-            else if (SDL_PointInRect(&mousePoint, twoRect) &&
-                       event.type == SDL_MOUSEBUTTONDOWN) {
+            } else if (SDL_PointInRect(&mousePoint, twoRect) && event.type == SDL_MOUSEBUTTONDOWN) {
                 pGame->NrOfChosenPlayers = 2;
             } else if (SDL_PointInRect(&mousePoint, threeRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN) {
@@ -426,75 +437,72 @@ void handleStartState(
             } else if (SDL_PointInRect(&mousePoint, fourRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN) {
                 pGame->NrOfChosenPlayers = 4;
-            }
-             else if (SDL_PointInRect(&mousePoint, EasierRect) &&
+            } else if (SDL_PointInRect(&mousePoint, EasierRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN) {
                 pGame->showEasyMods = true;
-            } 
-             else if (SDL_PointInRect(&mousePoint, harderRect) &&
+            } else if (SDL_PointInRect(&mousePoint, harderRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN) {
-                pGame->showHardMods = true;  
-            }     
-            else if (SDL_PointInRect(&mousePoint, easyModRect1) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true && pGame->easyMods[0] != 1) {
+                pGame->showHardMods = true;
+            } else if (SDL_PointInRect(&mousePoint, easyModRect1) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true &&
+                       pGame->easyMods[0] != 1) {
                 pGame->easyMods[0] = 1;
                 pGame->nrOfEasyMods++;
-            }
-            else if (SDL_PointInRect(&mousePoint, easyModRect1) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true && pGame->easyMods[0] == 1) {
+            } else if (SDL_PointInRect(&mousePoint, easyModRect1) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true &&
+                       pGame->easyMods[0] == 1) {
                 pGame->easyMods[0] = 0;
                 pGame->nrOfEasyMods--;
-            }
-            else if (SDL_PointInRect(&mousePoint, easyModRect2) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true  && pGame->easyMods[1] != 1) {
+            } else if (SDL_PointInRect(&mousePoint, easyModRect2) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true &&
+                       pGame->easyMods[1] != 1) {
                 pGame->easyMods[1] = 1;
                 pGame->nrOfEasyMods++;
-            }
-            else if (SDL_PointInRect(&mousePoint, easyModRect2) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true  && pGame->easyMods[1] == 1) {
+            } else if (SDL_PointInRect(&mousePoint, easyModRect2) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true &&
+                       pGame->easyMods[1] == 1) {
                 pGame->easyMods[1] = 0;
                 pGame->nrOfEasyMods--;
-            }
-            else if (SDL_PointInRect(&mousePoint, easyModRect3) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true  && pGame->easyMods[2] != 1) {
+            } else if (SDL_PointInRect(&mousePoint, easyModRect3) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true &&
+                       pGame->easyMods[2] != 1) {
                 pGame->easyMods[2] = 1;
                 pGame->nrOfEasyMods++;
-            }
-            else if (SDL_PointInRect(&mousePoint, easyModRect3) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true  && pGame->easyMods[2] == 1) {
+            } else if (SDL_PointInRect(&mousePoint, easyModRect3) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true &&
+                       pGame->easyMods[2] == 1) {
                 pGame->easyMods[2] = 0;
                 pGame->nrOfEasyMods--;
-            }
-            else if (SDL_PointInRect(&mousePoint, hardModRect1) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[0] != 1) {
+            } else if (SDL_PointInRect(&mousePoint, hardModRect1) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true &&
+                       pGame->hardMods[0] != 1) {
                 pGame->hardMods[0] = 1;
                 pGame->nrOfHardMods++;
-            }
-            else if (SDL_PointInRect(&mousePoint, hardModRect1) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[0] == 1) {
+            } else if (SDL_PointInRect(&mousePoint, hardModRect1) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true &&
+                       pGame->hardMods[0] == 1) {
                 pGame->hardMods[0] = 0;
                 pGame->nrOfHardMods--;
-            }
-            else if (SDL_PointInRect(&mousePoint, hardModRect2) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[1] != 1) {
+            } else if (SDL_PointInRect(&mousePoint, hardModRect2) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true &&
+                       pGame->hardMods[1] != 1) {
                 pGame->hardMods[1] = 1;
                 pGame->nrOfHardMods++;
-            }
-            else if (SDL_PointInRect(&mousePoint, hardModRect2) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[1] == 1) {
+            } else if (SDL_PointInRect(&mousePoint, hardModRect2) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true &&
+                       pGame->hardMods[1] == 1) {
                 pGame->hardMods[1] = 0;
                 pGame->nrOfHardMods--;
-            }
-            else if (SDL_PointInRect(&mousePoint, hardModRect3) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[2] != 1) {
+            } else if (SDL_PointInRect(&mousePoint, hardModRect3) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true &&
+                       pGame->hardMods[2] != 1) {
                 pGame->hardMods[2] = 1;
                 pGame->nrOfHardMods++;
-            }
-            else if (SDL_PointInRect(&mousePoint, hardModRect3) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[2] == 1) {
+            } else if (SDL_PointInRect(&mousePoint, hardModRect3) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true &&
+                       pGame->hardMods[2] == 1) {
                 pGame->hardMods[2] = 0;
                 pGame->nrOfHardMods--;
-
             }
         }
         SDL_Delay(8);
@@ -514,10 +522,10 @@ void handleOngoingState(Game *pGame) {
     pGame->gameTime = -2; // i dont know why
     int dmgGiven = REGULAR_DMG_GIVEN;
     int dmgTaken = REGULAR_DMG_TAKEN;
-    if (pGame->easyMods[1] == 1) dmgGiven *=2;
-    if (pGame->hardMods[1] == 1) dmgGiven /=2;
-    if (pGame->easyMods[2] == 1) dmgTaken /=2;
-    if (pGame->hardMods[2] == 1) dmgTaken *=2;
+    if (pGame->easyMods[1] == 1) dmgGiven *= 2;
+    if (pGame->hardMods[1] == 1) dmgGiven /= 2;
+    if (pGame->easyMods[2] == 1) dmgTaken /= 2;
+    if (pGame->hardMods[2] == 1) dmgTaken *= 2;
 
     if (pGame->nrOfEnemies_3 == 0) {
         spawnBoss(pGame);
@@ -1030,7 +1038,8 @@ void resetGameState(Game *pGame) {
             resetHealth(pGame->pShips[i]);
         }
         if (pGame->pCannons[i]) {
-            pGame->pCannons[i] = createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+            pGame->pCannons[i] =
+                createCannon(pGame->pRenderer, WINDOW_WIDTH, WINDOW_HEIGHT, pGame->pShips[i]);
             resetCannon(pGame->pCannons[i]);
             resetCannonHealth(pGame->pCannons[i]);
         }
@@ -1100,54 +1109,40 @@ void updateScoreMod(Game *pGame) {
     static char modString[30];
     sprintf(modString, "%d%%", getScoreMod(pGame));
     if (pGame->pFont) {
-        if (getScoreMod(pGame) < 100)
-        {
-            pGame->pScoreMod = createText(pGame->pRenderer, 175, 0, 0, pGame->pFont, modString, 138, WINDOW_HEIGHT-60);
+        if (getScoreMod(pGame) < 100) {
+            pGame->pScoreMod = createText(pGame->pRenderer, 175, 0, 0, pGame->pFont, modString, 138,
+                                          WINDOW_HEIGHT - 60);
+        } else if (getScoreMod(pGame) >= 100 && getScoreMod(pGame) <= 150) {
+            pGame->pScoreMod = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, modString,
+                                          138, WINDOW_HEIGHT - 60);
+        } else if (getScoreMod(pGame) > 150 && getScoreMod(pGame) <= 300) {
+            pGame->pScoreMod = createText(pGame->pRenderer, 0, 180, 0, pGame->pFont, modString, 138,
+                                          WINDOW_HEIGHT - 60);
         }
-        else if (getScoreMod(pGame) >= 100 && getScoreMod(pGame) <= 150)
-        {
-            pGame->pScoreMod = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, modString, 138, WINDOW_HEIGHT-60);
-        } 
-        else if (getScoreMod(pGame) > 150 && getScoreMod(pGame) <= 300)
-        {
-            pGame->pScoreMod = createText(pGame->pRenderer, 0, 180, 0, pGame->pFont, modString, 138, WINDOW_HEIGHT-60);
-        } 
-        
     }
 }
 
-int getScoreMod(Game *pGame)
-{
+int getScoreMod(Game *pGame) {
     int scoreMod = 0;
-    if (pGame->NrOfChosenPlayers == 0)
-    {
+    if (pGame->NrOfChosenPlayers == 0) {
         return 0;
     }
-    
-    else if (pGame->NrOfChosenPlayers == 1)
-    {
-        scoreMod=100;
-    }
-    else if (pGame->NrOfChosenPlayers == 2)
-    {
-        scoreMod=133;
-    }
-    else if (pGame->NrOfChosenPlayers == 3)
-    {
-        scoreMod=166;
-    }
-    else if (pGame->NrOfChosenPlayers == 4)
-    {
-        scoreMod=200;
+
+    else if (pGame->NrOfChosenPlayers == 1) {
+        scoreMod = 100;
+    } else if (pGame->NrOfChosenPlayers == 2) {
+        scoreMod = 133;
+    } else if (pGame->NrOfChosenPlayers == 3) {
+        scoreMod = 166;
+    } else if (pGame->NrOfChosenPlayers == 4) {
+        scoreMod = 200;
     }
 
-    for (int i = 0; i < pGame->nrOfEasyMods; i++)
-    {
-        scoreMod-=25;
+    for (int i = 0; i < pGame->nrOfEasyMods; i++) {
+        scoreMod -= 25;
     }
-    for (int i = 0; i < pGame->nrOfHardMods; i++)
-    {
-        scoreMod+=25;
+    for (int i = 0; i < pGame->nrOfHardMods; i++) {
+        scoreMod += 25;
     }
     return scoreMod;
 }

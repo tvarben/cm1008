@@ -28,7 +28,8 @@ Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth, int wind
     pShip->windowWidth = windowWidth;
     pShip->windowHeight = windowHeight;
     pShip->renderer = renderer;
-    pShip->keyDown = pShip->keyUp = pShip->keyRight = pShip->keyLeft = pShip->isShooting = false;
+    pShip->keyDown = pShip->keyUp = pShip->keyRight = pShip->keyLeft = pShip->isShooting =
+        pShip->facingLeft = false;
     pShip->health = 100;
     pShip->isAlive = true;
 
@@ -55,14 +56,14 @@ Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth, int wind
     SDL_QueryTexture(pShip->texture, NULL, NULL, &pShip->shipRect.w, &pShip->shipRect.h);
     pShip->shipRect.w /= 4;
     pShip->shipRect.h /= 4;
-    pShip->xStart = pShip->x = pShip->shipRect.x = windowWidth / 2 - pShip->shipRect.h / 2;
+    pShip->xStart = pShip->x = pShip->shipRect.x = windowWidth / 2 - pShip->shipRect.w / 2;
     pShip->yStart = pShip->y = pShip->shipRect.y = (playerId * 100) + 50;
     // For smooth movement, initialize target position to start position
     pShip->targetX = pShip->xStart;
     pShip->targetY = pShip->yStart;
 
     SDL_Surface *surface2 = IMG_Load("../lib/resources/shield.png");
-    if (!surface) {
+    if (!surface2) {
         printf("Error loading shield.png: %s\n", IMG_GetError());
         free(pShip);
         return NULL;
@@ -82,7 +83,8 @@ Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth, int wind
 
     pShip->shieldRect.x = pShip->x;
     pShip->shieldRect.y = pShip->y;
-    SDL_SetTextureAlphaMod(pShip->shield, 150); // sets transparency level, lower means more transparent
+    SDL_SetTextureAlphaMod(pShip->shield,
+                           150); // sets transparency level, lower means more transparent
 
     return pShip;
 }
@@ -193,17 +195,17 @@ void drawShip(Ship *pShip) {
     SDL_RenderCopyEx(pShip->renderer, pShip->texture, NULL, &pShip->shipRect, 0, NULL, flip);
     if (pShip->health == 100) {
         SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
-    }
-    else if (pShip->health == 80) {
-        SDL_SetTextureAlphaMod(pShip->shield, 120); // sets transparency level, lower means more transparent
+    } else if (pShip->health == 80) {
+        SDL_SetTextureAlphaMod(pShip->shield,
+                               120); // sets transparency level, lower means more transparent
         SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
-    }
-    else if (pShip->health == 60) {
-        SDL_SetTextureAlphaMod(pShip->shield, 90); // sets transparency level, lower means more transparent
+    } else if (pShip->health == 60) {
+        SDL_SetTextureAlphaMod(pShip->shield,
+                               90); // sets transparency level, lower means more transparent
         SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
-    }
-    else if (pShip->health == 40) {
-         SDL_SetTextureAlphaMod(pShip->shield, 60); // sets transparency level, lower means more transparent
+    } else if (pShip->health == 40) {
+        SDL_SetTextureAlphaMod(pShip->shield,
+                               60); // sets transparency level, lower means more transparent
         SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
     }
 }
