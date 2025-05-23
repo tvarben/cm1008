@@ -29,7 +29,7 @@ Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth, int wind
     pShip->windowHeight = windowHeight;
     pShip->renderer = renderer;
     pShip->keyDown = pShip->keyUp = pShip->keyRight = pShip->keyLeft = pShip->isShooting = false;
-    pShip->health = 2;
+    pShip->health = 100;
     pShip->isAlive = true;
 
     // SDL_Surface *surface = IMG_Load("../lib/resources/player.png");
@@ -82,8 +82,7 @@ Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth, int wind
 
     pShip->shieldRect.x = pShip->x;
     pShip->shieldRect.y = pShip->y;
-    SDL_SetTextureAlphaMod(pShip->shield,
-                           50); // sets transparency level, lower means more transparent
+    SDL_SetTextureAlphaMod(pShip->shield, 150); // sets transparency level, lower means more transparent
 
     return pShip;
 }
@@ -192,7 +191,19 @@ void drawShip(Ship *pShip) {
         return;
     }
     SDL_RenderCopyEx(pShip->renderer, pShip->texture, NULL, &pShip->shipRect, 0, NULL, flip);
-    if (pShip->health >= 2) {
+    if (pShip->health == 100) {
+        SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
+    }
+    else if (pShip->health == 80) {
+        SDL_SetTextureAlphaMod(pShip->shield, 120); // sets transparency level, lower means more transparent
+        SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
+    }
+    else if (pShip->health == 60) {
+        SDL_SetTextureAlphaMod(pShip->shield, 90); // sets transparency level, lower means more transparent
+        SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
+    }
+    else if (pShip->health == 40) {
+         SDL_SetTextureAlphaMod(pShip->shield, 60); // sets transparency level, lower means more transparent
         SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
     }
 }
@@ -228,6 +239,7 @@ void applyShipCommand(Ship *pShip, ClientCommand command) {
         break;
     case MOVE_UP:
         pShip->keyUp = true;
+        printf("ship health: %d \n", pShip->health);
         break;
     case MOVE_DOWN:
         pShip->keyDown = true;
@@ -312,7 +324,7 @@ bool isPlayerDead(Ship *pShip) {
 }
 
 void resetHealth(Ship *pShip) {
-    pShip->health = 2;
+    pShip->health = 100;
     return;
 }
 

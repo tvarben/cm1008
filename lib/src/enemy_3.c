@@ -79,7 +79,7 @@ static void getStartValues_3(Enemy_3 *pEnemy3) {
     pEnemy3->rectHitbox.w = pEnemy3->rect.w - 50;
     pEnemy3->rectHitbox.h = pEnemy3->rect.h - 50;
     pEnemy3->damage = 2;
-    pEnemy3->health = 100; // Change health
+    pEnemy3->health = 2000; // Change health
     float speed = 20;
     pEnemy3->x = pEnemy3->window_width - pEnemy3->rect.w; // spawn at right
     pEnemy3->y = pEnemy3->window_height / 2;              // spawn at middle
@@ -93,7 +93,7 @@ static void getStartValuesFromServer_3(Enemy_3 *pEnemy, Enemy_3_Data enemyData) 
     pEnemy->rectHitbox.w = pEnemy->rect.w - 50;
     pEnemy->rectHitbox.h = pEnemy->rect.h - 50;
     pEnemy->damage = 1;
-    pEnemy->health = 100;
+    pEnemy->health = 2000;
     pEnemy->x = enemyData.x;
     pEnemy->y = enemyData.y;
     pEnemy->active = enemyData.active;

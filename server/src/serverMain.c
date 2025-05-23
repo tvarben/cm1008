@@ -512,6 +512,13 @@ void handleOngoingState(Game *pGame) {
     pGame->map = 1;
     pGame->startTime = SDL_GetTicks64();
     pGame->gameTime = -2; // i dont know why
+    int dmgGiven = REGULAR_DMG_GIVEN;
+    int dmgTaken = REGULAR_DMG_TAKEN;
+    if (pGame->easyMods[1] == 1) dmgGiven *=2;
+    if (pGame->hardMods[1] == 1) dmgGiven /=2;
+    if (pGame->easyMods[2] == 1) dmgTaken /=2;
+    if (pGame->hardMods[2] == 1) dmgTaken *=2;
+
     if (pGame->nrOfEnemies_3 == 0) {
         spawnBoss(pGame);
     }
@@ -569,7 +576,6 @@ void handleOngoingState(Game *pGame) {
                 updateEnemies_2(pGame, &pGame->nrOfEnemiesToSpawn_2);
                 updateEnemy_3(pGame->pEnemies_3[0]);
             }
-            printf("map: %d \n ", pGame->map);
             for (int i = 0; i < pGame->nrOfEnemies_1 && i < MAX_ENEMIES; i++) {
                 updateEnemy(pGame->pEnemies_1[i]); // localy
             }
@@ -600,9 +606,9 @@ void handleOngoingState(Game *pGame) {
             for (int i = 0; i < pGame->NrOfChosenPlayers; i++) {
                 for (int j = 0; j < pGame->nrOfEnemies_1 && j < MAX_ENEMIES; j++) {
                     if (shipCollision(pGame->pShips[i], getRectEnemy(pGame->pEnemies_1[j]))) {
-                        damageEnemy(pGame->pEnemies_1[j], 2, j);
-                        damageShip(pGame->pShips[i], 1);
-                        damageCannon(pGame->pCannons[i], 1);
+                        damageEnemy(pGame->pEnemies_1[j], 100, j);
+                        damageShip(pGame->pShips[i], dmgTaken);
+                        damageCannon(pGame->pCannons[i], dmgTaken);
                         if (isPlayerDead(pGame->pShips[i])) {
                             printf("Player %d killed by enemy1\n", i);
                         }
@@ -610,9 +616,9 @@ void handleOngoingState(Game *pGame) {
                 }
                 for (int j = 0; j < pGame->nrOfEnemies_2 && j < MAX_ENEMIES; j++) {
                     if (shipCollision(pGame->pShips[i], getRectEnemy_2(pGame->pEnemies_2[j]))) {
-                        damageEnemy_2(pGame->pEnemies_2[j], 4, j);
-                        damageShip(pGame->pShips[i], 1);
-                        damageCannon(pGame->pCannons[i], 1);
+                        damageEnemy_2(pGame->pEnemies_2[j], 100, j);
+                        damageShip(pGame->pShips[i], dmgTaken);
+                        damageCannon(pGame->pCannons[i], dmgTaken);
                         if (isPlayerDead(pGame->pShips[i])) {
                             printf("Player %d killed by enemy2\n", i);
                         }
@@ -620,9 +626,9 @@ void handleOngoingState(Game *pGame) {
                 }
                 for (int j = 0; j < pGame->nrOfEnemies_3 && j < MAX_ENEMIES; j++) {
                     if (shipCollision(pGame->pShips[i], getRectEnemy_3(pGame->pEnemies_3[j]))) {
-                        damageEnemy_3(pGame->pEnemies_3[j], 2, j);
-                        damageShip(pGame->pShips[i], 1);
-                        damageCannon(pGame->pCannons[i], 1);
+                        damageEnemy_3(pGame->pEnemies_3[j], 200, j);
+                        damageShip(pGame->pShips[i], 100);
+                        damageCannon(pGame->pCannons[i], 100);
                         if (isPlayerDead(pGame->pShips[i])) {
                             printf("Player %d killed by enemy3\n", i);
                         }
@@ -637,7 +643,7 @@ void handleOngoingState(Game *pGame) {
                     SDL_Rect enemyRect = getRectEnemy(pGame->pEnemies_1[k]);
                     if (SDL_HasIntersection(&enemyRect, &bulletRect)) {
                         // printEnemyHealth(pGame->pEnemies_1[k]);
-                        damageEnemy(pGame->pEnemies_1[k], 1, k);
+                        damageEnemy(pGame->pEnemies_1[k], dmgGiven, k);
                         if (isEnemyActive(pGame->pEnemies_1[k]) == false) {
                             (pGame->killedEnemies)++;
                         }
@@ -652,7 +658,7 @@ void handleOngoingState(Game *pGame) {
                     SDL_Rect enemyRect2 = getRectEnemy_2(pGame->pEnemies_2[k]);
                     if (SDL_HasIntersection(&enemyRect2, &bulletRect)) {
                         // printEnemy_2Health(pGame->pEnemies_2[k]);
-                        damageEnemy_2(pGame->pEnemies_2[k], 1, k);
+                        damageEnemy_2(pGame->pEnemies_2[k], dmgGiven, k);
                         if (isEnemy_2Active(pGame->pEnemies_2[k]) == false) {
                             (pGame->killedEnemies)++;
                         }
@@ -667,7 +673,7 @@ void handleOngoingState(Game *pGame) {
                     SDL_Rect enemyRect3 = getRectEnemy_3(pGame->pEnemies_3[k]);
                     if (SDL_HasIntersection(&enemyRect3, &bulletRect)) {
                         // printEnemy_3Health(pGame->pEnemies_3[k]);
-                        damageEnemy_3(pGame->pEnemies_3[k], 1, k);
+                        damageEnemy_3(pGame->pEnemies_3[k], dmgGiven, k);
                         if (isEnemy_3Active(pGame->pEnemies_3[k]) == false) {
                             (pGame->killedEnemies)++;
                             pGame->state = GAME_OVER;
@@ -944,6 +950,8 @@ void spawnEnemies_1(Game *pGame, int amount) {
 void updateEnemies_1(Game *pGame, int *amount) {
     if (areTheyAllDead_1(pGame) == true) {
         (*amount) += 4;
+        if (pGame->easyMods[0] == 1) (*amount) /= 2;
+        if (pGame->hardMods[0] == 1) (*amount) *= 2;
         if ((*amount) > MAX_ENEMIES) (*amount) = MAX_ENEMIES;
         pGame->nrOfEnemies_1 = 0;
         spawnEnemies_1(pGame, *amount);
@@ -969,7 +977,9 @@ void spawnEnemies_2(Game *pGame, int amount) {
 
 void updateEnemies_2(Game *pGame, int *amount) {
     if (areTheyAllDead_2(pGame) == true) {
-        (*amount) += 6; // increments even for first wave. WHY?
+        (*amount) += 4; // increments even for first wave. WHY?
+        if (pGame->easyMods[0] == 1) (*amount) /= 2;
+        if (pGame->hardMods[0] == 1) (*amount) *= 2;
         if ((*amount) > MAX_ENEMIES) (*amount) = MAX_ENEMIES;
         pGame->nrOfEnemies_2 = 0;
         spawnEnemies_2(pGame, *amount);
