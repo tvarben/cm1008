@@ -19,7 +19,9 @@ struct Cannon {
     bool spacebar, moveLeftQ, moveRightE, moveDownN; // keys decide direction of bullet
 };
 
-Cannon *createCannon(SDL_Renderer *renderer, int windowWidth, int windowHeight) {
+Cannon *createCannon(SDL_Renderer *renderer, int windowWidth, int windowHeight, Ship *pShip) {
+    double cannonLocationX = 28;
+    double cannonLocationY = 15;
     Cannon *c = malloc(sizeof(Cannon));
     if (!c) return NULL;
 
@@ -49,6 +51,9 @@ Cannon *createCannon(SDL_Renderer *renderer, int windowWidth, int windowHeight) 
     SDL_QueryTexture(c->texture, NULL, NULL, &c->rect.w, &c->rect.h);
     c->rect.w /= 2; // width of image
     c->rect.h /= 2; // height of image
+
+    c->rect.y = getShipY(pShip) + cannonLocationY;
+    c->rect.x = getShipX(pShip) + cannonLocationX;
 
     /*c->x = x - c->rect.w / 2;*/
     /*c->y = y - c->rect.h / 2;*/
