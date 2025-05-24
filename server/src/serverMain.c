@@ -38,7 +38,7 @@ typedef struct {
     ServerData serverData;
     bool isRunning, isShooting;
     Cannon *pCannon;
-    int nrOfEnemiesToSpawn_1, nrOfEnemies_1, killedEnemies, nrOfEnemiesToSpawn_2, nrOfEnemies_2;
+    int nrOfEnemiesToSpawn_1, nrOfEnemies_1, nrOfEnemiesToSpawn_2, nrOfEnemies_2;
     EnemyImage *pEnemy_1Image;
     EnemyImage_2 *pEnemy_2Image;
     Enemy *pEnemies_1[MAX_ENEMIES];
@@ -54,7 +54,8 @@ typedef struct {
     int nrOfEasyMods, nrOfHardMods;
     int easyMods[3], hardMods[3];
     Stars *pStars;
-    int score;
+    int killedEnemies1, killedEnemies2, killedEnemies3;
+    float score;
 } Game;
 
 int initiate(Game *pGame);
@@ -84,6 +85,7 @@ void updateGameTime(Game *pGame);
 int getTime(Game *pGame);
 int getScoreMod(Game *pGame);
 void updateScoreMod(Game *pGame);
+float getSessionScore(Game *pGame);
 
 int main(int argc, char **argv) {
     Game game = {0};
@@ -200,6 +202,7 @@ int initiate(Game *pGame) {
     pGame->state = START;
     pGame->nrOfEasyMods = 0;
     pGame->nrOfHardMods = 0;
+    pGame->score = 0;
     for (int i = 0; i < 3; i++){
         pGame->easyMods[i] = 0;
         pGame->hardMods[i] = 0;
@@ -508,8 +511,12 @@ void handleOngoingState(Game *pGame) {
     const Uint32 tickInterval = 16;
     pGame->nrOfEnemies_1 = 0;
     pGame->nrOfEnemies_2 = 0;
+    pGame->killedEnemies1 = 0;
+    pGame->killedEnemies2 = 0;
+    pGame->killedEnemies3 = 0;
     SDL_Rect emptyRect = {0, 0, 0, 0}, rectArray[MAX_PROJECTILES] = {0, 0, 0, 0};
     pGame->map = 1;
+    pGame->score = 0;
     pGame->startTime = SDL_GetTicks64();
     pGame->gameTime = -2; // i dont know why
     int dmgGiven = REGULAR_DMG_GIVEN;
@@ -645,7 +652,7 @@ void handleOngoingState(Game *pGame) {
                         // printEnemyHealth(pGame->pEnemies_1[k]);
                         damageEnemy(pGame->pEnemies_1[k], dmgGiven, k);
                         if (isEnemyActive(pGame->pEnemies_1[k]) == false) {
-                            (pGame->killedEnemies)++;
+                            (pGame->killedEnemies1)++;
                         }
                         removeProjectile(i);
                         rectArray[i] = emptyRect;
@@ -660,7 +667,7 @@ void handleOngoingState(Game *pGame) {
                         // printEnemy_2Health(pGame->pEnemies_2[k]);
                         damageEnemy_2(pGame->pEnemies_2[k], dmgGiven, k);
                         if (isEnemy_2Active(pGame->pEnemies_2[k]) == false) {
-                            (pGame->killedEnemies)++;
+                            (pGame->killedEnemies2)++;
                         }
                         removeProjectile(i);
                         rectArray[i] = emptyRect;
@@ -675,7 +682,9 @@ void handleOngoingState(Game *pGame) {
                         // printEnemy_3Health(pGame->pEnemies_3[k]);
                         damageEnemy_3(pGame->pEnemies_3[k], dmgGiven, k);
                         if (isEnemy_3Active(pGame->pEnemies_3[k]) == false) {
-                            (pGame->killedEnemies)++;
+                            (pGame->killedEnemies3)++;
+                            pGame->score = getSessionScore(pGame);
+                            pGame->serverData.sessionScore = pGame->score;
                             pGame->state = GAME_OVER;
                             pGame->serverData.gState = pGame->state;
                             pGame->serverData.win = true;
@@ -758,22 +767,23 @@ void addClient(Game *pGame) {
 
 void handleGameOverState(Game *pGame) {
     Text *pGameOverText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
-                                     "GAME OVER LIL BRO", WINDOW_WIDTH / 2, 150);
+                                     "GAME OVER", WINDOW_WIDTH / 2, 150);
     Text *pRestartServer = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
                                       "RESTART SERVER", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
     SDL_RenderPresent(pGame->pRenderer);
 
     const SDL_Rect *pRestartRect =
-        getTextRect(pRestartServer); // Hämta position för rect för Start-texten
+    getTextRect(pRestartServer); // Hämta position för rect för Start-texten
     SDL_Event event;
+    printf("Score: %.2f \n", pGame->serverData.sessionScore);
     while (pGame->isRunning) {
         int x, y;
         SDL_GetMouseState(&x, &y);
         SDL_Point mousePoint = {x, y}; // Kolla position för musen
         if (SDL_PointInRect(&mousePoint, pRestartRect)) {
-            setTextColor(pRestartServer, 255, 100, 100, pGame->pFont, "RESTART SERVER");
+            setTextColor(pRestartServer, 255, 100, 100, pGame->pFont, "RETURN TO MAIN MENU");
         } else {
-            setTextColor(pRestartServer, 238, 168, 65, pGame->pFont, "RESTART SERVER");
+            setTextColor(pRestartServer, 238, 168, 65, pGame->pFont, "RETURN TO MAIN MENU");
         }
 
         SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255); // Clear with black
@@ -785,16 +795,11 @@ void handleGameOverState(Game *pGame) {
             if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
             } else if (SDL_PointInRect(&mousePoint, pRestartRect) &&
-                       event.type == SDL_MOUSEBUTTONDOWN) {
-                printf("I dunno how to reset the whole game for everyone yet.");
-                // closeGame(pGame);
-                printf("is running false \n");
+                event.type == SDL_MOUSEBUTTONDOWN) {
                 resetGameState(pGame);
                 pGame->state = START;
                 pGame->serverData.gState = pGame->state;
-                printf("state change \n");
                 run(pGame);
-                printf("run again \n ");
             }
         }
     }
@@ -816,8 +821,10 @@ void sendServerData(Game *pGame) {
     for (int i = 0; i < pGame->nrOfEnemies_3 && i < NROFBOSSES; i++)
         getEnemy_3_DataPackage(pGame->pEnemies_3[i], &pGame->serverData.enemies_3[i]);
     pGame->serverData.nrOfEnemies_3 = pGame->nrOfEnemies_3;
-    if (arePlayersDead(pGame) == true) // DOESNT WORK :(
+    if (arePlayersDead(pGame) == true)
     {
+        pGame->score = getSessionScore(pGame);
+        pGame->serverData.sessionScore = pGame->score;
         pGame->state = GAME_OVER;
         pGame->serverData.gState = pGame->state;
     }
@@ -1067,7 +1074,9 @@ void resetGameState(Game *pGame) {
     pGame->nrOfEnemiesToSpawn_3 = NROFBOSSES;
     pGame->nrOfClients = 0;
     pGame->NrOfChosenPlayers = 0;
-    pGame->killedEnemies = 0;
+    pGame->killedEnemies1 = 0;
+    pGame->killedEnemies2 = 0;
+    pGame->killedEnemies3 = 0;
     pGame->map = 1;
     printf("here \n");
     // Clear clients array
@@ -1150,4 +1159,15 @@ int getScoreMod(Game *pGame)
         scoreMod+=25;
     }
     return scoreMod;
+}
+
+float getSessionScore(Game *pGame)
+{
+    float score = 0;
+    float scoreMod = getScoreMod(pGame) / 100.0f;
+    for (int i = 0; i < pGame->killedEnemies1; i++) score+=250;
+    for (int i = 0; i < pGame->killedEnemies2; i++) score+=500;
+    for (int i = 0; i < pGame->killedEnemies3; i++) score+=10000;
+    score *= scoreMod;
+    return score;
 }

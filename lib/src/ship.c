@@ -242,7 +242,6 @@ void applyShipCommand(Ship *pShip, ClientCommand command) {
         break;
     case MOVE_UP:
         pShip->keyUp = true;
-        printf("ship health: %d \n", pShip->health);
         break;
     case MOVE_DOWN:
         pShip->keyDown = true;
