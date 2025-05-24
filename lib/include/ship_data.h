@@ -13,6 +13,8 @@
 #define NROFBOSSES 1
 #define REGULAR_DMG_GIVEN 10
 #define REGULAR_DMG_TAKEN 20
+#define SAVE_DATA_PATH "../lib/resources/save.txt"
+#define DATA_STORED 5
 
 typedef enum {
     START,
@@ -45,11 +47,12 @@ typedef enum {
 
 typedef struct {
     int cDPlayerId, bulletToRemove,
-        map; // cDPlayerId not really needed. Server finds out which klient
+    map; // cDPlayerId not really needed. Server finds out which klient
     ClientCommand command;
     bool isShooting, isAlive;
     GameState state;
-  int nrOfPlayers; //decided by server
+    int nrOfPlayers; //decided by server
+    float sessionScore;
 } ClientData;
 
 typedef struct {
@@ -85,7 +88,8 @@ typedef struct {
     Enemy_2_Data enemies_2[MAX_ENEMIES];
     Enemy_3_Data enemies_3[MAX_ENEMIES];
     int map;
-  int nrOfPlayers;
+    int nrOfPlayers;
+    float sessionScore;
 } ServerData;
 
 #endif

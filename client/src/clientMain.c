@@ -33,9 +33,9 @@ typedef struct {
     int nrOfShips, shipId;
     GameState state;
     Mix_Music *pMusic;
-    TTF_Font *pFont, *pSmallFont;
+    TTF_Font *pFont, *pSmallFont, *pSmallestFont;
     Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pTimer, *pMultiPlayerText,
-        *pMenuText, *pGameOverText, *pWaitingText;
+    *pMenuText, *pGameOverText, *pWaitingText, *pSessionScore, *pCashEarnedDuringSession, *pHighScore, *pCash;
     ClientCommand command, lastCommand;
     UDPsocket pSocket;
     IPaddress serverAddress;
@@ -64,6 +64,11 @@ typedef struct {
     bool keyHeld[SDL_NUM_SCANCODES]; // track all key states for smooth movement!
 
     int nrOfplayers;
+
+    float saveData[DATA_STORED];
+    float sessionScore;
+    float cash;
+    float highScore;
 } Game;
 
 int initiate(Game *pGame);
@@ -88,6 +93,11 @@ void drawMap(Game *pGame);
 void drawMapTransitionScreen(SDL_Renderer *renderer, TTF_Font *pFont);
 ClientCommand getCurrentCommand(Game *pGame);
 void resetGameState(Game *pGame);
+FILE* openOrCreateSaveFile(const char saveFilePath[]);
+void loadOrInitSave(char filename[], float arr[]);
+void updateHighScore(Game *pGame);
+void writeToSaveFile(char filename[], Game *pGame);
+void updateSessionScore(Game *pGame);
 
 int main(int argc, char **argv) {
     Game game = {0};
@@ -135,20 +145,21 @@ int initiate(Game *pGame) {
     }
     pGame->pFont = TTF_OpenFont("../lib/resources/vermin.ttf", 100);
     pGame->pSmallFont = TTF_OpenFont("../lib/resources/vermin.ttf", 50);
-    if (!pGame->pFont || !pGame->pSmallFont) {
+    pGame->pSmallestFont = TTF_OpenFont("../lib/resources/vermin.ttf", 15);
+    if (!pGame->pFont || !pGame->pSmallFont || !pGame->pSmallestFont) {
         printf("Error: %s\n", TTF_GetError());
         return 0;
     }
-    pGame->pSinglePlayerText = createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont,
-                                          "Singleplayer", WINDOW_WIDTH / 2, 330);
-    pGame->pMultiPlayerText = createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont,
-                                         "Multiplayer", WINDOW_WIDTH / 2, 450);
-    pGame->pGameName = createText(pGame->pRenderer, 255, 0, 0, pGame->pFont, "Solar Defence",
+    pGame->pSinglePlayerText = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
+                                          "Stats", WINDOW_WIDTH / 2, 450);
+    pGame->pMultiPlayerText = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
+                                         "Play", WINDOW_WIDTH / 2, 330);
+    pGame->pGameName = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Solar Defence",
                                   WINDOW_WIDTH / 2, WINDOW_HEIGHT / 8);
     pGame->pExitText =
-        createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont, "Exit", WINDOW_WIDTH / 2, 570);
+        createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "Exit", WINDOW_WIDTH / 2, 570);
     pGame->pWaitingText =
-        createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont,
+        createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
                    "Waiting for other players to join...", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
     if (!(pGame->pPacket = SDLNet_AllocPacket(5000))) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
@@ -228,7 +239,11 @@ int initiate(Game *pGame) {
         printf("Texture Creation Error: %s\n", SDL_GetError());
         return 0;
     }
-
+    FILE *pCurrentSave = openOrCreateSaveFile(SAVE_DATA_PATH);
+    loadOrInitSave(SAVE_DATA_PATH, pGame->saveData);
+    pGame->highScore = pGame->saveData[0];
+    pGame->cash = pGame->saveData[1]; //rest are not implemented, could be upgrades.
+    updateHighScore(pGame);
     pGame->pEnemy_1Image = initiateEnemy(pGame->pRenderer);
     pGame->nrOfEnemies_1 = 0;
     pGame->pEnemy_2Image = initiateEnemy_2(pGame->pRenderer);
@@ -279,6 +294,13 @@ void handleStartState(Game *pGame) {
                 return;
             } else if (userChoice == MAINMENU_SINGLEPLAYER) {
                 printf("Singleplayer chosen.\n");
+                printf("saveData: ");
+                for (int i = 0; i < DATA_STORED; i++)
+                {
+                    printf("%.0f ", pGame->saveData[i]);
+                }
+                printf("\n");
+                
             } else if (userChoice == MAINMENU_MULTIPLAYER) {
                 printf("Multiplayer chosen.\n");
                 pGame->state = LOBBY;
@@ -299,7 +321,7 @@ void renderStartWindow(Game *pGame) {
     drawText(pGame->pMultiPlayerText);
     drawText(pGame->pExitText);
     drawText(pGame->pGameName);
-
+    if (pGame->highScore > 0) drawText(pGame->pHighScore);
     SDL_Rect dstRect_1 = {125, 500, 100, 100}; // adjust position and size, placering av planet/måne
     SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage_1, NULL, &dstRect_1);
     SDL_Rect dstRect_2 = {1000, 125, 50, 50}; // adjust position and size, placering av planet/måne
@@ -318,6 +340,7 @@ void handleOngoingState(Game *pGame) {
     pGame->gameTime = -1; // i dont know why
     bool seenMapTransition = false;
     int nextMapShowWhen = 30;
+    pGame->sessionScore = 0;
     printf("map = %d \n", pGame->map);
     while (pGame->isRunning && pGame->state == ONGOING) {
         now = SDL_GetTicks();
@@ -489,7 +512,7 @@ void handleLobbyState(Game *pGame) {
                                         return;
                                     }
                                 }
-                                SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
+                                SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
                                 SDL_RenderClear(pGame->pRenderer);
                                 drawText(pGame->pWaitingText);
                                 SDL_RenderPresent(pGame->pRenderer);
@@ -536,18 +559,20 @@ void handleLobbyState(Game *pGame) {
 
 void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress, bool textFieldFocused) {
     // Render the text box
-    SDL_SetRenderDrawColor(pGame->pRenderer, 20, 20, 20, 255); // Dark background
+    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255); // Dark background
     SDL_RenderClear(pGame->pRenderer);
 
     // Draw the input box
-    SDL_Rect box = {300, 300, 600, 100};
+    SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255); // Dark background
+    drawStars(pGame->pStars, pGame->pRenderer);
+    SDL_Rect box = {300, 300, 600, 70};
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255); // Black box
     SDL_RenderFillRect(pGame->pRenderer, &box);
-    SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255); // White border
+    SDL_SetRenderDrawColor(pGame->pRenderer, 238, 168, 65, 255); // White border
     SDL_RenderDrawRect(pGame->pRenderer, &box);
 
     // Render the entered text
-    SDL_Color color = {255, 255, 255};
+    SDL_Color color = {238, 168, 65};
     SDL_Rect textRect = {box.x + 5, box.y + 10, 0, 0};
     SDL_Surface *textSurface = TTF_RenderText_Solid(pGame->pSmallFont, pEnteredIPAddress, color);
 
@@ -599,10 +624,10 @@ void printMultiplayerMenu(Game *pGame, char *pEnteredIPAddress, bool textFieldFo
 
     if (textFieldFocused && showCaret) {
         int caretX = textRect.x + textRect.w + 2;
-        int caretHeight = 60;
-        int caretY = box.y + (box.h - caretHeight) / 2;
+        int caretHeight = 30;
+        int caretY = box.y + (box.h - caretHeight) / 2 - 10;
 
-        SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
+        SDL_SetRenderDrawColor(pGame->pRenderer, 238, 168, 65, 255);
         SDL_Rect caretRect = {caretX, caretY, 3, caretHeight};
         SDL_RenderFillRect(pGame->pRenderer, &caretRect);
     }
@@ -618,6 +643,20 @@ void handleGameOverState(Game *pGame) {
     Text *pGameOverMainMenuText = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
                                              "MAIN MENU", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
     SDL_RenderPresent(pGame->pRenderer);
+    int cashEarnedDurringSession = pGame->sessionScore / 10;
+    pGame->cash += cashEarnedDurringSession;
+    printf("SCORE: %.2f \n", pGame->sessionScore);
+    printf("HIGH SCORE VAR: %.2f \n", pGame->highScore);
+    printf("HIGH SCORE VAR (IN SAVEDATA) %.2f \n", pGame->saveData[0]);
+    printf("CASH EARNED: %d \n", cashEarnedDurringSession);
+    printf("TOTAL CASH: %d \n", pGame->cash);
+    if (pGame->highScore == 0) pGame->highScore = pGame->sessionScore;
+    if (pGame->highScore < pGame->sessionScore) pGame->highScore = pGame->sessionScore;
+    if (pGame->highScore > pGame->saveData[0]) pGame->saveData[0] = pGame->highScore;
+    pGame->saveData[1] += cashEarnedDurringSession;
+    writeToSaveFile(SAVE_DATA_PATH, pGame);
+    updateSessionScore(pGame);
+    updateHighScore(pGame);
     const SDL_Rect *pGameOverMainMenuRect =
         getTextRect(pGameOverMainMenuText); // Hämta position för rect för Start-texten
     SDL_Event event;
@@ -638,6 +677,7 @@ void handleGameOverState(Game *pGame) {
         } else {
             drawText(pGameOverText);
         }
+        if (pGame->pSessionScore) drawText(pGame->pSessionScore);
         drawText(pGameOverMainMenuText);
         SDL_RenderPresent(pGame->pRenderer);
         while (SDL_PollEvent(&event)) {
@@ -671,6 +711,7 @@ void updateWithServerData(Game *pGame) {
     pGame->nrOfEnemies_2 = serverData.nrOfEnemies_2;
     pGame->nrOfEnemies_3 = serverData.nrOfEnemies_3;
     pGame->state = serverData.gState;
+    pGame->sessionScore = serverData.sessionScore;
     pGame->serverData = serverData;
     pGame->win = serverData.win;
 }
@@ -759,19 +800,19 @@ MainMenuChoice handleMainMenuOptions(Game *pGame) {
     const SDL_Rect *exitRect = getTextRect(pGame->pExitText);
 
     if (SDL_PointInRect(&mousePoint, singleRect))
-        setTextColor(pGame->pSinglePlayerText, 255, 255, 255, pGame->pSmallFont, "Singleplayer");
+        setTextColor(pGame->pSinglePlayerText, 255, 100, 100, pGame->pSmallFont, "Stats");
     else
-        setTextColor(pGame->pSinglePlayerText, 255, 0, 0, pGame->pSmallFont, "Singleplayer");
+        setTextColor(pGame->pSinglePlayerText, 238, 168, 65, pGame->pSmallFont, "Stats");
 
     if (SDL_PointInRect(&mousePoint, multiRect))
-        setTextColor(pGame->pMultiPlayerText, 255, 255, 255, pGame->pSmallFont, "Multiplayer");
+        setTextColor(pGame->pMultiPlayerText, 255, 100, 100, pGame->pSmallFont, "Play");
     else
-        setTextColor(pGame->pMultiPlayerText, 255, 0, 0, pGame->pSmallFont, "Multiplayer");
+        setTextColor(pGame->pMultiPlayerText, 238, 168, 65, pGame->pSmallFont, "Play");
 
     if (SDL_PointInRect(&mousePoint, exitRect))
-        setTextColor(pGame->pExitText, 255, 255, 255, pGame->pSmallFont, "Exit");
+        setTextColor(pGame->pExitText, 255, 100, 100, pGame->pSmallFont, "Exit");
     else
-        setTextColor(pGame->pExitText, 255, 0, 0, pGame->pSmallFont, "Exit");
+        setTextColor(pGame->pExitText, 238, 168, 65, pGame->pSmallFont, "Exit");
 
     Uint32 mouseState = SDL_GetMouseState(NULL, NULL);
     if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) {
@@ -788,7 +829,7 @@ void showCountdown(Game *pGame) {
     char joinMsg[64];
 
     snprintf(joinMsg, sizeof(joinMsg), "players have joined. Starting game in...");
-    Text *pJoinText = createText(pGame->pRenderer, 255, 0, 0, pGame->pSmallFont, joinMsg,
+    Text *pJoinText = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, joinMsg,
                                  WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 - 100);
     Uint32 lastTick = SDL_GetTicks();
 
@@ -807,10 +848,10 @@ void showCountdown(Game *pGame) {
 
             snprintf(buffer, sizeof(buffer), "%d", countdown);
             if (pGame->pCountdownText) destroyText(pGame->pCountdownText);
-            pGame->pCountdownText = createText(pGame->pRenderer, 255, 255, 255, pGame->pFont,
+            pGame->pCountdownText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
                                                buffer, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 
-            SDL_SetRenderDrawColor(pGame->pRenderer, 30, 30, 30, 255);
+            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
             SDL_RenderClear(pGame->pRenderer);
             drawText(pJoinText);
             drawText(pGame->pCountdownText);
@@ -849,7 +890,8 @@ void closeGame(Game *pGame) {
     if (pGame->pMenuText) destroyText(pGame->pMenuText);
     if (pGame->pGameOverText) destroyText(pGame->pGameOverText);
     if (pGame->pCountdownText) destroyText(pGame->pCountdownText);
-
+    if (pGame->pSessionScore) destroyText(pGame->pSessionScore);
+    if (pGame->pHighScore) destroyText(pGame->pHighScore);
     if (pGame->pStars) destroyStars(pGame->pStars);
     if (pGame->pStartImage_1) SDL_DestroyTexture(pGame->pStartImage_1);
     if (pGame->pStartImage_2) SDL_DestroyTexture(pGame->pStartImage_2);
@@ -962,3 +1004,82 @@ void resetGameState(Game *pGame) {
     pGame->map = 1;
     resetAllBullets();
 }
+
+
+FILE* openOrCreateSaveFile(const char saveFilePath[]) {
+    FILE *pSaveFile = fopen(saveFilePath, "r");
+    if (pSaveFile == NULL) {
+        pSaveFile = fopen(saveFilePath, "w");
+        if (pSaveFile == NULL) {
+            perror("Error creating file");
+            return NULL;
+        }
+    }
+    return pSaveFile;
+}
+
+void loadOrInitSave(char filename[], float saveCopy[]) {
+    FILE *file = fopen(filename, "r");
+    int temp, count = 0;
+
+    if (fscanf(file, "%f", &temp) != 1) {
+        fclose(file);
+        file = fopen(filename, "w");
+        for (int i = 0; i < DATA_STORED; i++) {
+            fprintf(file, "0\n");
+            saveCopy[i] = 0;
+        }
+        fclose(file);
+        return;
+    }
+
+    rewind(file);
+    for (int i = 0; i < DATA_STORED; i++) saveCopy[i] = 0; // initialize array
+    while (count < DATA_STORED && fscanf(file, "%f", &saveCopy[count]) == 1) {
+        count++;
+    }
+    fclose(file);
+    // If fewer than DATA_STORED integers were found, rewrite file with full data
+    if (count < DATA_STORED) {
+        file = fopen(filename, "w");
+        for (int i = 0; i < DATA_STORED; i++) {
+            fprintf(file, "%f\n", saveCopy[i]);
+        }
+        fclose(file);
+    }
+}
+
+void writeToSaveFile(char filename[], Game *pGame) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        return;
+    }
+
+    for (int i = 0; i < DATA_STORED; i++) {
+        fprintf(file, "%.0f\n", pGame->saveData[i]);
+    }
+
+    fclose(file);
+}
+void updateHighScore(Game *pGame){
+    if (pGame->pHighScore) destroyText(pGame->pHighScore);
+    static char highScoreString[30];
+    sprintf(highScoreString, "Current High Score: %.0f", pGame->highScore);
+    if (pGame->pSmallestFont) {
+        if (pGame->highScore > 0){
+            pGame->pHighScore = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallestFont, highScoreString, WINDOW_WIDTH-125, WINDOW_HEIGHT-25);
+        }
+    }
+}
+
+void updateSessionScore(Game *pGame){
+    if (pGame->pSessionScore) destroyText(pGame->pSessionScore);
+    static char sessionScoreString[30];
+    sprintf(sessionScoreString, "Session Score: %.0f", pGame->sessionScore);
+    if (pGame->pSmallestFont) {
+            pGame->pSessionScore = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallestFont, sessionScoreString, WINDOW_WIDTH/2, 200);
+    }
+}
+
+
