@@ -33,9 +33,10 @@ typedef struct {
     int nrOfShips, shipId;
     GameState state;
     Mix_Music *pMusic;
-    TTF_Font *pFont, *pSmallFont, *pSmallestFont;
+    TTF_Font *pFont, *pSmallFont, *pSmallestFont, *pUpgradeFont;
     Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pTimer, *pMultiPlayerText,
-    *pMenuText, *pGameOverText, *pWaitingText, *pSessionScore, *pCashEarnedDuringSession, *pHighScore, *pCash;
+    *pMenuText, *pGameOverText, *pWaitingText, *pSessionScore, *pHighScore, *pCash,
+    *pSpeedUpgradeText, *pDmgUpgradeText, *pHpUpgradeText;
     ClientCommand command, lastCommand;
     UDPsocket pSocket;
     IPaddress serverAddress;
@@ -67,8 +68,9 @@ typedef struct {
 
     float saveData[DATA_STORED];
     float sessionScore;
-    float cash;
-    float highScore;
+    float cash, highScore, speedUpgrade, dmgUpgrade, hpUpgrade;
+    bool showUpgradeMenu;
+    bool dead;
 } Game;
 
 int initiate(Game *pGame);
@@ -98,6 +100,7 @@ void loadOrInitSave(char filename[], float arr[]);
 void updateHighScore(Game *pGame);
 void writeToSaveFile(char filename[], Game *pGame);
 void updateSessionScore(Game *pGame);
+void updateCashText(Game *pGame);
 
 int main(int argc, char **argv) {
     Game game = {0};
@@ -146,12 +149,13 @@ int initiate(Game *pGame) {
     pGame->pFont = TTF_OpenFont("../lib/resources/vermin.ttf", 100);
     pGame->pSmallFont = TTF_OpenFont("../lib/resources/vermin.ttf", 50);
     pGame->pSmallestFont = TTF_OpenFont("../lib/resources/vermin.ttf", 15);
+    pGame->pUpgradeFont = TTF_OpenFont("../lib/resources/vermin.ttf", 30);
     if (!pGame->pFont || !pGame->pSmallFont || !pGame->pSmallestFont) {
         printf("Error: %s\n", TTF_GetError());
         return 0;
     }
     pGame->pSinglePlayerText = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
-                                          "Stats", WINDOW_WIDTH / 2, 450);
+                                          "Upgrade", WINDOW_WIDTH / 2, 450);
     pGame->pMultiPlayerText = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
                                          "Play", WINDOW_WIDTH / 2, 330);
     pGame->pGameName = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Solar Defence",
@@ -161,6 +165,11 @@ int initiate(Game *pGame) {
     pGame->pWaitingText =
         createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont,
                    "Waiting for other players to join...", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+
+    pGame->pSpeedUpgradeText = createText(pGame->pRenderer, 238, 168, 65, pGame->pUpgradeFont, "2X SPEED    500$", 875, 75);
+    pGame->pDmgUpgradeText = createText(pGame->pRenderer, 238, 168, 65, pGame->pUpgradeFont, "2X DMG    1000$", 875, 135);
+    pGame->pHpUpgradeText = createText(pGame->pRenderer, 238, 168, 65, pGame->pUpgradeFont, "2X HP    1000$", 875, 195);
+
     if (!(pGame->pPacket = SDLNet_AllocPacket(5000))) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 0;
@@ -243,6 +252,9 @@ int initiate(Game *pGame) {
     loadOrInitSave(SAVE_DATA_PATH, pGame->saveData);
     pGame->highScore = pGame->saveData[0];
     pGame->cash = pGame->saveData[1]; //rest are not implemented, could be upgrades.
+    pGame->speedUpgrade = pGame->saveData[2];
+    pGame->dmgUpgrade = pGame->saveData[3];
+    pGame->hpUpgrade = pGame->saveData[4];
     updateHighScore(pGame);
     pGame->pEnemy_1Image = initiateEnemy(pGame->pRenderer);
     pGame->nrOfEnemies_1 = 0;
@@ -251,6 +263,7 @@ int initiate(Game *pGame) {
     pGame->pEnemy_3Image = initiateEnemy_3(pGame->pRenderer);
     pGame->nrOfEnemies_3 = 0;
     pGame->map = 1;
+    pGame->showUpgradeMenu = false;
     printf("map = %d \n", pGame->map);
 
 
@@ -287,6 +300,7 @@ void run(Game *pGame) {
 void handleStartState(Game *pGame) {
     SDL_Event event;
     while (pGame->isRunning && pGame->state == START) {
+        updateCashText(pGame);
         MainMenuChoice userChoice = handleMainMenuOptions(pGame);
         if (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT || userChoice == MAINMENU_EXIT) {
@@ -299,8 +313,14 @@ void handleStartState(Game *pGame) {
                 {
                     printf("%.0f ", pGame->saveData[i]);
                 }
-                printf("\n");
-                
+                if (pGame->showUpgradeMenu == true)
+                {
+                    pGame->showUpgradeMenu = false;
+                }
+                else if (pGame->showUpgradeMenu == false)
+                {
+                    pGame->showUpgradeMenu = true;
+                }
             } else if (userChoice == MAINMENU_MULTIPLAYER) {
                 printf("Multiplayer chosen.\n");
                 pGame->state = LOBBY;
@@ -324,8 +344,17 @@ void renderStartWindow(Game *pGame) {
     if (pGame->highScore > 0) drawText(pGame->pHighScore);
     SDL_Rect dstRect_1 = {125, 500, 100, 100}; // adjust position and size, placering av planet/måne
     SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage_1, NULL, &dstRect_1);
-    SDL_Rect dstRect_2 = {1000, 125, 50, 50}; // adjust position and size, placering av planet/måne
+    SDL_Rect dstRect_2 = {980, 125, 50, 50}; // adjust position and size, placering av planet/måne
     SDL_RenderCopy(pGame->pRenderer, pGame->pStartImage_2, NULL, &dstRect_2);
+    if (pGame->showUpgradeMenu)
+    {
+        showUpgradeMenu(pGame->pRenderer);
+        drawText(pGame->pSpeedUpgradeText);
+        drawText(pGame->pDmgUpgradeText);
+        drawText(pGame->pHpUpgradeText);
+        if (pGame->pCash) drawText(pGame->pCash);
+        
+    }
     SDL_RenderPresent(pGame->pRenderer);
 }
 
@@ -342,6 +371,7 @@ void handleOngoingState(Game *pGame) {
     int nextMapShowWhen = 30;
     pGame->sessionScore = 0;
     printf("map = %d \n", pGame->map);
+    pGame->dead = 0;
     while (pGame->isRunning && pGame->state == ONGOING) {
         now = SDL_GetTicks();
         delta = now - lastUpdate; // används bara på rad 253, men delta används inte
@@ -367,6 +397,10 @@ void handleOngoingState(Game *pGame) {
                 if (seenMapTransition == true) {
                     ccData.map = pGame->map;
                 }
+                for (int i = 0; i < DATA_STORED; i++)
+                {
+                    ccData.saveData[i] = pGame->saveData[i];
+                }
                 memcpy(pGame->pPacket->data, &ccData, sizeof(ClientData));
                 pGame->pPacket->len = sizeof(ClientData);
                 SDLNet_UDP_Send(pGame->pSocket, -1, pGame->pPacket);
@@ -376,11 +410,6 @@ void handleOngoingState(Game *pGame) {
             }
 
             updateShipVelocity(pGame->pShips[pGame->shipId]);
-            // if (pGame->isShooting) {
-            //     handleCannonEvent(pGame->pCannons[pGame->shipId]);
-            //     //pGame->isShooting = false;
-            // }
-            // Använder vi ens prediction?
             for (int i = 0; i < pGame->nrOfplayers; i++) {
                 if (pGame->pShips[i]) {
                     removeProjectile(getBulletToRemove(pGame->pShips[i]));
@@ -445,8 +474,8 @@ void handleOngoingState(Game *pGame) {
             }
             for (int i = 0; i < pGame->nrOfplayers; i++) {
                 if (!clientAliveControll(pGame->pShips[i])) {
-                    damageCannon(pGame->pCannons[i], 2);
-                    damageShip(pGame->pShips[i], 2);
+                    damageCannon(pGame->pCannons[i], 20);
+                    damageShip(pGame->pShips[i], 20);
                 }
                 render_projectiles(pGame->pRenderer);
                 drawShip(pGame->pShips[i]);
@@ -645,11 +674,6 @@ void handleGameOverState(Game *pGame) {
     SDL_RenderPresent(pGame->pRenderer);
     int cashEarnedDurringSession = pGame->sessionScore / 10;
     pGame->cash += cashEarnedDurringSession;
-    printf("SCORE: %.2f \n", pGame->sessionScore);
-    printf("HIGH SCORE VAR: %.2f \n", pGame->highScore);
-    printf("HIGH SCORE VAR (IN SAVEDATA) %.2f \n", pGame->saveData[0]);
-    printf("CASH EARNED: %d \n", cashEarnedDurringSession);
-    printf("TOTAL CASH: %d \n", pGame->cash);
     if (pGame->highScore == 0) pGame->highScore = pGame->sessionScore;
     if (pGame->highScore < pGame->sessionScore) pGame->highScore = pGame->sessionScore;
     if (pGame->highScore > pGame->saveData[0]) pGame->saveData[0] = pGame->highScore;
@@ -714,6 +738,7 @@ void updateWithServerData(Game *pGame) {
     pGame->sessionScore = serverData.sessionScore;
     pGame->serverData = serverData;
     pGame->win = serverData.win;
+    pGame->dead = pGame->serverData.clientStatus[pGame->shipId];
 }
 
 bool connectToServer(Game *pGame) {
@@ -755,7 +780,7 @@ void handleInput(SDL_Event *pEvent, Game *pGame) {
         bool isDown = (pEvent->type == SDL_KEYDOWN);
         pGame->keyHeld[key] = isDown;
 
-        if (key == SDL_SCANCODE_SPACE) {
+        if (key == SDL_SCANCODE_SPACE && pGame->dead == false) {
             if (isDown) {
                 pGame->spacePressed = true;
             } else if (pGame->spacePressed) {
@@ -794,15 +819,18 @@ MainMenuChoice handleMainMenuOptions(Game *pGame) {
     int x, y;
     SDL_GetMouseState(&x, &y);
     SDL_Point mousePoint = {x, y};
-
     const SDL_Rect *singleRect = getTextRect(pGame->pSinglePlayerText);
     const SDL_Rect *multiRect = getTextRect(pGame->pMultiPlayerText);
     const SDL_Rect *exitRect = getTextRect(pGame->pExitText);
+    const SDL_Rect *hpRect = getTextRect(pGame->pHpUpgradeText);
+    const SDL_Rect *speedRect = getTextRect(pGame->pSpeedUpgradeText);
+    const SDL_Rect *DmgRect = getTextRect(pGame->pDmgUpgradeText);
+    SDL_Event event;
 
     if (SDL_PointInRect(&mousePoint, singleRect))
-        setTextColor(pGame->pSinglePlayerText, 255, 100, 100, pGame->pSmallFont, "Stats");
+        setTextColor(pGame->pSinglePlayerText, 255, 100, 100, pGame->pSmallFont, "Upgrade");
     else
-        setTextColor(pGame->pSinglePlayerText, 238, 168, 65, pGame->pSmallFont, "Stats");
+        setTextColor(pGame->pSinglePlayerText, 238, 168, 65, pGame->pSmallFont, "Upgrade");
 
     if (SDL_PointInRect(&mousePoint, multiRect))
         setTextColor(pGame->pMultiPlayerText, 255, 100, 100, pGame->pSmallFont, "Play");
@@ -813,12 +841,62 @@ MainMenuChoice handleMainMenuOptions(Game *pGame) {
         setTextColor(pGame->pExitText, 255, 100, 100, pGame->pSmallFont, "Exit");
     else
         setTextColor(pGame->pExitText, 238, 168, 65, pGame->pSmallFont, "Exit");
+    
+    //Speed Upgrade
+    if (pGame->speedUpgrade == 1) {
+        setTextColor(pGame->pSpeedUpgradeText, 30, 30, 30, pGame->pUpgradeFont, "2X SPEED    500");
+    } else if (SDL_PointInRect(&mousePoint, speedRect)) {
+        setTextColor(pGame->pSpeedUpgradeText, 255, 100, 100, pGame->pUpgradeFont, "2X SPEED    500");
+    } else {
+        setTextColor(pGame->pSpeedUpgradeText, 238, 168, 65, pGame->pUpgradeFont, "2X SPEED    500");
+    }
 
+    // Damage Upgrade
+    if (pGame->dmgUpgrade == 1) {
+        setTextColor(pGame->pDmgUpgradeText, 30, 30, 30, pGame->pUpgradeFont, "2X DMG    1000");
+    } else if (SDL_PointInRect(&mousePoint, DmgRect)) {
+        setTextColor(pGame->pDmgUpgradeText, 255, 100, 100, pGame->pUpgradeFont, "2X DMG    1000");
+    } else {
+        setTextColor(pGame->pDmgUpgradeText, 238, 168, 65, pGame->pUpgradeFont, "2X DMG    1000");
+    }
+
+    // HP Upgrade
+    if (pGame->hpUpgrade == 1) {
+        setTextColor(pGame->pHpUpgradeText, 30, 30, 30, pGame->pUpgradeFont, "2X HP    1000");
+    } else if (SDL_PointInRect(&mousePoint, hpRect)) {
+        setTextColor(pGame->pHpUpgradeText, 255, 100, 100, pGame->pUpgradeFont, "2X HP    1000");
+    } else {
+        setTextColor(pGame->pHpUpgradeText, 238, 168, 65, pGame->pUpgradeFont, "2X HP    1000");
+    }
     Uint32 mouseState = SDL_GetMouseState(NULL, NULL);
     if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) {
         if (SDL_PointInRect(&mousePoint, singleRect)) return MAINMENU_SINGLEPLAYER;
         if (SDL_PointInRect(&mousePoint, multiRect)) return MAINMENU_MULTIPLAYER;
         if (SDL_PointInRect(&mousePoint, exitRect)) return MAINMENU_EXIT;
+        if (SDL_PointInRect(&mousePoint, speedRect) && pGame->cash >= 500 && pGame->speedUpgrade == 0)
+        {
+            pGame->speedUpgrade = 1;
+            pGame->saveData[2] = 1;
+            pGame->cash -= 500;
+            pGame->saveData[1] -= 500;
+            writeToSaveFile(SAVE_DATA_PATH, pGame);
+        } 
+        else if (SDL_PointInRect(&mousePoint, DmgRect) && pGame->cash >= 1000 && pGame->dmgUpgrade == 0)
+        {
+            pGame->dmgUpgrade = 1;
+            pGame->saveData[3] = 1;
+            pGame->cash -= 1000;
+            pGame->saveData[1] -= 1000;
+            writeToSaveFile(SAVE_DATA_PATH, pGame);
+        }
+        else if (SDL_PointInRect(&mousePoint, hpRect) && pGame->cash >= 1000 && pGame->hpUpgrade == 0)
+        {
+            pGame->hpUpgrade = 1;
+            pGame->saveData[4] = 1;
+            pGame->cash -= 1000;
+            pGame->saveData[1] -= 1000;
+            writeToSaveFile(SAVE_DATA_PATH, pGame);
+        } 
     }
     return MAINMENU_NONE;
 }
@@ -892,6 +970,13 @@ void closeGame(Game *pGame) {
     if (pGame->pCountdownText) destroyText(pGame->pCountdownText);
     if (pGame->pSessionScore) destroyText(pGame->pSessionScore);
     if (pGame->pHighScore) destroyText(pGame->pHighScore);
+    if(pGame->pSessionScore) destroyText(pGame->pSessionScore);
+    if(pGame->pCash) destroyText(pGame->pCash);
+    if(pGame->pHpUpgradeText) destroyText(pGame->pHpUpgradeText);
+    if(pGame->pSpeedUpgradeText) destroyText(pGame->pSpeedUpgradeText);
+    if(pGame->pDmgUpgradeText) destroyText(pGame->pDmgUpgradeText);
+
+
     if (pGame->pStars) destroyStars(pGame->pStars);
     if (pGame->pStartImage_1) SDL_DestroyTexture(pGame->pStartImage_1);
     if (pGame->pStartImage_2) SDL_DestroyTexture(pGame->pStartImage_2);
@@ -901,6 +986,9 @@ void closeGame(Game *pGame) {
 
     if (pGame->pFont) TTF_CloseFont(pGame->pFont);
     if (pGame->pSmallFont) TTF_CloseFont(pGame->pSmallFont);
+    if (pGame->pSmallestFont) TTF_CloseFont(pGame->pSmallestFont);
+    if (pGame->pUpgradeFont) TTF_CloseFont(pGame->pUpgradeFont);
+
 
     if (pGame->pMusic) closeMusic(pGame->pMusic);
 
@@ -1078,8 +1166,16 @@ void updateSessionScore(Game *pGame){
     static char sessionScoreString[30];
     sprintf(sessionScoreString, "Session Score: %.0f", pGame->sessionScore);
     if (pGame->pSmallestFont) {
-            pGame->pSessionScore = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallestFont, sessionScoreString, WINDOW_WIDTH/2, 200);
+            pGame->pSessionScore = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallestFont, sessionScoreString, 50, 100);
     }
 }
 
-
+void updateCashText(Game *pGame)
+{
+    if (pGame->pCash) destroyText(pGame->pCash);
+    static char str[30];
+    sprintf(str, "%.0f$", pGame->cash);
+    if (pGame->pSmallestFont) {
+            pGame->pCash = createText(pGame->pRenderer, 0, 175, 0, pGame->pSmallestFont, str, 975, 250);
+    }
+}

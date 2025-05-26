@@ -33,4 +33,7 @@ int shipCollision(Ship *pShip, SDL_Rect rect);
 bool clientAliveControll(Ship *pShip);
 void setBulletToRemove(Ship *pShip, int bulletToRemove);
 int getBulletToRemove(Ship *pShip);
+void ShipSpeedUpgrade(Ship *pShip);
+void shipHealthUpgrade(Ship *pShip);
+
 #endif

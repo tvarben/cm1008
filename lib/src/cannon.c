@@ -8,7 +8,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 struct Cannon {
     int dy, dx;
     int windowWidth, windowHeight, health;
@@ -17,6 +16,7 @@ struct Cannon {
     SDL_Rect rect;
     bool lastFacedLeft;
     bool spacebar, moveLeftQ, moveRightE, moveDownN; // keys decide direction of bullet
+    bool hpUpgradeLockedIn;
 };
 
 Cannon *createCannon(SDL_Renderer *renderer, int windowWidth, int windowHeight) {
@@ -27,9 +27,10 @@ Cannon *createCannon(SDL_Renderer *renderer, int windowWidth, int windowHeight) 
     c->windowHeight = windowHeight;
     c->renderer = renderer;
     c->dy = 0; // direction cannon shoots when press space at start of the game
-    c->dx = 400;
+    c->dx = 5;
     c->lastFacedLeft = false;
-    c->health = 2;
+    c->health = 100;
+    c->hpUpgradeLockedIn = false;
     SDL_Surface *surface = IMG_Load("../lib/resources/ship_cannon.png");
     if (!surface) {
         printf("Error loading Cannon.png: %s\n", IMG_GetError());
@@ -79,20 +80,20 @@ void updateCannon(Cannon *pCannon, Ship *pShip) {
 
     if (isLeft(pShip)) {
         pCannon->lastFacedLeft = true;
-        pCannon->dx = -100;
+        pCannon->dx = -5;
         pCannon->dy = 0;
     } else {
         pCannon->lastFacedLeft = false;
-        pCannon->dx = 100;
+        pCannon->dx = 5;
         pCannon->dy = 0;
     }
 }
 
 void handleCannonEvent(Cannon *cannon) {
     if (cannon->lastFacedLeft) {
-        spawn_projectile(cannon->rect.x - 8, cannon->rect.y + 15, -5, 0);
+        spawn_projectile(cannon->rect.x - 8, cannon->rect.y + 15, cannon->dx, 0);
     } else {
-        spawn_projectile(cannon->rect.x + 20, cannon->rect.y + 15, 5, 0);
+        spawn_projectile(cannon->rect.x + 20, cannon->rect.y + 15, cannon->dx, 0);
     }
 }
 
@@ -104,7 +105,16 @@ void resetCannon(Cannon *c) {
 }
 void damageCannon(Cannon *pCannon, int damage) {
     pCannon->health -= damage;
+    printf("cannon health %d \n", pCannon->health);
 }
 void resetCannonHealth(Cannon *pCannon) {
     pCannon->health = 100;
+}
+
+void cannonHpUpgrade(Cannon *pCannon) {
+    if (pCannon->hpUpgradeLockedIn == false)
+    {
+        pCannon->health = 200;
+        pCannon->hpUpgradeLockedIn = true;
+    }
 }

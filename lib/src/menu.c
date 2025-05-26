@@ -117,3 +117,21 @@ void drawSoreModifier(SDL_Renderer *pRenderer) { //idk a good name for this one 
     SDL_SetRenderDrawColor(pRenderer, 238, 168, 65, 255);  // Border: orange
     SDL_RenderDrawRect(pRenderer, &hatBox);
 }
+
+void showUpgradeMenu(SDL_Renderer *renderer)
+{
+    // Menu box size and position
+    int menuWidth = 800;
+    int menuHeight = 250;
+    int x = (WINDOW_WIDTH - menuWidth) / 2;
+    int y = (WINDOW_HEIGHT - menuHeight) / 2 - 205;
+
+    // Draw black box
+    SDL_Rect box = {x, y, menuWidth, menuHeight};
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black
+    SDL_RenderFillRect(renderer, &box);
+    
+    // Drawborder
+    SDL_SetRenderDrawColor(renderer, 238,168,65, 255);
+    SDL_RenderDrawRect(renderer, &box);
+}
