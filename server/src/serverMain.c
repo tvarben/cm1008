@@ -13,9 +13,9 @@
 #include "ship.h"
 #include "ship_data.h"
 #include "sound.h"
+#include "stars.h"
 #include "text.h"
 #include "tick.h"
-#include "stars.h"
 
 #define MUSIC_FILEPATH "../lib/resources/music.wav"
 
@@ -29,8 +29,8 @@ typedef struct {
     Mix_Music *pMusic;
     TTF_Font *pFont, *pSmallFont;
     Text *pStartText, *pGameName, *pExitText, *pLobbyText, *pTimer, *pOne, *pTwo, *pThree, *pFour,
-    *pHardModifiers, *pEasyModifiers, *pEasyMod1, *pEasyMod2, *pEasyMod3, *phardMod1, *phardMod2, *phardMod3,
-    *pScoreMod;
+        *pHardModifiers, *pEasyModifiers, *pEasyMod1, *pEasyMod2, *pEasyMod3, *phardMod1, *phardMod2, *phardMod3,
+        *pScoreMod;
     ClientCommand command;
     IPaddress clients[MAX_PLAYERS];
     UDPsocket pSocket;
@@ -140,7 +140,7 @@ int initiate(Game *pGame) {
     }
     // pGame->pStartText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Start", WINDOW_WIDTH / 3, WINDOW_HEIGHT / 2 + 100);
     pGame->pGameName = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Solar Defence",
-                                  WINDOW_WIDTH / 2, WINDOW_HEIGHT / 4 - 50 );
+                                  WINDOW_WIDTH / 2, WINDOW_HEIGHT / 4 - 50);
     pGame->pExitText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "Exit",
                                   WINDOW_WIDTH / 2, WINDOW_HEIGHT - 75);
     pGame->pLobbyText = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont,
@@ -153,8 +153,8 @@ int initiate(Game *pGame) {
     pGame->pThree = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "3", 750, WINDOW_HEIGHT - 450);
     pGame->pFour = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, "4", 975, WINDOW_HEIGHT - 450);
     pGame->phardMod1 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "2X ENEMIES", WINDOW_WIDTH - 145, WINDOW_HEIGHT - 550);
-    pGame->phardMod2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "0.5X DAMAGE GIVEN", WINDOW_WIDTH -145, WINDOW_HEIGHT - 400);
-    pGame->phardMod3 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "2X DAMAGE TAKEN", WINDOW_WIDTH -145, WINDOW_HEIGHT - 250);
+    pGame->phardMod2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "0.5X DAMAGE GIVEN", WINDOW_WIDTH - 145, WINDOW_HEIGHT - 400);
+    pGame->phardMod3 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "2X DAMAGE TAKEN", WINDOW_WIDTH - 145, WINDOW_HEIGHT - 250);
     pGame->pEasyMod1 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "0.5X ENEMIES", 155, WINDOW_HEIGHT - 550);
     pGame->pEasyMod2 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "2X DAMAGE GIVEN", 155, WINDOW_HEIGHT - 400);
     pGame->pEasyMod3 = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallFont, "0.5X DAMAGE TAKEN", 155, WINDOW_HEIGHT - 250);
@@ -203,7 +203,7 @@ int initiate(Game *pGame) {
     pGame->nrOfEasyMods = 0;
     pGame->nrOfHardMods = 0;
     pGame->score = 0;
-    for (int i = 0; i < 3; i++){
+    for (int i = 0; i < 3; i++) {
         pGame->easyMods[i] = 0;
         pGame->hardMods[i] = 0;
     }
@@ -255,12 +255,14 @@ void handleStartState(
     const SDL_Rect *hardModRect2 = getTextRect(pGame->phardMod2);
     const SDL_Rect *hardModRect3 = getTextRect(pGame->phardMod3);
     pGame->NrOfChosenPlayers = 0;
+    pGame->win = false;
+    pGame->serverData.win = false;
 
     while (pGame->isRunning && pGame->state == START) {
         SDL_GetMouseState(&x, &y);
         SDL_Point mousePoint = {x, y};
-        updateScoreMod(pGame);        
-        if (SDL_PointInRect(&mousePoint, startRect) ) {
+        updateScoreMod(pGame);
+        if (SDL_PointInRect(&mousePoint, startRect)) {
             setTextColor(pGame->pStartText, 255, 100, 100, pGame->pFont, "START");
         } else {
             setTextColor(pGame->pStartText, 238, 168, 65, pGame->pFont, "START");
@@ -386,15 +388,13 @@ void handleStartState(
         drawText(pGame->pTwo);
         drawText(pGame->pThree);
         drawText(pGame->pFour);
-        if (pGame->showEasyMods == true) 
-        {
+        if (pGame->showEasyMods == true) {
             DrawModifiersToMakeGameEasier(pGame->pRenderer, pGame->pFont);
             drawText(pGame->pEasyMod1);
             drawText(pGame->pEasyMod2);
             drawText(pGame->pEasyMod3);
         }
-        if (pGame->showHardMods == true)
-        {
+        if (pGame->showHardMods == true) {
             DrawModifiersToMakeGameHarder(pGame->pRenderer, pGame->pFont);
             drawText(pGame->phardMod1);
             drawText(pGame->phardMod2);
@@ -405,8 +405,7 @@ void handleStartState(
         if (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
-            }
-            else if (SDL_PointInRect(&mousePoint, startRect) &&
+            } else if (SDL_PointInRect(&mousePoint, startRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN && pGame->NrOfChosenPlayers > 0) {
                 pGame->state = LOBBY;
             } else if (SDL_PointInRect(&mousePoint, exitRect) &&
@@ -415,8 +414,7 @@ void handleStartState(
             } else if (SDL_PointInRect(&mousePoint, oneRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN) {
                 pGame->NrOfChosenPlayers = 1;
-            }  
-            else if (SDL_PointInRect(&mousePoint, twoRect) &&
+            } else if (SDL_PointInRect(&mousePoint, twoRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN) {
                 pGame->NrOfChosenPlayers = 2;
             } else if (SDL_PointInRect(&mousePoint, threeRect) &&
@@ -425,79 +423,62 @@ void handleStartState(
             } else if (SDL_PointInRect(&mousePoint, fourRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN) {
                 pGame->NrOfChosenPlayers = 4;
-            }
-             else if (SDL_PointInRect(&mousePoint, EasierRect) && event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == false) {
+            } else if (SDL_PointInRect(&mousePoint, EasierRect) && event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == false) {
                 pGame->showEasyMods = true;
-            } 
-             else if (SDL_PointInRect(&mousePoint, EasierRect) && event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true) {
-                pGame->showEasyMods = false;  
-            }
-            else if (SDL_PointInRect(&mousePoint, harderRect) && event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == false) {
+            } else if (SDL_PointInRect(&mousePoint, EasierRect) && event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true) {
+                pGame->showEasyMods = false;
+            } else if (SDL_PointInRect(&mousePoint, harderRect) && event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == false) {
                 pGame->showHardMods = true;
-            } 
-             else if (SDL_PointInRect(&mousePoint, harderRect) && event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true) {
-                pGame->showHardMods = false;  
-            }
-            else if (SDL_PointInRect(&mousePoint, easyModRect1) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true && pGame->easyMods[0] != 1) {
+            } else if (SDL_PointInRect(&mousePoint, harderRect) && event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true) {
+                pGame->showHardMods = false;
+            } else if (SDL_PointInRect(&mousePoint, easyModRect1) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true && pGame->easyMods[0] != 1) {
                 pGame->easyMods[0] = 1;
                 pGame->nrOfEasyMods++;
-            }
-            else if (SDL_PointInRect(&mousePoint, easyModRect1) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true && pGame->easyMods[0] == 1) {
+            } else if (SDL_PointInRect(&mousePoint, easyModRect1) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true && pGame->easyMods[0] == 1) {
                 pGame->easyMods[0] = 0;
                 pGame->nrOfEasyMods--;
-            }
-            else if (SDL_PointInRect(&mousePoint, easyModRect2) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true  && pGame->easyMods[1] != 1) {
+            } else if (SDL_PointInRect(&mousePoint, easyModRect2) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true && pGame->easyMods[1] != 1) {
                 pGame->easyMods[1] = 1;
                 pGame->nrOfEasyMods++;
-            }
-            else if (SDL_PointInRect(&mousePoint, easyModRect2) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true  && pGame->easyMods[1] == 1) {
+            } else if (SDL_PointInRect(&mousePoint, easyModRect2) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true && pGame->easyMods[1] == 1) {
                 pGame->easyMods[1] = 0;
                 pGame->nrOfEasyMods--;
-            }
-            else if (SDL_PointInRect(&mousePoint, easyModRect3) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true  && pGame->easyMods[2] != 1) {
+            } else if (SDL_PointInRect(&mousePoint, easyModRect3) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true && pGame->easyMods[2] != 1) {
                 pGame->easyMods[2] = 1;
                 pGame->nrOfEasyMods++;
-            }
-            else if (SDL_PointInRect(&mousePoint, easyModRect3) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true  && pGame->easyMods[2] == 1) {
+            } else if (SDL_PointInRect(&mousePoint, easyModRect3) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true && pGame->easyMods[2] == 1) {
                 pGame->easyMods[2] = 0;
                 pGame->nrOfEasyMods--;
-            }
-            else if (SDL_PointInRect(&mousePoint, hardModRect1) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[0] != 1) {
+            } else if (SDL_PointInRect(&mousePoint, hardModRect1) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[0] != 1) {
                 pGame->hardMods[0] = 1;
                 pGame->nrOfHardMods++;
-            }
-            else if (SDL_PointInRect(&mousePoint, hardModRect1) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[0] == 1) {
+            } else if (SDL_PointInRect(&mousePoint, hardModRect1) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[0] == 1) {
                 pGame->hardMods[0] = 0;
                 pGame->nrOfHardMods--;
-            }
-            else if (SDL_PointInRect(&mousePoint, hardModRect2) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[1] != 1) {
+            } else if (SDL_PointInRect(&mousePoint, hardModRect2) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[1] != 1) {
                 pGame->hardMods[1] = 1;
                 pGame->nrOfHardMods++;
-            }
-            else if (SDL_PointInRect(&mousePoint, hardModRect2) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[1] == 1) {
+            } else if (SDL_PointInRect(&mousePoint, hardModRect2) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[1] == 1) {
                 pGame->hardMods[1] = 0;
                 pGame->nrOfHardMods--;
-            }
-            else if (SDL_PointInRect(&mousePoint, hardModRect3) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[2] != 1) {
+            } else if (SDL_PointInRect(&mousePoint, hardModRect3) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[2] != 1) {
                 pGame->hardMods[2] = 1;
                 pGame->nrOfHardMods++;
-            }
-            else if (SDL_PointInRect(&mousePoint, hardModRect3) &&
-                        event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[2] == 1) {
+            } else if (SDL_PointInRect(&mousePoint, hardModRect3) &&
+                       event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true && pGame->hardMods[2] == 1) {
                 pGame->hardMods[2] = 0;
                 pGame->nrOfHardMods--;
-
             }
         }
         SDL_Delay(8);
@@ -523,12 +504,10 @@ void handleOngoingState(Game *pGame) {
     int dmgGiven = REGULAR_DMG_GIVEN;
     int dmgTaken = REGULAR_DMG_TAKEN;
     int count = 0;
-    for (int i = 0; i < MAX_PLAYERS; i++)
-    {
+    for (int i = 0; i < MAX_PLAYERS; i++) {
         pGame->serverData.clientStatus[i] = 0;
     }
-    
-    
+
     if (pGame->easyMods[1] == 1) dmgGiven *= 2;
     if (pGame->hardMods[1] == 1) dmgGiven /= 2;
     if (pGame->easyMods[2] == 1) dmgTaken /= 2;
@@ -562,22 +541,19 @@ void handleOngoingState(Game *pGame) {
                 }
             }
         }
-        for (int i = 0; i < pGame->NrOfChosenPlayers; i++)
-        {
-            if (pGame->serverData.saveData[2][i] == 1)
-            {
+        for (int i = 0; i < pGame->NrOfChosenPlayers; i++) {
+            if (pGame->serverData.saveData[2][i] == 1) {
                 ShipSpeedUpgrade(pGame->pShips[i]);
             }
-            if (pGame->serverData.saveData[3][i] == 1) //yes this was the easiest solution i could think of.
+            if (pGame->serverData.saveData[3][i] == 1) // yes this was the easiest solution i could think of.
             {
-                //the player who has this upgrade got scammed
+                // the player who has this upgrade got scammed
             }
-            if (pGame->serverData.saveData[4][i] == 1)
-            {
+            if (pGame->serverData.saveData[4][i] == 1) {
                 shipHealthUpgrade(pGame->pShips[i]);
                 cannonHpUpgrade(pGame->pCannons[i]);
             }
-        } 
+        }
         if (timeToUpdate(&lastUpdate, tickInterval)) {
             for (int i = 0; i < pGame->NrOfChosenPlayers; i++) {
                 if (pGame->pShips[i]) {
@@ -585,7 +561,7 @@ void handleOngoingState(Game *pGame) {
                     if (isCannonShooting(pGame->pShips[i]) && isPlayerDead(pGame->pShips[i]) == false) {
                         handleCannonEvent(pGame->pCannons[i]);
                         // setShoot(pGame->pShips[i], false);
-                    }        
+                    }
                     update_projectiles(delta);
                     updateShipVelocity(pGame->pShips[i]);
                     updateShipOnServer(pGame->pShips[i]);
@@ -798,7 +774,7 @@ void handleGameOverState(Game *pGame) {
     SDL_RenderPresent(pGame->pRenderer);
 
     const SDL_Rect *pRestartRect =
-    getTextRect(pRestartServer); // Hämta position för rect för Start-texten
+        getTextRect(pRestartServer); // Hämta position för rect för Start-texten
     SDL_Event event;
     printf("Score: %.2f \n", pGame->serverData.sessionScore);
     while (pGame->isRunning) {
@@ -820,7 +796,7 @@ void handleGameOverState(Game *pGame) {
             if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
             } else if (SDL_PointInRect(&mousePoint, pRestartRect) &&
-                event.type == SDL_MOUSEBUTTONDOWN) {
+                       event.type == SDL_MOUSEBUTTONDOWN) {
                 resetGameState(pGame);
                 pGame->state = START;
                 pGame->serverData.gState = pGame->state;
@@ -846,15 +822,12 @@ void sendServerData(Game *pGame) {
     for (int i = 0; i < pGame->nrOfEnemies_3 && i < NROFBOSSES; i++)
         getEnemy_3_DataPackage(pGame->pEnemies_3[i], &pGame->serverData.enemies_3[i]);
     pGame->serverData.nrOfEnemies_3 = pGame->nrOfEnemies_3;
-    for (int i = 0; i < pGame->NrOfChosenPlayers; i++)
-    {
-        if (isPlayerDead(pGame->pShips[i]) == true)
-        {
+    for (int i = 0; i < pGame->NrOfChosenPlayers; i++) {
+        if (isPlayerDead(pGame->pShips[i]) == true) {
             pGame->serverData.clientStatus[i] = 1;
         }
     }
-    if (arePlayersDead(pGame) == true)
-    {
+    if (arePlayersDead(pGame) == true) {
         pGame->score = getSessionScore(pGame);
         pGame->serverData.sessionScore = pGame->score;
         pGame->state = GAME_OVER;
@@ -1141,65 +1114,50 @@ void updateScoreMod(Game *pGame) {
     static char modString[30];
     sprintf(modString, "%d%%", getScoreMod(pGame));
     if (pGame->pFont) {
-        if (getScoreMod(pGame) < 100)
-        {
-            pGame->pScoreMod = createText(pGame->pRenderer, 175, 0, 0, pGame->pFont, modString, 138, WINDOW_HEIGHT-60);
+        if (getScoreMod(pGame) < 100) {
+            pGame->pScoreMod = createText(pGame->pRenderer, 175, 0, 0, pGame->pFont, modString, 138, WINDOW_HEIGHT - 60);
+        } else if (getScoreMod(pGame) >= 100 && getScoreMod(pGame) <= 150) {
+            pGame->pScoreMod = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, modString, 138, WINDOW_HEIGHT - 60);
+        } else if (getScoreMod(pGame) > 150 && getScoreMod(pGame) <= 300) {
+            pGame->pScoreMod = createText(pGame->pRenderer, 0, 180, 0, pGame->pFont, modString, 138, WINDOW_HEIGHT - 60);
         }
-        else if (getScoreMod(pGame) >= 100 && getScoreMod(pGame) <= 150)
-        {
-            pGame->pScoreMod = createText(pGame->pRenderer, 238, 168, 65, pGame->pFont, modString, 138, WINDOW_HEIGHT-60);
-        } 
-        else if (getScoreMod(pGame) > 150 && getScoreMod(pGame) <= 300)
-        {
-            pGame->pScoreMod = createText(pGame->pRenderer, 0, 180, 0, pGame->pFont, modString, 138, WINDOW_HEIGHT-60);
-        } 
-        
     }
 }
 
-int getScoreMod(Game *pGame)
-{
+int getScoreMod(Game *pGame) {
     int scoreMod = 0;
-    if (pGame->NrOfChosenPlayers == 0)
-    {
+    if (pGame->NrOfChosenPlayers == 0) {
         return 0;
     }
-    
-    else if (pGame->NrOfChosenPlayers == 1)
-    {
-        scoreMod=100;
-    }
-    else if (pGame->NrOfChosenPlayers == 2)
-    {
-        scoreMod=133;
-    }
-    else if (pGame->NrOfChosenPlayers == 3)
-    {
-        scoreMod=166;
-    }
-    else if (pGame->NrOfChosenPlayers == 4)
-    {
-        scoreMod=200;
+
+    else if (pGame->NrOfChosenPlayers == 1) {
+        scoreMod = 100;
+    } else if (pGame->NrOfChosenPlayers == 2) {
+        scoreMod = 133;
+    } else if (pGame->NrOfChosenPlayers == 3) {
+        scoreMod = 166;
+    } else if (pGame->NrOfChosenPlayers == 4) {
+        scoreMod = 200;
     }
 
-    for (int i = 0; i < pGame->nrOfEasyMods; i++)
-    {
-        scoreMod-=25;
+    for (int i = 0; i < pGame->nrOfEasyMods; i++) {
+        scoreMod -= 25;
     }
-    for (int i = 0; i < pGame->nrOfHardMods; i++)
-    {
-        scoreMod+=25;
+    for (int i = 0; i < pGame->nrOfHardMods; i++) {
+        scoreMod += 25;
     }
     return scoreMod;
 }
 
-float getSessionScore(Game *pGame)
-{
+float getSessionScore(Game *pGame) {
     float score = 0;
     float scoreMod = getScoreMod(pGame) / 100.0f;
-    for (int i = 0; i < pGame->killedEnemies1; i++) score+=250;
-    for (int i = 0; i < pGame->killedEnemies2; i++) score+=500;
-    for (int i = 0; i < pGame->killedEnemies3; i++) score+=10000;
+    for (int i = 0; i < pGame->killedEnemies1; i++)
+        score += 250;
+    for (int i = 0; i < pGame->killedEnemies2; i++)
+        score += 500;
+    for (int i = 0; i < pGame->killedEnemies3; i++)
+        score += 10000;
     score *= scoreMod;
     return score;
 }
