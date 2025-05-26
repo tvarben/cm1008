@@ -105,15 +105,13 @@ void resetCannon(Cannon *c) {
 }
 void damageCannon(Cannon *pCannon, int damage) {
     pCannon->health -= damage;
-    printf("cannon health %d \n", pCannon->health);
 }
 void resetCannonHealth(Cannon *pCannon) {
     pCannon->health = 100;
 }
 
 void cannonHpUpgrade(Cannon *pCannon) {
-    if (pCannon->hpUpgradeLockedIn == false)
-    {
+    if (pCannon->hpUpgradeLockedIn == false) {
         pCannon->health = 200;
         pCannon->hpUpgradeLockedIn = true;
     }
