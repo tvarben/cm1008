@@ -255,7 +255,6 @@ void handleStartState(
     const SDL_Rect *hardModRect2 = getTextRect(pGame->phardMod2);
     const SDL_Rect *hardModRect3 = getTextRect(pGame->phardMod3);
     pGame->NrOfChosenPlayers = 0;
-    pGame->win = false;
     pGame->serverData.win = false;
 
     while (pGame->isRunning && pGame->state == START) {
