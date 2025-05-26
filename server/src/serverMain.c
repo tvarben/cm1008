@@ -506,8 +506,8 @@ void handleOngoingState(Game *pGame) {
     for (int i = 0; i < MAX_PLAYERS; i++) {
         pGame->serverData.clientStatus[i] = 0;
     }
-    for (int i = 0; i < MAX_PLAYERS; i++) {
-        for (int j = 0; j < DATA_STORED; j++) {
+    for (int i = 0; i < DATA_STORED; i++) {
+        for (int j = 0; j < MAX_PLAYERS; j++) {
             pGame->serverData.saveData[i][j] = 0;
         }
     }
