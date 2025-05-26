@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
 struct enemyImage_3 {
     SDL_Renderer *pRenderer;
     SDL_Texture *pTexture;
@@ -13,10 +14,8 @@ struct enemyImage_3 {
 
 struct enemy3 {
     float x, y, vx, vy;
-    int health;
-    int damage;
+    int health, damage, window_width, window_height, renderAngle;
     bool active;
-    int window_width, window_height, renderAngle;
     SDL_Renderer *pRenderer;
     SDL_Texture *pTexture;
     SDL_Rect rect;
@@ -60,8 +59,7 @@ Enemy_3 *createEnemy_3(EnemyImage_3 *pEnemyImage3, int window_width, int window_
     return pEnemy3;
 }
 
-Enemy_3 *createEnemy_3_OnClients(EnemyImage_3 *pEnemyImage, int window_width, int window_height,
-                                 Enemy_3_Data enemyData) {
+Enemy_3 *createEnemy_3_OnClients(EnemyImage_3 *pEnemyImage, int window_width, int window_height, Enemy_3_Data enemyData) {
     Enemy_3 *pEnemy = malloc(sizeof(struct enemy3));
     pEnemy->pRenderer = pEnemyImage->pRenderer;
     pEnemy->pTexture = pEnemyImage->pTexture;
@@ -138,8 +136,7 @@ void updateEnemy_3_OnClients(Enemy_3 *pEnemy, Enemy_3_Data enemyData) {
 
 void drawEnemy_3(Enemy_3 *pEnemy3) {
     if (pEnemy3->active == true) {
-        SDL_RenderCopyEx(pEnemy3->pRenderer, pEnemy3->pTexture, NULL, &(pEnemy3->rect), 0, NULL,
-                         SDL_FLIP_NONE); // made 0 to not rotate enemy.png
+        SDL_RenderCopyEx(pEnemy3->pRenderer, pEnemy3->pTexture, NULL, &(pEnemy3->rect), 0, NULL, SDL_FLIP_NONE); // made 0 to not rotate enemy.png
     }
 }
 
@@ -166,31 +163,16 @@ void damageEnemy_3(Enemy_3 *pEnemy3, int damage, int i) {
     if (pEnemy3->health < 0) pEnemy3->health = 0;
 }
 
-// bool isInWindow_3(Enemy_3 *pEnemy3) {
-//   if (pEnemy3->x > pEnemy3->window_width || pEnemy3->x + pEnemy3->rect.w < 0 || pEnemy3->y >
-//   pEnemy3->window_height || pEnemy3->y + pEnemy3->rect.h < 0)
-//   {
-//     pEnemy3->vx = pEnemy3->vx * -1; // reverse direction
-//     pEnemy3->vy = pEnemy3->vy * -1; // reverse direction
-//     return false;
-//   }
-//   else {
-//     return true;
-//   }
-// }
-
 bool isEnemy_3Active(Enemy_3 *pEnemy3) {
-    if (pEnemy3->active == false) {
+    if (pEnemy3->active == false)
         return false;
-    } else {
+    else
         return true;
-    }
 }
 
 void printEnemy_3Health(Enemy_3 *pEnemy3) {
-    if (pEnemy3->active == true) {
+    if (pEnemy3->active == true)
         printf("Health: %d\n", pEnemy3->health);
-    }
 }
 
 void getEnemy_3_DataPackage(Enemy_3 *pEnemy, Enemy_3_Data *pEnemyData) {
