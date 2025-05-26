@@ -293,6 +293,7 @@ void run(Game *pGame) {
 
 void handleStartState(Game *pGame) {
     SDL_Event event;
+    pGame->win = false;
     while (pGame->isRunning && pGame->state == START) {
         updateCashText(pGame);
         MainMenuChoice userChoice = handleMainMenuOptions(pGame);
