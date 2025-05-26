@@ -506,6 +506,11 @@ void handleOngoingState(Game *pGame) {
     for (int i = 0; i < MAX_PLAYERS; i++) {
         pGame->serverData.clientStatus[i] = 0;
     }
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        for (int j = 0; j < DATA_STORED; j++) {
+            pGame->serverData.saveData[i][j] = 0;
+        }
+    }
 
     if (pGame->easyMods[1] == 1) dmgGiven *= 2;
     if (pGame->hardMods[1] == 1) dmgGiven /= 2;
