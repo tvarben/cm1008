@@ -406,10 +406,6 @@ void handleStartState(
             if (event.type == SDL_QUIT) {
                 pGame->isRunning = false;
             }
-            else if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
-                pGame->showEasyMods = false;
-                pGame->showHardMods = false;
-            }
             else if (SDL_PointInRect(&mousePoint, startRect) &&
                        event.type == SDL_MOUSEBUTTONDOWN && pGame->NrOfChosenPlayers > 0) {
                 pGame->state = LOBBY;
@@ -430,14 +426,18 @@ void handleStartState(
                        event.type == SDL_MOUSEBUTTONDOWN) {
                 pGame->NrOfChosenPlayers = 4;
             }
-             else if (SDL_PointInRect(&mousePoint, EasierRect) &&
-                       event.type == SDL_MOUSEBUTTONDOWN) {
+             else if (SDL_PointInRect(&mousePoint, EasierRect) && event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == false) {
                 pGame->showEasyMods = true;
             } 
-             else if (SDL_PointInRect(&mousePoint, harderRect) &&
-                       event.type == SDL_MOUSEBUTTONDOWN) {
-                pGame->showHardMods = true;  
-            }     
+             else if (SDL_PointInRect(&mousePoint, EasierRect) && event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true) {
+                pGame->showEasyMods = false;  
+            }
+            else if (SDL_PointInRect(&mousePoint, harderRect) && event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == false) {
+                pGame->showHardMods = true;
+            } 
+             else if (SDL_PointInRect(&mousePoint, harderRect) && event.type == SDL_MOUSEBUTTONDOWN && pGame->showHardMods == true) {
+                pGame->showHardMods = false;  
+            }
             else if (SDL_PointInRect(&mousePoint, easyModRect1) &&
                         event.type == SDL_MOUSEBUTTONDOWN && pGame->showEasyMods == true && pGame->easyMods[0] != 1) {
                 pGame->easyMods[0] = 1;
@@ -519,13 +519,20 @@ void handleOngoingState(Game *pGame) {
     pGame->score = 0;
     pGame->startTime = SDL_GetTicks64();
     pGame->gameTime = -2; // i dont know why
+    bool upgradesDone = 0;
     int dmgGiven = REGULAR_DMG_GIVEN;
     int dmgTaken = REGULAR_DMG_TAKEN;
-    if (pGame->easyMods[1] == 1) dmgGiven *=2;
-    if (pGame->hardMods[1] == 1) dmgGiven /=2;
-    if (pGame->easyMods[2] == 1) dmgTaken /=2;
-    if (pGame->hardMods[2] == 1) dmgTaken *=2;
-
+    int count = 0;
+    for (int i = 0; i < MAX_PLAYERS; i++)
+    {
+        pGame->serverData.clientStatus[i] = 0;
+    }
+    
+    
+    if (pGame->easyMods[1] == 1) dmgGiven *= 2;
+    if (pGame->hardMods[1] == 1) dmgGiven /= 2;
+    if (pGame->easyMods[2] == 1) dmgTaken /= 2;
+    if (pGame->hardMods[2] == 1) dmgTaken *= 2;
     if (pGame->nrOfEnemies_3 == 0) {
         spawnBoss(pGame);
     }
@@ -543,24 +550,42 @@ void handleOngoingState(Game *pGame) {
             memcpy(&cData, pGame->pPacket->data, sizeof(ClientData));
             clientIndex = getClientIndex(pGame, &pGame->pPacket->address);
             pGame->map = cData.map; // idk if this is safe.
+
             if (clientIndex >= 0 && clientIndex < pGame->NrOfChosenPlayers) {
                 applyShipCommand(pGame->pShips[clientIndex], cData.command);
                 if (cData.isShooting) {
                     setShoot(pGame->pShips[clientIndex], true);
                     // pGame->pShips[clientIndex]->shoot = true;
                 }
+                for (int i = 0; i < DATA_STORED; i++) {
+                    pGame->serverData.saveData[i][clientIndex] = cData.saveData[i];
+                }
             }
         }
-        /*if (delta >= tickInterval) {
-            lastUpdate = now;*/
+        for (int i = 0; i < pGame->NrOfChosenPlayers; i++)
+        {
+            if (pGame->serverData.saveData[2][i] == 1)
+            {
+                ShipSpeedUpgrade(pGame->pShips[i]);
+            }
+            if (pGame->serverData.saveData[3][i] == 1) //yes this was the easiest solution i could think of.
+            {
+                //the player who has this upgrade got scammed
+            }
+            if (pGame->serverData.saveData[4][i] == 1)
+            {
+                shipHealthUpgrade(pGame->pShips[i]);
+                cannonHpUpgrade(pGame->pCannons[i]);
+            }
+        } 
         if (timeToUpdate(&lastUpdate, tickInterval)) {
             for (int i = 0; i < pGame->NrOfChosenPlayers; i++) {
                 if (pGame->pShips[i]) {
                     // if (isShooting(pGame->pShips[i]) ) {
-                    if (isCannonShooting(pGame->pShips[i])) {
+                    if (isCannonShooting(pGame->pShips[i]) && isPlayerDead(pGame->pShips[i]) == false) {
                         handleCannonEvent(pGame->pCannons[i]);
                         // setShoot(pGame->pShips[i], false);
-                    }
+                    }        
                     update_projectiles(delta);
                     updateShipVelocity(pGame->pShips[i]);
                     updateShipOnServer(pGame->pShips[i]);
@@ -821,6 +846,13 @@ void sendServerData(Game *pGame) {
     for (int i = 0; i < pGame->nrOfEnemies_3 && i < NROFBOSSES; i++)
         getEnemy_3_DataPackage(pGame->pEnemies_3[i], &pGame->serverData.enemies_3[i]);
     pGame->serverData.nrOfEnemies_3 = pGame->nrOfEnemies_3;
+    for (int i = 0; i < pGame->NrOfChosenPlayers; i++)
+    {
+        if (isPlayerDead(pGame->pShips[i]) == true)
+        {
+            pGame->serverData.clientStatus[i] = 1;
+        }
+    }
     if (arePlayersDead(pGame) == true)
     {
         pGame->score = getSessionScore(pGame);

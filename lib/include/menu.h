@@ -9,4 +9,5 @@ void drawModifierMenu(SDL_Renderer *pRenderer, TTF_Font *pFont);
 void DrawModifiersToMakeGameEasier(SDL_Renderer *pRenderer, TTF_Font *pFont);
 void DrawModifiersToMakeGameHarder(SDL_Renderer *pRenderer, TTF_Font *pFont);
 void drawSoreModifier(SDL_Renderer *pRenderer);
+void showUpgradeMenu(SDL_Renderer *renderer);
 #endif

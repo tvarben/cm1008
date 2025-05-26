@@ -13,6 +13,7 @@
 #define NROFBOSSES 1
 #define REGULAR_DMG_GIVEN 10
 #define REGULAR_DMG_TAKEN 20
+#define TWICE_REGULAR_DMG_GIVEN 20
 #define SAVE_DATA_PATH "../lib/resources/save.txt"
 #define DATA_STORED 5
 
@@ -53,6 +54,8 @@ typedef struct {
     GameState state;
     int nrOfPlayers; //decided by server
     float sessionScore;
+    float saveData[DATA_STORED];
+    int dead;
 } ClientData;
 
 typedef struct {
@@ -90,6 +93,8 @@ typedef struct {
     int map;
     int nrOfPlayers;
     float sessionScore;
+    float saveData[DATA_STORED][MAX_PLAYERS];
+    int clientStatus[MAX_PLAYERS];
 } ServerData;
 
 #endif
