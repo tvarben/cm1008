@@ -1166,7 +1166,7 @@ void updateSessionScore(Game *pGame){
     static char sessionScoreString[30];
     sprintf(sessionScoreString, "Session Score: %.0f", pGame->sessionScore);
     if (pGame->pSmallestFont) {
-            pGame->pSessionScore = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallestFont, sessionScoreString, 50, 100);
+            pGame->pSessionScore = createText(pGame->pRenderer, 238, 168, 65, pGame->pSmallestFont, sessionScoreString, 100, 50);
     }
 }
 
