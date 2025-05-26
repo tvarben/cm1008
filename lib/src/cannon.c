@@ -8,15 +8,14 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 struct Cannon {
-    int dy, dx;
-    int windowWidth, windowHeight, health;
+    int dy, dx, windowWidth, windowHeight, health;
     SDL_Renderer *renderer;
     SDL_Texture *texture;
     SDL_Rect rect;
-    bool lastFacedLeft;
     bool spacebar, moveLeftQ, moveRightE, moveDownN; // keys decide direction of bullet
-    bool hpUpgradeLockedIn;
+    bool hpUpgradeLockedIn, lastFacedLeft;
 };
 
 Cannon *createCannon(SDL_Renderer *renderer, int windowWidth, int windowHeight) {
@@ -51,8 +50,6 @@ Cannon *createCannon(SDL_Renderer *renderer, int windowWidth, int windowHeight) 
     c->rect.w /= 2; // width of image
     c->rect.h /= 2; // height of image
 
-    /*c->x = x - c->rect.w / 2;*/
-    /*c->y = y - c->rect.h / 2;*/
     return c;
 }
 
@@ -103,9 +100,11 @@ void resetCannon(Cannon *c) {
     c->moveLeftQ = false;
     c->moveRightE = false;
 }
+
 void damageCannon(Cannon *pCannon, int damage) {
     pCannon->health -= damage;
 }
+
 void resetCannonHealth(Cannon *pCannon) {
     pCannon->health = 100;
 }
