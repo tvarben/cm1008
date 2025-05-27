@@ -5,18 +5,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SPEED 3
+#define SPEED 5
 
 struct ship {
-    float x, y, vx, vy, xStart, yStart, targetX,
-        targetY; // x och y används inte? kolla rad 50
-    // float targetX, targetY; // for smooth movement
-    int windowWidth, windowHeight;
+    float x, y, vx, vy, xStart, yStart, targetX, targetY;
+    int windowWidth, windowHeight, health, bulletToRemove, speed;
     SDL_Renderer *renderer;
     SDL_Texture *texture, *shield;
     SDL_Rect shipRect, shieldRect;
-    int health, bulletToRemove;
-    bool keyLeft, keyRight, keyUp, keyDown, facingLeft, isShooting, isAlive;
+    bool keyLeft, keyRight, keyUp, keyDown, facingLeft, isShooting, isAlive, hpUpgradeLockedIn;
 };
 
 Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth, int windowHeight) {
@@ -29,9 +26,9 @@ Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth, int wind
     pShip->windowHeight = windowHeight;
     pShip->renderer = renderer;
     pShip->keyDown = pShip->keyUp = pShip->keyRight = pShip->keyLeft = pShip->isShooting = false;
-    pShip->health = 2;
+    pShip->health = 100;
     pShip->isAlive = true;
-
+    pShip->speed = 3;
     // SDL_Surface *surface = IMG_Load("../lib/resources/player.png");
     char imagePath[64];
     sprintf(imagePath, "../lib/resources/player%d.png", playerId);
@@ -61,7 +58,9 @@ Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth, int wind
     pShip->targetX = pShip->xStart;
     pShip->targetY = pShip->yStart;
 
-    SDL_Surface *surface2 = IMG_Load("../lib/resources/shield.png");
+    char imagePath2[64];
+    sprintf(imagePath2, "../lib/resources/shield%d.png", playerId);
+    SDL_Surface *surface2 = IMG_Load(imagePath2);
     if (!surface) {
         printf("Error loading shield.png: %s\n", IMG_GetError());
         free(pShip);
@@ -82,9 +81,7 @@ Ship *createShip(int playerId, SDL_Renderer *renderer, int windowWidth, int wind
 
     pShip->shieldRect.x = pShip->x;
     pShip->shieldRect.y = pShip->y;
-    SDL_SetTextureAlphaMod(pShip->shield,
-                           75); // sets transparency level, lower means more transparent
-
+    pShip->hpUpgradeLockedIn = false;
     return pShip;
 }
 
@@ -115,14 +112,14 @@ void updateShipVelocity(Ship *pShip) {
 
 // For client-side prediction + interpolation
 void updateShipOnClients(Ship *pShip, int shipId, int myShipId) {
-    const float lerpFactor = 0.75f; // 75% Adjust this value to control the interpolation speed, the
-                                    // closer to 1 the faster
+    const float lerpFactor = 0.75f;   // 75% Adjust this value to control the interpolation speed, the
+                                      // closer to 1 the faster
     const float correctionFactor = 5; // nr of pixels, threshold for correction
     float dx, dy;
 
     if (shipId == myShipId) {
-        pShip->x += pShip->vx * SPEED;
-        pShip->y += pShip->vy * SPEED;
+        pShip->x += pShip->vx * pShip->speed;
+        pShip->y += pShip->vy * pShip->speed;
         dx = pShip->targetX - pShip->x;
         dy = pShip->targetY - pShip->y;
 
@@ -157,8 +154,8 @@ int getShipY(Ship *pShip) {
 // For server (no client prediction, pure physics)
 void updateShipOnServer(Ship *pShip) {
 
-    pShip->x += pShip->vx * SPEED;
-    pShip->y += pShip->vy * SPEED;
+    pShip->x += pShip->vx * pShip->speed;
+    pShip->y += pShip->vy * pShip->speed;
     /*pShip->shipRect.x += pShip->vx * SPEED;*/
     /*pShip->shipRect.y += pShip->vy * SPEED;*/
 
@@ -168,7 +165,11 @@ void updateShipOnServer(Ship *pShip) {
 void stayInWindow(Ship *pShip) {
     pShip->shipRect.x = (int)pShip->x;
     pShip->shipRect.y = (int)pShip->y;
-    pShip->shieldRect.x = ((int)pShip->x) - 10; // not sure if this is more left or more right
+    if (pShip->facingLeft) {
+        pShip->shieldRect.x = ((int)pShip->x) - 17; // not sure if this is more left or more right
+    } else {
+        pShip->shieldRect.x = ((int)pShip->x) - 18;
+    }
     pShip->shieldRect.y = ((int)pShip->y) - 15; // adjusted where shield is placed, -15 is a bit up
 
     // BOUNDARY CHECK
@@ -182,35 +183,60 @@ void stayInWindow(Ship *pShip) {
 
 void drawShip(Ship *pShip) {
     SDL_RendererFlip flip = pShip->facingLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-    if (pShip->health <= 0) { //
+    if (pShip->health <= 0) {
         pShip->shipRect.w = 0;
         pShip->shipRect.h = 0;
         return;
     }
     SDL_RenderCopyEx(pShip->renderer, pShip->texture, NULL, &pShip->shipRect, 0, NULL, flip);
-    if (pShip->health >= 2)
+
+    if (pShip->health == 200) {
+        SDL_SetTextureAlphaMod(pShip->shield, 220);
         SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
-
-    /*if (s->health >= 2) {
-        SDL_RenderCopy(pShip->renderer, pShip->texture, NULL, &pShip->shipRect);
-    }*/
-    // SDL_RenderCopy(pShip->renderer, pShip->texture, NULL, &pShip->shipRect);
+    } else if (pShip->health == 180) {
+        SDL_SetTextureAlphaMod(pShip->shield, 190); // sets transparency level, lower means more transparent
+        SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
+    } else if (pShip->health == 160) {
+        SDL_SetTextureAlphaMod(pShip->shield, 170); // sets transparency level, lower means more transparent
+        SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
+    } else if (pShip->health == 140) {
+        SDL_SetTextureAlphaMod(pShip->shield, 140); // sets transparency level, lower means more transparent
+        SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
+    } else if (pShip->health == 120) {
+        SDL_SetTextureAlphaMod(pShip->shield, 120); // sets transparency level, lower means more transparent
+        SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
+    } else if (pShip->health == 100) {
+        SDL_SetTextureAlphaMod(pShip->shield, 100); // sets transparency level, lower means more transparent
+        SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
+    } else if (pShip->health == 80) {
+        SDL_SetTextureAlphaMod(pShip->shield, 80); // sets transparency level, lower means more transparent
+        SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
+    } else if (pShip->health == 60) {
+        SDL_SetTextureAlphaMod(pShip->shield, 60); // sets transparency level, lower means more transparent
+        SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
+    } else if (pShip->health == 40) {
+        SDL_SetTextureAlphaMod(pShip->shield, 40); // sets transparency level, lower means more transparent
+        SDL_RenderCopy(pShip->renderer, pShip->shield, NULL, &pShip->shieldRect);
+    }
 }
-
-void resetShip(Ship *pShip) {
+void resetShip(Ship *pShip, int playerId) {
+    pShip->isAlive = true;
     pShip->vx = 0;
     pShip->vy = 0;
     pShip->keyRight = pShip->keyLeft = pShip->keyDown = pShip->keyUp = false;
+    pShip->shipRect.w /= 4;
+    pShip->shipRect.h /= 4;
+    pShip->hpUpgradeLockedIn = false;
+    pShip->xStart = pShip->x = pShip->shipRect.x = WINDOW_HEIGHT / 2 - pShip->shipRect.h / 2;
+    pShip->yStart = pShip->y = pShip->shipRect.y = (playerId * 100) + 50;
 }
 
 void destroyShip(Ship *pShip) {
     if (pShip) {
-        if (pShip->texture) {
+        if (pShip->texture)
             SDL_DestroyTexture(pShip->texture);
-        }
-        if (pShip->shield) {
+        if (pShip->shield)
             SDL_DestroyTexture(pShip->shield);
-        }
         free(pShip);
     }
 }
@@ -255,8 +281,7 @@ void applyShipCommand(Ship *pShip, ClientCommand command) {
     }
 }
 
-void getShipDataPackage(Ship *pShip,
-                        ShipData *pShipData) { // retrieves data from server
+void getShipDataPackage(Ship *pShip, ShipData *pShipData) { // retrieves data from server
     pShipData->x = pShip->x;
     pShipData->y = pShip->y;
     pShipData->vx = pShip->vx;
@@ -294,7 +319,6 @@ int shipCollision(Ship *pShip, SDL_Rect rect) {
 
 void damageShip(Ship *pShip, int damage) {
     pShip->health -= damage;
-    printf("Ship health %d\n", pShip->health);
 }
 
 bool isPlayerDead(Ship *pShip) {
@@ -307,17 +331,17 @@ bool isPlayerDead(Ship *pShip) {
 }
 
 void resetHealth(Ship *pShip) {
-    pShip->health = 2;
+    pShip->health = 100;
     return;
 }
 
 bool clientAliveControll(Ship *pShip) {
-    if (pShip->isAlive == false) {
+    if (pShip->isAlive == false)
         return false;
-    } else {
+    else
         return true;
-    }
 }
+
 void setBulletToRemove(Ship *pShip, int bulletToRemove) {
     pShip->bulletToRemove = bulletToRemove;
 }
@@ -327,4 +351,15 @@ int getBulletToRemove(Ship *pShip) {
     if (pShip) bullet = pShip->bulletToRemove;
     pShip->bulletToRemove = -1;
     return bullet;
+}
+
+void ShipSpeedUpgrade(Ship *pShip) {
+    pShip->speed = 8;
+}
+
+void shipHealthUpgrade(Ship *pShip) {
+    if (pShip->hpUpgradeLockedIn == false) {
+        pShip->health = 200;
+        pShip->hpUpgradeLockedIn = true;
+    }
 }

@@ -20,7 +20,6 @@ void spawn_projectile(float x, float y, float dx, float dy) {
             projectiles[i].active = true;
             projectiles[i].rect.w = projectile_width; // size of projectile
             projectiles[i].rect.h = projectile_length;
-            // printf("spawning projectile\n");
             return;
         }
     }
@@ -31,13 +30,11 @@ void update_projectiles(Uint32 delta_time) {
         if (projectiles[i].active) {
             projectiles[i].x += projectiles[i].vx * delta_time / 10;
             projectiles[i].y += projectiles[i].vy * delta_time / 10;
-            printf("active projectile %d\n", i);
 
             // Deactivate if off screen (based on wndiow size)
             if (projectiles[i].x < 0 || projectiles[i].x > WINDOW_WIDTH || projectiles[i].y < 0 ||
                 projectiles[i].y > WINDOW_HEIGHT) {
                 projectiles[i].active = false;
-                // printf("deactivating projectile\n");
             }
 
             // Update rect position for rendering
@@ -48,11 +45,10 @@ void update_projectiles(Uint32 delta_time) {
 }
 
 void render_projectiles(SDL_Renderer *renderer) {
-    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255); // Yellow
+    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
     for (int i = 0; i < MAX_PROJECTILES; i++) {
         if (projectiles[i].active) {
             SDL_RenderFillRect(renderer, &projectiles[i].rect);
-            // printf("rendering projectile\n");
         }
     }
 }
