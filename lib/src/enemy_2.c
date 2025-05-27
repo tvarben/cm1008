@@ -1,11 +1,12 @@
-#include "enemy_2.h"
-#include "ship_data.h"
+#include "../../lib/include/enemy_2.h"
+#include "../../lib/include/ship_data.h"
 #include <SDL2/SDL_image.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
 struct enemyImage_2 {
     SDL_Renderer *pRenderer;
     SDL_Texture *pTexture;
@@ -13,10 +14,8 @@ struct enemyImage_2 {
 
 struct enemy2 {
     float x, y, vx, vy;
-    int health;
-    int damage;
+    int health, damage, window_width, window_height;
     bool active;
-    int window_width, window_height;
     SDL_Renderer *pRenderer;
     SDL_Texture *pTexture;
     SDL_Rect rect;
@@ -50,7 +49,6 @@ EnemyImage_2 *initiateEnemy_2(SDL_Renderer *pRenderer) {
 }
 
 Enemy_2 *createEnemy_2(EnemyImage_2 *pEnemyImage2, int window_width, int window_height) {
-    // printf("creating enemy_2\n");
     Enemy_2 *pEnemy2 = malloc(sizeof(struct enemy2));
     pEnemy2->pRenderer = pEnemyImage2->pRenderer;
     pEnemy2->pTexture = pEnemyImage2->pTexture;
@@ -62,8 +60,7 @@ Enemy_2 *createEnemy_2(EnemyImage_2 *pEnemyImage2, int window_width, int window_
     return pEnemy2;
 }
 
-Enemy_2 *createEnemy_2_OnClients(EnemyImage_2 *pEnemyImage, int window_width, int window_height,
-                                 Enemy_2_Data enemyData) {
+Enemy_2 *createEnemy_2_OnClients(EnemyImage_2 *pEnemyImage, int window_width, int window_height, Enemy_2_Data enemyData) {
     Enemy_2 *pEnemy = malloc(sizeof(struct enemy2));
     pEnemy->pRenderer = pEnemyImage->pRenderer;
     pEnemy->pTexture = pEnemyImage->pTexture;
@@ -152,8 +149,7 @@ void updateEnemy_2_OnClients(Enemy_2 *pEnemy, Enemy_2_Data enemyData) {
 
 void drawEnemy_2(Enemy_2 *pEnemy2) {
     if (pEnemy2->active == true) {
-        SDL_RenderCopyEx(pEnemy2->pRenderer, pEnemy2->pTexture, NULL, &(pEnemy2->rect), 0, NULL,
-                         SDL_FLIP_NONE); // made 0 to not rotate enemy.png
+        SDL_RenderCopyEx(pEnemy2->pRenderer, pEnemy2->pTexture, NULL, &(pEnemy2->rect), 0, NULL, SDL_FLIP_NONE); // made 0 to not rotate enemy.png
     }
 }
 

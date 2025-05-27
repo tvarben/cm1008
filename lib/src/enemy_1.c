@@ -1,5 +1,5 @@
-#include "enemy_1.h"
-#include "ship_data.h"
+#include "../include/enemy_1.h"
+#include "../include/ship_data.h"
 #include <SDL2/SDL_image.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -15,10 +15,8 @@ struct enemyImage {
 
 struct enemy {
     float x, y, vx, vy;
-    int health;
-    int damage;
+    int health, damage, window_width, window_height;
     bool active;
-    int window_width, window_height;
     SDL_Renderer *pRenderer;
     SDL_Texture *pTexture;
     SDL_Rect rect;
@@ -150,8 +148,7 @@ void updateEnemyOnClients(Enemy *pEnemy, Enemy_1_Data enemyData) {
 
 void drawEnemy(Enemy *pEnemy) {
     if (pEnemy->active == true) {
-        SDL_RenderCopyEx(pEnemy->pRenderer, pEnemy->pTexture, NULL, &(pEnemy->rect), 0, NULL,
-                         SDL_FLIP_NONE); // made 0 to not rotate enemy.png
+        SDL_RenderCopyEx(pEnemy->pRenderer, pEnemy->pTexture, NULL, &(pEnemy->rect), 0, NULL, SDL_FLIP_NONE); // made 0 to not rotate enemy.png
     }
 }
 

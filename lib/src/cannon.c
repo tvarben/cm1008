@@ -1,22 +1,21 @@
-#include "cannon.h"
-#include "bullet.h"
-#include "ship.h"
-#include "ship_data.h"
+#include "../include/cannon.h"
+#include "../include/bullet.h"
+#include "../include/ship.h"
+#include "../include/ship_data.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_scancode.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 struct Cannon {
-    int dy, dx;
-    int windowWidth, windowHeight, health;
+    int dy, dx, windowWidth, windowHeight, health;
     SDL_Renderer *renderer;
     SDL_Texture *texture;
     SDL_Rect rect;
-    bool lastFacedLeft;
     bool spacebar, moveLeftQ, moveRightE, moveDownN; // keys decide direction of bullet
-    bool hpUpgradeLockedIn;
+    bool hpUpgradeLockedIn, lastFacedLeft;
 };
 
 Cannon *createCannon(SDL_Renderer *renderer, int windowWidth, int windowHeight) {
@@ -51,8 +50,6 @@ Cannon *createCannon(SDL_Renderer *renderer, int windowWidth, int windowHeight) 
     c->rect.w /= 2; // width of image
     c->rect.h /= 2; // height of image
 
-    /*c->x = x - c->rect.w / 2;*/
-    /*c->y = y - c->rect.h / 2;*/
     return c;
 }
 
@@ -103,17 +100,17 @@ void resetCannon(Cannon *c) {
     c->moveLeftQ = false;
     c->moveRightE = false;
 }
+
 void damageCannon(Cannon *pCannon, int damage) {
     pCannon->health -= damage;
-    printf("cannon health %d \n", pCannon->health);
 }
+
 void resetCannonHealth(Cannon *pCannon) {
     pCannon->health = 100;
 }
 
 void cannonHpUpgrade(Cannon *pCannon) {
-    if (pCannon->hpUpgradeLockedIn == false)
-    {
+    if (pCannon->hpUpgradeLockedIn == false) {
         pCannon->health = 200;
         pCannon->hpUpgradeLockedIn = true;
     }
