@@ -54,16 +54,15 @@ char *enterIPAddress(SDL_Renderer *renderer, TTF_Font *font) {
     return ip;
 }
 
-
-void drawModifierMenu(SDL_Renderer *pRenderer, TTF_Font *pFont){
+void drawModifierMenu(SDL_Renderer *pRenderer, TTF_Font *pFont) {
     int menuWidth = 900;
     int menuHeight = 500;
     int x = (WINDOW_WIDTH - menuWidth) / 2;
-    int y = (WINDOW_HEIGHT - menuHeight) / 2  -50;
+    int y = (WINDOW_HEIGHT - menuHeight) / 2 - 50;
 
     SDL_Rect box = {x, y, menuWidth, menuHeight};
     SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
-    SDL_RenderFillRect(pRenderer, &box); 
+    SDL_RenderFillRect(pRenderer, &box);
     SDL_SetRenderDrawColor(pRenderer, 238, 168, 65, 255);
     SDL_RenderDrawRect(pRenderer, &box);
 
@@ -73,26 +72,26 @@ void drawModifierMenu(SDL_Renderer *pRenderer, TTF_Font *pFont){
     int innerY = y + (menuHeight - innerHeight) / 2 + 135;
 
     SDL_Rect innerBox = {innerX, innerY, innerWidth, innerHeight};
-    SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);  //
+    SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255); //
     SDL_RenderFillRect(pRenderer, &innerBox);
-    SDL_SetRenderDrawColor(pRenderer, 238, 168, 65, 255); 
+    SDL_SetRenderDrawColor(pRenderer, 238, 168, 65, 255);
     SDL_RenderDrawRect(pRenderer, &innerBox);
 }
 
-void DrawModifiersToMakeGameEasier(SDL_Renderer *pRenderer, TTF_Font *pFont){
+void DrawModifiersToMakeGameEasier(SDL_Renderer *pRenderer, TTF_Font *pFont) {
     int menuWidth = 250;
     int menuHeight = 650;
     int x = 25;
-    int y = (WINDOW_HEIGHT - menuHeight) / 2 ;
+    int y = (WINDOW_HEIGHT - menuHeight) / 2;
 
     SDL_Rect box = {x, y, menuWidth, menuHeight};
     SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
-    SDL_RenderFillRect(pRenderer, &box); 
+    SDL_RenderFillRect(pRenderer, &box);
     SDL_SetRenderDrawColor(pRenderer, 238, 168, 65, 255);
     SDL_RenderDrawRect(pRenderer, &box);
 }
 
-void DrawModifiersToMakeGameHarder(SDL_Renderer *pRenderer, TTF_Font *pFont){
+void DrawModifiersToMakeGameHarder(SDL_Renderer *pRenderer, TTF_Font *pFont) {
     int menuWidth = 250;
     int menuHeight = 650;
     int x = (WINDOW_WIDTH - menuWidth) - 20;
@@ -100,26 +99,25 @@ void DrawModifiersToMakeGameHarder(SDL_Renderer *pRenderer, TTF_Font *pFont){
 
     SDL_Rect box = {x, y, menuWidth, menuHeight};
     SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
-    SDL_RenderFillRect(pRenderer, &box); 
+    SDL_RenderFillRect(pRenderer, &box);
     SDL_SetRenderDrawColor(pRenderer, 238, 168, 65, 255);
     SDL_RenderDrawRect(pRenderer, &box);
 }
 
-void drawSoreModifier(SDL_Renderer *pRenderer) { //idk a good name for this one its just the black box and border
+void drawSoreModifier(SDL_Renderer *pRenderer) { // idk a good name for this one its just the black box and border
     int hatWidth = 245;
     int hatHeight = 100;
     int x = 15;
-    int y = (WINDOW_HEIGHT) - 120;
+    int y = (WINDOW_HEIGHT)-120;
 
     SDL_Rect hatBox = {x, y, hatWidth, hatHeight};
-    SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);  // Fill: black
+    SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255); // Fill: black
     SDL_RenderFillRect(pRenderer, &hatBox);
-    SDL_SetRenderDrawColor(pRenderer, 238, 168, 65, 255);  // Border: orange
+    SDL_SetRenderDrawColor(pRenderer, 238, 168, 65, 255); // Border: orange
     SDL_RenderDrawRect(pRenderer, &hatBox);
 }
 
-void showUpgradeMenu(SDL_Renderer *renderer)
-{
+void showUpgradeMenu(SDL_Renderer *renderer) {
     // Menu box size and position
     int menuWidth = 800;
     int menuHeight = 250;
@@ -130,8 +128,8 @@ void showUpgradeMenu(SDL_Renderer *renderer)
     SDL_Rect box = {x, y, menuWidth, menuHeight};
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black
     SDL_RenderFillRect(renderer, &box);
-    
+
     // Drawborder
-    SDL_SetRenderDrawColor(renderer, 238,168,65, 255);
+    SDL_SetRenderDrawColor(renderer, 238, 168, 65, 255);
     SDL_RenderDrawRect(renderer, &box);
 }

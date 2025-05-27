@@ -6,8 +6,11 @@ a.out
 *.o
 .DS_Store
 myGame
+gameServer
+gameClient
 # macOS system files
 .DS_Store
+*.txt
 
 # Build outputs
 myGame

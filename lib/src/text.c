@@ -8,8 +8,7 @@ struct text {
     SDL_Renderer *pRenderer;
 };
 
-Text *createText(SDL_Renderer *pRenderer, int r, int g, int b, TTF_Font *pFont, char *pString,
-                 int x, int y) {
+Text *createText(SDL_Renderer *pRenderer, int r, int g, int b, TTF_Font *pFont, char *pString, int x, int y) {
     Text *pText = malloc(sizeof(struct text));
     pText->pRenderer = pRenderer;
     SDL_Color color = {r, g, b};
