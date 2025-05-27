@@ -33,6 +33,7 @@ typedef struct {
     int nrOfShips, shipId, nrOfplayers;
     GameState state;
     Mix_Music *pMusic;
+    Mix_Chunk *pSFX;
     TTF_Font *pFont, *pSmallFont, *pSmallestFont, *pUpgradeFont;
     Text *pSinglePlayerText, *pGameName, *pExitText, *pPauseText, *pTimer, *pMultiPlayerText,
         *pMenuText, *pGameOverText, *pWaitingText, *pSessionScore, *pHighScore, *pCash,
@@ -273,7 +274,9 @@ void run(Game *pGame) {
     while (pGame->isRunning) {
         switch (pGame->state) {
         case START:
+            Mix_PlayMusic(pGame->pMusic, 0);
             handleStartState(pGame);
+            Mix_HaltMusic();
             break;
         case ONGOING:
             handleOngoingState(pGame);
@@ -407,6 +410,7 @@ void handleOngoingState(Game *pGame) {
                     updateCannon(pGame->pCannons[i], pGame->pShips[i]);
                     if (isCannonShooting(pGame->pShips[i])) {
                         handleCannonEvent(pGame->pCannons[i]);
+                        playSound(&pGame->pSFX, "../lib/resources/pew.wav", -1);
                     }
                 }
             }
@@ -430,8 +434,10 @@ void handleOngoingState(Game *pGame) {
             if (pGame->gameTime >= nextMapShowWhen) pGame->map = 2;
             if (seenMapTransition == false && pGame->gameTime >= nextMapShowWhen - 1) {
                 seenMapTransition = true;
+                playSound(&pGame->pSFX, "../lib/resources/nextlevel.wav", -1);
                 SDL_SetRenderDrawColor(pGame->pRenderer, 175, 0, 0, 255);
                 drawMapTransitionScreen(pGame);
+                playSound(&pGame->pSFX, "../lib/resources/Alien1.wav", -1);
             }
             for (int i = 0; i < pGame->nrOfEnemies_1; i++) {
                 if (isEnemyActive(pGame->pEnemies_1[i])) {
