@@ -15,10 +15,8 @@ struct enemyImage {
 
 struct enemy {
     float x, y, vx, vy;
-    int health;
-    int damage;
+    int health, damage, window_width, window_height;
     bool active;
-    int window_width, window_height;
     SDL_Renderer *pRenderer;
     SDL_Texture *pTexture;
     SDL_Rect rect;
@@ -80,7 +78,7 @@ static void getStartValuesFromServer(Enemy *pEnemy, Enemy_1_Data enemyData) {
     pEnemy->rectHitbox.w = pEnemy->rect.w - 20;
     pEnemy->rectHitbox.h = pEnemy->rect.h - 10;
     pEnemy->damage = 1;
-    pEnemy->health = 2;
+    pEnemy->health = 30;
     pEnemy->x = enemyData.x;
     pEnemy->y = enemyData.y;
     pEnemy->active = enemyData.active;
@@ -93,9 +91,9 @@ static void getStartValues(Enemy *pEnemy) {
     pEnemy->rectHitbox.w = pEnemy->rect.w - 20;
     pEnemy->rectHitbox.h = pEnemy->rect.h - 10;
     pEnemy->damage = 1;
-    pEnemy->health = 2;
-    // float speed = rand() % (50 - 15 + 1) + 15;
-    float speed = INITIALSPEED;
+    pEnemy->health = 30;
+    float speed = rand() % 4 + 3;
+    // float speed = INITIALSPEED;
     if (startSpawnOnTheLeft) {
         pEnemy->x = pEnemy->window_width;
         pEnemy->y = rand() % (pEnemy->window_height - pEnemy->rect.h);
@@ -150,8 +148,7 @@ void updateEnemyOnClients(Enemy *pEnemy, Enemy_1_Data enemyData) {
 
 void drawEnemy(Enemy *pEnemy) {
     if (pEnemy->active == true) {
-        SDL_RenderCopyEx(pEnemy->pRenderer, pEnemy->pTexture, NULL, &(pEnemy->rect), 0, NULL,
-                         SDL_FLIP_NONE); // made 0 to not rotate enemy.png
+        SDL_RenderCopyEx(pEnemy->pRenderer, pEnemy->pTexture, NULL, &(pEnemy->rect), 0, NULL, SDL_FLIP_NONE); // made 0 to not rotate enemy.png
     }
 }
 

@@ -8,9 +8,9 @@
 typedef struct bullet Bullet;
 
 struct bullet {
-  float x, y, vx, vy;
-  bool active;
-  SDL_Rect rect;
+    float x, y, vx, vy;
+    bool active;
+    SDL_Rect rect;
 };
 
 void spawn_projectile(float x, float y, float dx, float dy);

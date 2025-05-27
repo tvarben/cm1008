@@ -15,4 +15,5 @@ void resetCannon(Cannon *c);
 void applyCannonCommand(Cannon *pCannon, ClientCommand command);
 void damageCannon(Cannon *pCannon, int damage);
 void resetCannonHealth(Cannon *pCannon);
+void cannonHpUpgrade(Cannon *pCannon);
 #endif
