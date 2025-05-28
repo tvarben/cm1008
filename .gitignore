@@ -1,11 +1,7 @@
-makefile*
-Makefile*
-Makefile
 a.out
 *.exe
 *.o
 .DS_Store
-myGame
 gameServer
 gameClient
 # macOS system files
@@ -13,7 +9,6 @@ gameClient
 *.txt
 
 # Build outputs
-myGame
 *.o obj/
 
 # Editor configs
